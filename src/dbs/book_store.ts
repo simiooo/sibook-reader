@@ -7,7 +7,8 @@ const book_items = {
         name:  { notNull: true, dataType: "string" },
         des:  { notNull: true, dataType: "string" },
         hash: {primaryKey: true, notNull: true, dataType: 'string'},
-        
+        fileType: {dataType: "string"},
+        sort: {dataType: "number"},
     },
 }
 

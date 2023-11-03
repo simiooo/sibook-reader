@@ -1,4 +1,7 @@
 import {Connection} from 'jsstore'
-import JsStoreWorker from 'jsstore/dist/jsstore.worker?worker'
 import { database } from './book_store'
-export const connection = new Connection(new JsStoreWorker())
+const JsStoreWorker = await new Worker('/jsstore.worker.js', {
+    type: 'classic'
+})
+export const connection = new Connection(JsStoreWorker)
+connection.importScripts('/uploadBook.js')

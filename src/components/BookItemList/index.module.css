@@ -1,3 +1,12 @@
+
+:global(.book_item) {
+    border: 2px solid transparent;
+    height: 210px;
+    &:hover{
+        border: 2px solid #222;
+    }
+}
 .book_item_active{
-    background-color: #f2f2f2
+    background-color: #FFF9E8;
+    border: 2px solid #222;
 }

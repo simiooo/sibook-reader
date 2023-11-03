@@ -4,43 +4,37 @@ import { Row } from 'antd'
 import React, { useState } from 'react'
 import Selecto from "react-selecto";
 import style from './index.module.css'
+import { useSet } from 'ahooks';
+import { Tooltip } from 'antd';
+import { Tag } from 'antd';
 
 interface BookItemListProps {
     data?: any[]
+    // selected?: Set<string>;
 }
 export default function BookItemList(p: BookItemListProps) {
-    const [selected, setSelected] = useState<any[]>([])
+    const [selected, { add, remove }] = useSet<string | undefined>([])
 
     return (
         <Row
-            gutter={[20, 20]}
+            gutter={[32, 20]}
         >
             <Selecto
-                // The container to add a selection element
                 container={document.body}
                 hitRate={5}
-                // The area to drag selection element (default: container)
                 dragContainer={window}
-                // Targets to select. You can register a queryselector or an Element.
                 selectableTargets={[".book_item"]}
-                // Whether to select by click (default: true)
                 selectByClick={true}
-                // Whether to select from the target inside (default: true)
                 selectFromInside={true}
-    
                 continueSelect={false}
-            
                 toggleContinueSelect={"shift"}
-                // The container for keydown and keyup events
                 keyContainer={window}
-                // The rate at which the target overlaps the drag area to be selected. (default: 100)
-
-                onSelect={e => {
+                onSelect={(e: {added:HTMLElement[], removed: HTMLElement[]}) => {
                     e.added.forEach(el => {
-                        el.classList.add(style.book_item_active);
+                        add(el?.dataset?.hash)
                     });
                     e.removed.forEach(el => {
-                        el.classList.remove(style.book_item_active);
+                        remove(el?.dataset?.hash);
                     });
                 }}
             />
@@ -48,18 +42,22 @@ export default function BookItemList(p: BookItemListProps) {
                 (p.data ?? []).map((ele, index) => {
                     return <Col
                         flex={'1 1'}
-                        span={4}
+                        span={6}
                         sm={12}
-                        xl={6}
+                        xl={8}
                         xs={24}
                         key={ele?.hash ?? ele?.name ?? index}
-                        xxl={4}
+                        xxl={6}
                     >
                         <Card
-                        data-hash={ele?.hash}
-                        className={`book_item`}
-                            hoverable
-                            title={ele?.name}
+                            data-hash={ele?.hash}
+                            extra={<Tag color="#212121">{ele?.type}</Tag>}
+                            className={`book_item ${selected.has(ele?.hash) && style.book_item_active}`}
+                            title={<Tooltip
+                                // title={ele?.name}
+                            >
+                                {ele?.name}
+                            </Tooltip>}
                         >{ele?.des}</Card>
                     </Col>
                 })
