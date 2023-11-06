@@ -12,25 +12,27 @@ export function useUpload() {
 
     const upload = 
         async (info?: { file?: File; onSuccess?: (v: any) => void; onError?: (error: Error) => void }) => {
-            
-            const res = db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
-                setLoading(true)
+            setLoading(true)
                 if (!info?.file) {
                     throw Error('请传入文件')
                 }
-                console.log(1);
-                
-                const file = await readFileAsBase64(info.file)
-                console.log(2);
+                const MAX_LIMIT = (window?.performance?.memory?.jsHeapSizeLimit as number) * 0.75
+            if(info.file.size > MAX_LIMIT) {
+                throw Error(`请传入不大于${MAX_LIMIT / 1024 /1024}MB 的书籍`)
+            }
+            const file = await readFileAsBase64(info.file)
+            
+            const res = db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
+                if (!info?.file) {
+                    throw Error('请传入文件')
+                }
 
                 const hash = sha256().update(file).digest('hex')
                 const hasSame = await db_instance?.book_items.where('hash').equals(hash).toArray()
-                console.log(3);
 
                 if ((hasSame ?? [])?.length > 0) {
                     throw (Error('请勿重复上传文件'))
                 }
-                console.log(4);
 
                 db_instance?.book_items?.add({
                     name: info.file.name,
@@ -43,7 +45,7 @@ export function useUpload() {
                     id: hash,
                     blob: file,
                 })
-                // return res && res_blob
+                return true
             }).then(() => {
                 info?.onSuccess?.(info?.file)
             }).catch(err => {

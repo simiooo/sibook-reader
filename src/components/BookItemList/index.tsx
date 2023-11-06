@@ -11,10 +11,11 @@ import { BookItems } from '../../dbs/db';
 
 interface BookItemListProps {
     data?: BookItems[]
-    // selected?: Set<string>;
+    selected?: Set<string | undefined>;
+    onAdd?: (key?: string) => void;
+    onRemove?: (key?: string) => void;
 }
 export default function BookItemList(p: BookItemListProps) {
-    const [selected, { add, remove }] = useSet<string | undefined>([])
 
     return (
         <Row
@@ -32,10 +33,10 @@ export default function BookItemList(p: BookItemListProps) {
                 keyContainer={window}
                 onSelect={(e: any | {added:HTMLElement[], removed: HTMLElement[]}) => {
                     e.added.forEach((el: HTMLElement) => {
-                        add(el?.dataset?.hash)
+                        p?.onAdd?.(el?.dataset?.hash)
                     });
                     e.removed.forEach((el: HTMLElement) => {
-                        remove(el?.dataset?.hash);
+                        p?.onRemove?.(el?.dataset?.hash);
                     });
                 }}
             />
@@ -53,7 +54,7 @@ export default function BookItemList(p: BookItemListProps) {
                         <Card
                             data-hash={ele?.hash}
                             extra={<Tag color="#212121">{ele?.fileType}</Tag>}
-                            className={`book_item ${selected.has(ele?.hash) && style.book_item_active}`}
+                            className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
                             title={<Tooltip
                             >
                                 {ele?.name}

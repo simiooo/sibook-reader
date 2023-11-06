@@ -28,10 +28,7 @@ export async function uploadBook(
     if (!info?.file) {
       throw Error("请传入文件");
     }
-    console.log('1');
-    
     const file = await readFileAsBase64(info.file);
-    console.log('2');
 
     const hash = sha256().update(file).digest("hex");
     const hasSame = await ctx?.select({
@@ -40,7 +37,6 @@ export async function uploadBook(
         hash,
       },
     });
-    console.log('3');
 
     if ((hasSame ?? [])?.length > 0) {
       throw (Error("请勿重复上传文件"));
