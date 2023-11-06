@@ -1,13 +1,14 @@
 import { create } from "zustand";
+import { BookClassedDexie, db } from "../dbs/db";
 
 
 
 export interface BookStateType {
-    db_instance: Connection | null;
+    db_instance: BookClassedDexie | null;
 }
 
 export const useBookState = create<BookStateType>(() => {
     return {
-        db_instance: connection,
+        db_instance: db,
     }
 })

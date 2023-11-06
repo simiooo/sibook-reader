@@ -20,16 +20,13 @@ export default function index() {
     const {upload, loading: uploadLoading} = useUpload()
     const [list, setList] = useState<any[]>([])
     const { runAsync, loading: listLoading } = useRequest(async () => {
-        const res = await db_instance?.select({
-            from: 'BookItems',
-        })
-        setList(res)
+        const res = await db_instance?.book_items?.toArray()
+        setList(res ?? [])
     })
     const [dropModalOpen, setDropModalOpen] = useState<boolean>()
     const containerRef = useRef<HTMLElement>(null)
     useDrop(() => containerRef.current, {
         onFiles(e) {
-            console.log(e)
             Promise.allSettled(e.map(file => upload({file}))).finally(() => runAsync())
         },
         onDragEnter() {

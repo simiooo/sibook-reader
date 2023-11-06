@@ -28,7 +28,11 @@ export async function uploadBook(
     if (!info?.file) {
       throw Error("请传入文件");
     }
+    console.log('1');
+    
     const file = await readFileAsBase64(info.file);
+    console.log('2');
+
     const hash = sha256().update(file).digest("hex");
     const hasSame = await ctx?.select({
       from: "BookItems",
@@ -36,6 +40,8 @@ export async function uploadBook(
         hash,
       },
     });
+    console.log('3');
+
     if ((hasSame ?? [])?.length > 0) {
       throw (Error("请勿重复上传文件"));
     }
@@ -50,6 +56,8 @@ export async function uploadBook(
         hash,
       }],
     });
+    console.log('4');
+
     const res_blob = await ctx?.insert({
       into: "BookBlob",
       upsert: true,
@@ -58,6 +66,8 @@ export async function uploadBook(
         blob: file,
       }],
     });
+    console.log('5');
+
     if (res && res_blob) {
       info.onSuccess?.(res);
     } else {

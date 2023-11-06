@@ -7,9 +7,10 @@ import style from './index.module.css'
 import { useSet } from 'ahooks';
 import { Tooltip } from 'antd';
 import { Tag } from 'antd';
+import { BookItems } from '../../dbs/db';
 
 interface BookItemListProps {
-    data?: any[]
+    data?: BookItems[]
     // selected?: Set<string>;
 }
 export default function BookItemList(p: BookItemListProps) {
@@ -29,11 +30,11 @@ export default function BookItemList(p: BookItemListProps) {
                 continueSelect={false}
                 toggleContinueSelect={"shift"}
                 keyContainer={window}
-                onSelect={(e: {added:HTMLElement[], removed: HTMLElement[]}) => {
-                    e.added.forEach(el => {
+                onSelect={(e: any | {added:HTMLElement[], removed: HTMLElement[]}) => {
+                    e.added.forEach((el: HTMLElement) => {
                         add(el?.dataset?.hash)
                     });
-                    e.removed.forEach(el => {
+                    e.removed.forEach((el: HTMLElement) => {
                         remove(el?.dataset?.hash);
                     });
                 }}
@@ -51,10 +52,9 @@ export default function BookItemList(p: BookItemListProps) {
                     >
                         <Card
                             data-hash={ele?.hash}
-                            extra={<Tag color="#212121">{ele?.type}</Tag>}
+                            extra={<Tag color="#212121">{ele?.fileType}</Tag>}
                             className={`book_item ${selected.has(ele?.hash) && style.book_item_active}`}
                             title={<Tooltip
-                                // title={ele?.name}
                             >
                                 {ele?.name}
                             </Tooltip>}
