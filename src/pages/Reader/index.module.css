@@ -1,9 +1,11 @@
 .container{
+    padding: 0rem 1.5rem;
     .toolbar{
 
     }
     .article{
         height: 90vh;
-        width: 100vw;
+        width: 100%;
+
     }
 }
