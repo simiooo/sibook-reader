@@ -1,0 +1,9 @@
+.container{
+    .toolbar{
+
+    }
+    .article{
+        height: 90vh;
+        width: 100vw;
+    }
+}

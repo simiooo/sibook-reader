@@ -2,22 +2,22 @@ import dayjs from "dayjs";
 import { sha256 } from "hash.js";
 import { Connection } from "jsstore";
 
-export async function readFileAsBase64(
+export async function readFileAsArrayBuffer(
   file: File,
-): Promise<string | undefined> {
+): Promise<Uint8Array | undefined> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
     reader.onload = () => {
-      const base64String = (reader?.result as string)?.split?.(",")[1];
-      resolve(base64String);
+      const buffer = (reader?.result as ArrayBuffer);
+      resolve(new Uint8Array(buffer));
     };
 
     reader.onerror = () => {
       reject(reader.error);
     };
 
-    reader.readAsDataURL(file);
+    reader.readAsArrayBuffer(file);
   });
 }
 export async function uploadBook(
@@ -28,7 +28,7 @@ export async function uploadBook(
     if (!info?.file) {
       throw Error("请传入文件");
     }
-    const file = await readFileAsBase64(info.file);
+    const file = await readFileAsArrayBuffer(info.file);
 
     const hash = sha256().update(file).digest("hex");
     const hasSame = await ctx?.select({

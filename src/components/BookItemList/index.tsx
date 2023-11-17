@@ -8,6 +8,7 @@ import { useSet } from 'ahooks';
 import { Tooltip } from 'antd';
 import { Tag } from 'antd';
 import { BookItems } from '../../dbs/db';
+import { useNavigate } from 'react-router-dom';
 
 interface BookItemListProps {
     data?: BookItems[]
@@ -16,6 +17,7 @@ interface BookItemListProps {
     onRemove?: (key?: string) => void;
 }
 export default function BookItemList(p: BookItemListProps) {
+    const navigate = useNavigate()
 
     return (
         <Row
@@ -55,6 +57,9 @@ export default function BookItemList(p: BookItemListProps) {
                             data-hash={ele?.hash}
                             extra={<Tag color="#212121">{ele?.fileType}</Tag>}
                             className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
+                            onDoubleClick={() => {
+                                navigate(`/reader/${ele.hash}`)
+                            }}
                             title={<Tooltip
                             >
                                 {ele?.name}

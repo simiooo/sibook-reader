@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useBookState } from "../store";
 import { sha256 } from "hash.js";
 import dayjs from 'dayjs'
-import { readFileAsBase64 } from "../dbs/createBook";
+import { readFileAsArrayBuffer } from "../dbs/createBook";
 
 
 
@@ -20,7 +20,7 @@ export function useUpload() {
             if(info.file.size > MAX_LIMIT) {
                 throw Error(`请传入不大于${MAX_LIMIT / 1024 /1024}MB 的书籍`)
             }
-            const file = await readFileAsBase64(info.file)
+            const file = await readFileAsArrayBuffer(info.file)
             
             const res = db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
                 if (!info?.file) {

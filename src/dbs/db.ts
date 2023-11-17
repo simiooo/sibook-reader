@@ -10,7 +10,7 @@ export interface BookItems {
 }
 export interface BookBlob {
   id?: string;
-  blob?: string;
+  blob?: Uint8Array;
 }
 
 export class BookClassedDexie extends Dexie {
