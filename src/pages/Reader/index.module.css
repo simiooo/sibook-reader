@@ -1,11 +1,19 @@
-.container{
+.container {
     padding: 0rem 1.5rem;
-    .toolbar{
 
-    }
-    .article{
+    .toolbar {}
+
+    .article {
         height: 90vh;
         width: 100%;
 
     }
+}
+
+.reader_progress {
+    width: 80vw;
+    position: absolute;
+    bottom: 0rem;
+    right: 10vw;
+    left: 10vw;
 }
