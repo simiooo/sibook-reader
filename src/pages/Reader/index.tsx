@@ -30,31 +30,39 @@ export default function index() {
   const [currentLocation, setCurrentLocation] = useState<number>(0)
 
   const locationChangeByPercentage = useCallback(() => {
-    if (!rendition) {
-      return
-    }
-    const startPercentage = book?.locations.percentageFromCfi(rendition.location.start.cfi) ?? 0
-    // const endPercentage = book?.locations.percentageFromCfi(rendition.location.end.cfi) ?? 0
-    // const percentage = (startPercentage + endPercentage) / 2
-    const percentage = startPercentage
+    // if (!rendition) {
+    //   return
+    // }
+    // const startPercentage = book?.locations.percentageFromCfi(rendition.location.start.cfi) ?? 0
+    // // const endPercentage = book?.locations.percentageFromCfi(rendition.location.end.cfi) ?? 0
+    // // const percentage = (startPercentage + endPercentage) / 2
+    // const percentage = startPercentage
     
-    if (currentLocation !== 0 || percentage * 100 !== currentLocation) {
-      setCurrentLocation(percentage * 100)
-    }
+    // if (currentLocation !== 0 || percentage * 100 !== currentLocation) {
+    //   setCurrentLocation(percentage * 100)
+    // }
   }, [rendition, currentLocation])
 
-  const textSelected = useCallback((e, ...others) => {
-    console.log(e, others);
-    
-  }, [])
+  const wheelHandler = useCallback((e) => {
+    if((e as any).wheelDeltaY > 0) {
+      rendition?.prev()
+      
+    } else if((e as any).wheelDeltaY < 0) {
+      rendition?.next()
+    }
+  }, [rendition])
 
   // 设置事件监听
   useEffect(() => {
     rendition?.on('relocated', locationChangeByPercentage)
-    rendition?.on('selected', textSelected)
+    rendition?.on('wheel', wheelHandler)
+    rendition?.on('keyup', () => {
+      console.log('keyup');
+
+    })
     return () => {
       rendition?.off('relocated', locationChangeByPercentage)
-      rendition?.off('selected', textSelected)
+      rendition?.off('wheel', wheelHandler)
     }
   }, [rendition, currentLocation])
 
@@ -69,14 +77,7 @@ export default function index() {
     // target: document.documentElement
   })
 
-  useEventListener('wheel', (e) => {
-    if((e as any).wheelDeltaY > 0) {
-      rendition?.prev()
-      
-    } else if((e as any).wheelDeltaY < 0) {
-      rendition?.next()
-    }
-  })
+  useEventListener('wheel', wheelHandler)
 
   const init = useCallback(
     async (book?: Book, rendition?: Rendition) => {
