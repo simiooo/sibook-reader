@@ -8,7 +8,7 @@ interface ExportButtonProps extends React.RefAttributes<HTMLElement> {
 }
 
 const download = async (obj: {
-    blob?: string,
+    blob?: Uint8Array,
     name?: string,
 }) => {
     const url = URL.createObjectURL(new Blob([obj?.blob ?? '']))

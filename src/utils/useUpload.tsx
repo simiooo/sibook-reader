@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useBookState } from "../store";
 import { sha256 } from "hash.js";
 import dayjs from 'dayjs'
@@ -16,7 +16,7 @@ export function useUpload() {
                 if (!info?.file) {
                     throw Error('请传入文件')
                 }
-                const MAX_LIMIT = (window?.performance?.memory?.jsHeapSizeLimit as number) * 0.75
+                const MAX_LIMIT = ((window?.performance as any)?.memory?.jsHeapSizeLimit as number) * 0.75
             if(info.file.size > MAX_LIMIT) {
                 throw Error(`请传入不大于${MAX_LIMIT / 1024 /1024}MB 的书籍`)
             }

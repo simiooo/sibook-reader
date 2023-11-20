@@ -1,28 +1,21 @@
 import { Col } from 'antd'
 import { Row } from 'antd'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import style from './index.module.css'
 import { useBookState } from '../../store'
-import { useLocation } from 'react-router-dom'
-import { useAsyncEffect } from 'ahooks'
 import { useParams } from 'react-router-dom'
 import ePub, { Rendition } from 'epubjs'
 import { Book } from 'epubjs'
 import tailwindcss from './default.css?url'
 import { BookItems } from '../../dbs/db'
-import { Button } from 'antd'
 import { Breadcrumb } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { HomeOutlined } from '@ant-design/icons'
-import { Alert } from 'antd'
 import { createPortal } from 'react-dom'
 import { Slider } from 'antd'
 import { useEventListener } from 'ahooks'
 import { Spin } from 'antd'
-import { useDebounce } from 'ahooks'
-import Section from 'epubjs/types/section'
 import { useKeyPress } from 'ahooks'
-import { useThrottle } from 'ahooks'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -36,7 +29,7 @@ export default function index() {
 
   const [currentLocation, setCurrentLocation] = useState<number>(0)
 
-  const locationChangeByPercentage = useCallback((e) => {
+  const locationChangeByPercentage = useCallback(() => {
     if (!rendition) {
       return
     }
@@ -50,11 +43,18 @@ export default function index() {
     }
   }, [rendition, currentLocation])
 
+  const textSelected = useCallback((e, ...others) => {
+    console.log(e, others);
+    
+  }, [])
+
   // 设置事件监听
   useEffect(() => {
     rendition?.on('relocated', locationChangeByPercentage)
+    rendition?.on('selected', textSelected)
     return () => {
       rendition?.off('relocated', locationChangeByPercentage)
+      rendition?.off('selected', textSelected)
     }
   }, [rendition, currentLocation])
 
@@ -70,10 +70,10 @@ export default function index() {
   })
 
   useEventListener('wheel', (e) => {
-    if(e.wheelDeltaY > 0) {
+    if((e as any).wheelDeltaY > 0) {
       rendition?.prev()
       
-    } else if(e.wheelDeltaY < 0) {
+    } else if((e as any).wheelDeltaY < 0) {
       rendition?.next()
     }
   })
@@ -134,8 +134,8 @@ export default function index() {
     if (!book_id) {
       return
     }
-    let book: Book | undefined = undefined
-    let rendition: Rendition | undefined = undefined
+    const book: Book | undefined = undefined
+    const rendition: Rendition | undefined = undefined
 
     init(book, rendition)
     return () => {

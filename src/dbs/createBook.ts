@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import { sha256 } from "hash.js";
-import { Connection } from "jsstore";
 
 export async function readFileAsArrayBuffer(
   file: File,

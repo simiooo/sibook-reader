@@ -1,10 +1,8 @@
 import { Col } from 'antd'
 import { Card } from 'antd'
 import { Row } from 'antd'
-import React, { useState } from 'react'
 import Selecto from "react-selecto";
 import style from './index.module.css'
-import { useSet } from 'ahooks';
 import { Tooltip } from 'antd';
 import { Tag } from 'antd';
 import { BookItems } from '../../dbs/db';

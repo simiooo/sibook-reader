@@ -1,17 +1,16 @@
-import { Button, Col } from "antd";
+import { Col } from "antd";
 import { Row } from "antd";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { FileTextTwoTone } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
 import { useBookState } from "../../store";
 import BookItemList from "../../components/BookItemList";
-import { useAsyncEffect, useRequest } from "ahooks";
+import { useRequest } from "ahooks";
 import style from './index.module.css'
 import { Spin } from "antd";
 import { useDrop } from "ahooks";
-import { Modal } from "antd";
 import { Dropdown } from "antd";
 import { useUpload } from "../../utils/useUpload";
 import { message } from "antd";
@@ -42,10 +41,10 @@ export default function index() {
         onDragEnter() {
             setDropModalOpen(true)
         },
-        onDrop(e) {
+        onDrop() {
             setDropModalOpen(false)
         },
-        onDragLeave(e) {
+        onDragLeave() {
             setDropModalOpen(false)
         }
     })
@@ -105,7 +104,7 @@ export default function index() {
         >
             <Spin spinning={loading}>
                 <Dropdown 
-                menu={{ items: contextmenuList }} 
+                menu={{ items: contextmenuList as any }} 
                 trigger={['contextMenu']} 
                 dropdownRender={(menu) => {
                     return selected.size > 1 ? menu : <Alert
