@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       theme={{
         token: {
           colorError: '#E53935',
-          colorPrimary: '#2196F3',
+          colorPrimary: '#80aa51',
           colorSuccess: '#4CAF50',
           colorWarning: '#FFEB3B',
           fontSize: 16,
