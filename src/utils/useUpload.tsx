@@ -16,6 +16,9 @@ export function useUpload() {
                 if (!info?.file) {
                     throw Error('请传入文件')
                 }
+                if(!['application/epub+zip', 'application/pdf'].includes(info.file.type)) {
+                    throw Error('仅支持 pdf 与 epub 书籍~')
+                }
                 const MAX_LIMIT = ((window?.performance as any)?.memory?.jsHeapSizeLimit as number) * 0.75
             if(info.file.size > MAX_LIMIT) {
                 throw Error(`请传入不大于${MAX_LIMIT / 1024 /1024}MB 的书籍`)

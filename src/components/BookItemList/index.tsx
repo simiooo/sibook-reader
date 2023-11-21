@@ -1,4 +1,4 @@
-import { Col } from 'antd'
+import { Col, message } from 'antd'
 import { Card } from 'antd'
 import { Row } from 'antd'
 import Selecto from "react-selecto";
@@ -57,7 +57,14 @@ export default function BookItemList(p: BookItemListProps) {
                             extra={<Tag color="#212121">{ele?.fileType}</Tag>}
                             className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
                             onDoubleClick={() => {
-                                navigate(`/reader/${ele.hash}`)
+                                if(ele?.fileType === 'application/epub+zip') {
+                                    navigate(`/reader/${ele.hash}`)
+                                } else if( ele?.fileType === 'application/pdf') {
+                                    navigate(`/pdf_reader/${ele.hash}`)
+                                } else {
+                                    message.error('暂不支持')
+                                }
+                                
                             }}
                             title={<Tooltip
                             >

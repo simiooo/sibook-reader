@@ -21,6 +21,7 @@ export default function index(p: IndexProp) {
             capture={true}
             showUploadList={false}
             customRequest={upload as any}
+            multiple={true}
         >
             <Button
             type={renderType}

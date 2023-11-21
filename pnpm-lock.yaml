@@ -47,6 +47,9 @@ dependencies:
   normalize.css:
     specifier: ^8.0.1
     version: 8.0.1
+  pdfjs-dist:
+    specifier: ^3.11.174
+    version: 3.11.174
   postcss:
     specifier: ^8.4.31
     version: 8.4.31
