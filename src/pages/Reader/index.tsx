@@ -58,6 +58,8 @@ export default function index() {
   }, [rendition, currentLocation])
 
   const { run: wheelHandler } = useThrottleFn((e) => {
+    console.log(e);
+    
     if ((e as any).wheelDeltaY > 0) {
       rendition?.prev()
 
@@ -69,6 +71,8 @@ export default function index() {
   })
 
   const { run: keyUpHandler } = useThrottleFn((e) => {
+    console.log(e);
+    
     if (e.keyCode === 38) {
       // 向上
       rendition?.prev()

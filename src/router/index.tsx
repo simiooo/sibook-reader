@@ -4,6 +4,7 @@ import {
 import Bookshelf from "../pages/Bookshelf";
 import Reader from "../pages/Reader";
 import Index from '../pages'
+import PdfReader from "../pages/PdfReader";
 
 export const router = createBrowserRouter([
     {
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
         {
           path: "/reader/:book_id",
           element: <Reader></Reader>,
+        },
+        {
+          path: "/pef_reader/:book_id",
+          element: <PdfReader></PdfReader>,
         },
       ]
     },

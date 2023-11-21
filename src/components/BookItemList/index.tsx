@@ -20,6 +20,7 @@ export default function BookItemList(p: BookItemListProps) {
     return (
         <Row
             gutter={[32, 20]}
+            className={style.container}
         >
             <Selecto
                 container={document.body}

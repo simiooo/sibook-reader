@@ -10,3 +10,11 @@
     background-color: #FFF9E8;
     border: 2px solid #222;
 }
+.container{
+    overflow: auto;
+    overflow-x: hidden;
+    height: 82vh;
+    &::-webkit-scrollbar{
+        display: none;
+    }
+}
