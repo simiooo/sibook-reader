@@ -92,14 +92,17 @@ export default function index() {
     }
   }, [rendition, currentLocation])
 
-  useKeyPress('uparrow', () => {
-    rendition?.prev()
-  })
-  useKeyPress(40, () => {
-    rendition?.next()
-  })
+  // useKeyPress('uparrow', () => {
+  //   rendition?.prev()
+  // })
+  // useKeyPress(40, () => {
+  //   rendition?.next()
+  // })
 
-  useEventListener('wheel', wheelHandler)
+  // useEventListener('resize', () => {
+  //   rendition?.flow()
+  // })
+  // useEventListener('wheel', wheelHandler)
 
   const init = useCallback(
     async (book?: Book, rendition?: Rendition) => {
@@ -183,23 +186,23 @@ export default function index() {
 
       {error
         ? <Row
-        justify={'center'}
-        align={'middle'}
-        style={{
-          height:'90vh'
-        }}
+          justify={'center'}
+          align={'middle'}
+          style={{
+            height: '90vh'
+          }}
         >
           <Result
             status="error"
             title="加载图书失败"
             subTitle="发生异常，请联系开发者"
             extra={[
-              <Button 
-              type="link" 
-              key="console"
-              onClick={() => {
-                navigate('/')
-              }}
+              <Button
+                type="link"
+                key="console"
+                onClick={() => {
+                  navigate('/')
+                }}
               >
                 回到书架
               </Button>
@@ -220,7 +223,7 @@ export default function index() {
                 <p><Breadcrumb
                   items={[
                     {
-                      title: <a type="link"><HomeOutlined /></a> ,
+                      title: <a type="link"><HomeOutlined /></a>,
                       onClick: () => navigate('/')
                     },
                     {
@@ -249,18 +252,23 @@ export default function index() {
                 sm={8}
                 xs={8}
               >
-                <Menu
-                  items={menuItems}
-                  openKeys={menuOpenKeys}
-                  selectedKeys={menuSelectedKeys}
-                  onOpenChange={(e) => {
-                    setMenuOpenKeys(e)
-                  }}
-                  onSelect={(e) => {
-                    setIsUserChangingLocation(false)
-                    rendition?.display(e.key)
-                  }}
-                ></Menu>
+                <div
+                  className={style.menu_container}
+                >
+                  <Menu
+                    items={menuItems}
+                    openKeys={menuOpenKeys}
+                    selectedKeys={menuSelectedKeys}
+                    onOpenChange={(e) => {
+                      setMenuOpenKeys(e)
+                    }}
+                    onSelect={(e) => {
+                      setIsUserChangingLocation(false)
+                      rendition?.display(e.key)
+                    }}
+                  ></Menu>
+                </div>
+
               </Col>
               <Col
                 sm={16}
