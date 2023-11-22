@@ -90,18 +90,6 @@ export default function index() {
     wait: 200
   })
 
-  const {run : copyHandler} = useThrottleFn(async (e) => {
-    try {
-      const res = await content.window.navigator.clipboard.readText()
-      // console.log(res);
-      message.success('复制成功')
-      setCopiedText(res)
-    } catch (error) {
-      console.error(error instanceof Error ? error.message : error)
-      message.error('粘贴失败')
-    }
-  })
-
   const copyHandlerFactory = (content: any) => {
     return async () => {
       try {
