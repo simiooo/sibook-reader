@@ -4,7 +4,7 @@ import { Key, useCallback, useEffect, useRef, useState } from 'react'
 import style from './index.module.css'
 import { useBookState } from '../../store'
 import { useParams } from 'react-router-dom'
-import ePub, { NavItem, Rendition } from 'epubjs'
+import ePub, { Contents, NavItem, Rendition } from 'epubjs'
 import { Book } from 'epubjs'
 import tailwindcss from './default.css?url'
 import { BookItems } from '../../dbs/db'
@@ -23,6 +23,7 @@ export default function index() {
   const db_instance = useBookState(state => state.db_instance)
   const navigate = useNavigate()
   const [bookInfo, setBookInfo] = useState<BookItems>()
+  const container_ref = useRef<HTMLDivElement>(null)
   const article_inited_ref = useRef<boolean>(false)
   const { book_id } = useParams()
   const [book, setBook] = useState<Book>()
@@ -30,6 +31,7 @@ export default function index() {
   const [bookLoading, setBookLoading] = useState<boolean>(false)
   const [isUserChangingLocation, setIsUserChangingLocation] = useState(false);
   const [error, setError] = useState<boolean>(false)
+  const [epubHooks, setEpubHooks] = useState<Function[]>([])
 
 
   const [menuItems, setMenuItems] = useState<MenuItemType[]>()
@@ -58,11 +60,8 @@ export default function index() {
   }, [rendition, currentLocation])
 
   const { run: wheelHandler } = useThrottleFn((e) => {
-    console.log(e);
-    
     if ((e as any).wheelDeltaY > 0) {
       rendition?.prev()
-
     } else if ((e as any).wheelDeltaY < 0) {
       rendition?.next()
     }
@@ -84,29 +83,36 @@ export default function index() {
     wait: 200
   })
 
+  const rendition_rendered_handler = useCallback(() => {
+    const contents = rendition.getContents() as any as Contents[]
+    for(const content of contents) {
+      content.document.addEventListener('wheel', wheelHandler)
+      console.log('wheel event listenning~')
+    }
+  }, [rendition])
+
   // 设置事件监听
   useEffect(() => {
     rendition?.on('relocated', locationChangeByPercentage)
-    rendition?.on('wheel', wheelHandler)
+    rendition?.on('rendered', rendition_rendered_handler)
     rendition?.on('keyup', keyUpHandler)
     return () => {
       rendition?.off('relocated', locationChangeByPercentage)
-      rendition?.off('wheel', wheelHandler)
       rendition?.off('keyup', keyUpHandler)
+      rendition?.on('rendered', rendition_rendered_handler)
     }
   }, [rendition, currentLocation])
 
-  // useKeyPress('uparrow', () => {
-  //   rendition?.prev()
-  // })
-  // useKeyPress(40, () => {
-  //   rendition?.next()
-  // })
-
-  // useEventListener('resize', () => {
-  //   rendition?.flow()
-  // })
-  // useEventListener('wheel', wheelHandler)
+  useKeyPress('uparrow', () => {
+    rendition?.prev()
+  }, {
+    target: container_ref
+  })
+  useKeyPress(40, () => {
+    rendition?.next()
+  }, {
+    target: container_ref
+  })
 
   const init = useCallback(
     async (book?: Book, rendition?: Rendition) => {
@@ -119,7 +125,7 @@ export default function index() {
         }
         setBookInfo(book_info)
         const tempBook = ePub(book_blob.blob?.buffer, {})
-
+        
         setBook(tempBook)
         tempBook.ready.then(() => {
           tempBook.locations.generate(512)
@@ -132,8 +138,6 @@ export default function index() {
               ; (cfi && cfi !== '-1') ? tempRendition.display(cfi) : tempRendition.display()
 
             setMenuItems(epubToMenuItemHandler(tempBook?.navigation?.toc))
-            console.log(tempBook);
-
             return { book, rendition }
           } else {
             setBookLoading(false)
@@ -268,6 +272,7 @@ export default function index() {
                     }}
                     onSelect={(e) => {
                       setIsUserChangingLocation(false)
+                      setMenuSelectedKeys(e.selectedKeys)
                       rendition?.display(e.key)
                     }}
                   ></Menu>
@@ -283,7 +288,7 @@ export default function index() {
                 span={20}>
                 <div
                   id={'article'}
-                  // ref={article_inited_ref}
+                  ref={container_ref}
                   className={style.article}
                 >
 
