@@ -16,6 +16,32 @@ const cMapsDir = path.join(
 export default defineConfig({
   plugins: [
     react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        name: 'Si Reader',
+        short_name: 'Si Reader',
+        description: 'Si Reader application',
+        theme_color: '#80aa51',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: '/icon/si_reader_icon1.png',
+            type: 'image/png', 
+          },
+          {
+            src: '/icon/si_reader_icon2.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/icon/si_reader_icon3.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ]
+      }
+    }),
     viteStaticCopy({
       targets: [
         {
@@ -26,32 +52,6 @@ export default defineConfig({
           src: cMapsDir,
           dest: "",
         },
-        VitePWA({
-          registerType: 'autoUpdate',
-          manifest: {
-            name: 'Si Reader',
-            short_name: 'Si Reader',
-            description: 'Si Reader application',
-            theme_color: '#80aa51',
-            background_color: '#ffffff',
-            icons: [
-              {
-                src: '/icon/si_reader_icon1.png',
-                type: 'image/png', 
-              },
-              {
-                src: '/icon/si_reader_icon2.png',
-                sizes: '192x192',
-                type: 'image/png',
-              },
-              {
-                src: '/icon/si_reader_icon3.png',
-                sizes: '512x512',
-                type: 'image/png',
-              },
-            ]
-          }
-        })
       ],
     }),
   ],
