@@ -91,27 +91,41 @@ export default function index() {
   })
 
   const {run : copyHandler} = useThrottleFn(async (e) => {
-    console.log(e);
-    
-    console.log(e?.target?.ownerDocument);
-    
-    // try {
-    //   const res = await content.window.navigator.clipboard.readText()
-    //   // console.log(res);
-    //   message.success('复制成功')
-    //   setCopiedText(res)
-    // } catch (error) {
-    //   console.error(error instanceof Error ? error.message : error)
-    //   message.error('粘贴失败')
-    // }
+    try {
+      const res = await content.window.navigator.clipboard.readText()
+      // console.log(res);
+      message.success('复制成功')
+      setCopiedText(res)
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error)
+      message.error('粘贴失败')
+    }
   })
 
+  const copyHandlerFactory = (content: any) => {
+    return async () => {
+      try {
+        const res = await content.window.navigator.clipboard.readText()
+        message.success('复制成功')
+        setCopiedText(res)
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : error)
+        message.error('粘贴失败')
+      }
+    }
+  }
+
   const rendition_rendered_handler = useCallback(() => {
+    
     const contents = rendition.getContents() as any as Contents[]
     for (const content of contents) {
-      content.document.addEventListener('wheel', wheelHandler)
-      content.document.addEventListener('copy', copyHandler)
-      console.log('wheel event listenning~')
+      const copyHandler = copyHandlerFactory(content)
+      // content.document.removeEventListener('wheel', wheelHandler)
+      // content.document.removeEventListener('copy', copyHandler)
+      // content.document.addEventListener('wheel', wheelHandler)
+      // content.document.addEventListener('copy', copyHandler)
+      content.document.onwheel = wheelHandler
+      content.document.oncopy = copyHandler
     }
   }, [rendition])
 
@@ -124,10 +138,6 @@ export default function index() {
       rendition?.off('relocated', locationChangeByPercentage)
       rendition?.off('keyup', keyUpHandler)
       rendition?.on('rendered', rendition_rendered_handler)
-      // const contents = rendition.getContents() as any as Contents[]
-      // for (const content of contents) {
-      //   content.document.removeEventListener()
-      // }
     }
   }, [rendition, currentLocation])
 
