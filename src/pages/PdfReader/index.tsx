@@ -10,6 +10,7 @@ import { HomeOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
+import { useKeyPress } from 'ahooks';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.js',
@@ -21,11 +22,13 @@ export default function PdfReader() {
   const [bookInfo, setBookInfo] = useState<BookItems>()
   const navigate = useNavigate()
   const { book_id } = useParams()
+  const [pdf, setPdf] = useState()
 
   const [blob, setBlob] = useState<{data: Uint8Array}>()
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
+  function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number }): void {
+    console.log(others);
     
     setNumPages(numPages);
   }
@@ -39,6 +42,20 @@ export default function PdfReader() {
       setBookInfo(book_info)
     })
   }, [])
+
+  useKeyPress('uparrow', () => {
+    if(pageNumber === 0) {
+      return
+    }
+    setPageNumber(pageNumber -1)
+  })
+  useKeyPress(40, () => {
+    if(pageNumber === numPages) {
+      return
+    }
+    setPageNumber(pageNumber +1)
+    
+  })
 
   useEffect(() => {
     if (!book_id) {
@@ -90,7 +107,6 @@ export default function PdfReader() {
                 status="error"
                 title="书籍加载失败"
                 ></Result>}
-          
                 file={blob} onLoadSuccess={onDocumentLoadSuccess}>
                   <Page pageNumber={pageNumber} />
                 </Document>
