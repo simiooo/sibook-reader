@@ -13,7 +13,7 @@
 .container{
     overflow: auto;
     overflow-x: hidden;
-    height: 82vh;
+    max-height: 82vh;
     &::-webkit-scrollbar{
         display: none;
     }

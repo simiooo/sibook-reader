@@ -1,0 +1,85 @@
+import { Button, Divider, Form, Input, Modal, ModalProps } from 'antd'
+import React, { useEffect, useState } from 'react'
+import { useBookState } from '../../store'
+
+export interface GPTSettingProps extends ModalProps {
+
+}
+
+export default function GPTSetting(p: GPTSettingProps) {
+    const { ...modals } = p
+    const formValue = useBookState(state => ({
+        openai_base_url: state.openai_base_url,
+        openai_api_key: state.openai_api_key
+    }))
+    const openai_update = useBookState(state => state.openai_update)
+    const [form] = Form.useForm()
+    useEffect(() => {
+        form.setFieldsValue(formValue)
+    }, [formValue])
+
+    return (
+        <Modal
+            title="gpt 配置"
+            {...modals}
+            footer={null}
+            width={'60vw'}
+        >
+            <Divider></Divider>
+            <Form
+                form={form}
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                onFinish={(e) => {
+                    openai_update(e)
+                    p?.onOk?.(e)
+                }}
+            >
+                <Form.Item
+                    name="openai_base_url"
+                    label="openai代理地址（可选）"
+                    rules={[
+                        {
+                            pattern: /^https?:\/\/.+$/,
+                            message: '输入的url不正确'
+                        },
+                    ]}
+                >
+                    <Input
+                        style={{
+                            width: '300px'
+                        }}
+                        placeholder='请输入基础url'
+                    ></Input>
+                </Form.Item>
+                <Form.Item
+                    label="API密钥"
+                    name="openai_api_key"
+                    required
+                    rules={[
+                        {
+                            required: true,
+                            message: '请输入 API 密钥'
+                        }
+                    ]}
+                >
+                    <Input
+                        style={{
+                            width: '300px'
+                        }}
+                        type="password"
+                        placeholder='请输入api密钥，该密钥存储在本地。'
+                    ></Input>
+                </Form.Item>
+                <Form.Item
+                wrapperCol={{offset: 8}}
+                >
+                    <Button
+                        type='primary'
+                        htmlType='submit'
+                    >保存</Button>
+                </Form.Item>
+            </Form>
+        </Modal>
+    )
+}

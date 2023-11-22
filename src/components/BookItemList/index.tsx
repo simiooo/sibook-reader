@@ -21,6 +21,8 @@ export default function BookItemList(p: BookItemListProps) {
         <Row
             gutter={[32, 20]}
             className={style.container}
+            justify={'start'}
+            align={'top'}
         >
             <Selecto
                 container={document.body}
@@ -44,7 +46,7 @@ export default function BookItemList(p: BookItemListProps) {
             {
                 (p.data ?? []).map((ele, index) => {
                     return <Col
-                        flex={'1 1'}
+                        // flex={'1 1'}
                         span={6}
                         sm={12}
                         xl={8}

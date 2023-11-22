@@ -1,4 +1,4 @@
-import { Col } from "antd";
+import { Button, Col, Space } from "antd";
 import { Row } from "antd";
 import { useMemo, useRef, useState } from "react";
 import { FileTextTwoTone } from '@ant-design/icons'
@@ -19,11 +19,13 @@ import DropButton from "../../components/DropButton";
 import ExportButton from "../../components/ExportButton";
 import { ItemType } from "antd/es/breadcrumb/Breadcrumb";
 import { Alert } from "antd";
+import GPTSetting from "../../components/GPTSetting";
 
 export default function index() {
     const db_instance = useBookState(state => state.db_instance)
     const { upload, loading: uploadLoading } = useUpload()
     const [list, setList] = useState<any[]>([])
+    const [aiOpen, setAiOpen] = useState<boolean>(false)
     const { runAsync, loading: listLoading } = useRequest(async () => {
         const res = await db_instance?.book_items?.toArray()
         setList(res ?? [])
@@ -60,12 +62,12 @@ export default function index() {
         switch (selected.size) {
             case 0:
                 result = [
-                    
+
                 ]
                 break;
             case 1:
                 result = [
-                   
+
                     {
                         label: <DropButton
                             keys={selected}
@@ -80,7 +82,7 @@ export default function index() {
                 break;
             default:
                 result = [
-                    
+
                     {
                         label: <DropButton
                             keys={selected}
@@ -102,26 +104,41 @@ export default function index() {
         <Layout
             ref={containerRef}
         >
+            <GPTSetting
+            open={aiOpen}
+            onCancel={() => setAiOpen(false)}
+            onOk={() => setAiOpen(false)}
+            ></GPTSetting>
             <Spin spinning={loading}>
-                <Dropdown 
-                menu={{ items: contextmenuList as any }} 
-                trigger={['contextMenu']} 
-                dropdownRender={(menu) => {
-                    return selected.size > 1 ? menu : <Alert
-                    message={'请选择'}
-                    ></Alert>
-                }}
+                <Dropdown
+                    menu={{ items: contextmenuList as any }}
+                    trigger={['contextMenu']}
+                    dropdownRender={(menu) => {
+                        return selected.size > 1 ? menu : <Alert
+                            message={'请选择'}
+                        ></Alert>
+                    }}
                 >
                     <Content className={style.content}>
                         <Row gutter={[20, 32]}>
                             <Col span={24}>
                                 <Row justify={'end'}>
                                     <Col >
-                                        <BookNewButton
-                                            onChange={async () => {
-                                                runAsync()
-                                            }}
-                                        ></BookNewButton>
+                                        <Space>
+                                            <BookNewButton
+                                                onChange={async () => {
+                                                    runAsync()
+                                                }}
+                                            ></BookNewButton>
+                                            <Button
+                                                type="link"
+                                                onClick={() => {setAiOpen(true)}}
+                                            >
+                                                ai 辅助设置
+                                            </Button>
+
+                                        </Space>
+
                                     </Col>
                                 </Row>
                             </Col>

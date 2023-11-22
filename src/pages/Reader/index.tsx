@@ -1,4 +1,4 @@
-import { Button, Col, Menu, Result } from 'antd'
+import { Button, Col, FloatButton, Menu, Result, message } from 'antd'
 import { Row } from 'antd'
 import { Key, useCallback, useEffect, useRef, useState } from 'react'
 import style from './index.module.css'
@@ -10,7 +10,7 @@ import tailwindcss from './default.css?url'
 import { BookItems } from '../../dbs/db'
 import { Breadcrumb } from 'antd'
 import { useNavigate } from 'react-router-dom'
-import { HomeOutlined } from '@ant-design/icons'
+import { BulbOutlined, HomeOutlined, MoreOutlined, QuestionCircleOutlined, TranslationOutlined } from '@ant-design/icons'
 import { createPortal } from 'react-dom'
 import { Slider } from 'antd'
 import { useEventListener, useThrottleFn } from 'ahooks'
@@ -18,6 +18,8 @@ import { Spin } from 'antd'
 import { useKeyPress } from 'ahooks'
 import { MenuItemType } from 'antd/es/menu/hooks/useItems'
 import { RootObject, SubItem } from './type'
+import TranslateModal from '../../components/TranslateModal'
+import ExplainModal from '../../components/ExplainModal'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -32,6 +34,11 @@ export default function index() {
   const [isUserChangingLocation, setIsUserChangingLocation] = useState(false);
   const [error, setError] = useState<boolean>(false)
   const [epubHooks, setEpubHooks] = useState<Function[]>([])
+  const [copiedText, setCopiedText] = useState<string>()
+  const [floatOpen, setFloatOpen] = useState<boolean>(true)
+
+  const [translatorOpen, setTranslatorOpen] = useState<boolean>(false)
+  const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
 
 
   const [menuItems, setMenuItems] = useState<MenuItemType[]>()
@@ -71,7 +78,7 @@ export default function index() {
 
   const { run: keyUpHandler } = useThrottleFn((e) => {
     console.log(e);
-    
+
     if (e.keyCode === 38) {
       // 向上
       rendition?.prev()
@@ -85,8 +92,21 @@ export default function index() {
 
   const rendition_rendered_handler = useCallback(() => {
     const contents = rendition.getContents() as any as Contents[]
-    for(const content of contents) {
+    for (const content of contents) {
       content.document.addEventListener('wheel', wheelHandler)
+      content.document.addEventListener('copy', async (e) => {
+        try {
+          const res = await content.window.navigator.clipboard.readText()
+          // console.log(res);
+          message.success('复制成功')
+          setCopiedText(res)
+        } catch (error) {
+          console.error(error instanceof Error ? error.message : error)
+          message.error('粘贴失败')
+        }
+
+
+      })
       console.log('wheel event listenning~')
     }
   }, [rendition])
@@ -125,7 +145,7 @@ export default function index() {
         }
         setBookInfo(book_info)
         const tempBook = ePub(book_blob.blob?.buffer, {})
-        
+
         setBook(tempBook)
         tempBook.ready.then(() => {
           tempBook.locations.generate(512)
@@ -191,6 +211,34 @@ export default function index() {
 
   return (
     <Spin spinning={bookLoading}>
+      <ExplainModal
+        open={explainerOpen}
+        onCancel={() => setExplainerOpen(false)}
+        text={copiedText}
+      >
+
+      </ExplainModal>
+      <TranslateModal
+        open={translatorOpen}
+        onCancel={() => setTranslatorOpen(false)}
+        text={copiedText}
+      ></TranslateModal>
+      <FloatButton.Group
+        open={floatOpen}
+        shape="square" 
+        trigger="click"
+        icon={<MoreOutlined />}
+        onOpenChange={setFloatOpen}
+        type='primary'
+        // badge={{ dot: true }}
+        style={{ right: 24 , bottom: 24}}>
+        <FloatButton
+          onClick={() => setExplainerOpen(true)}
+          icon={<BulbOutlined />} type="primary" />
+        <FloatButton
+          onClick={() => setTranslatorOpen(true)}
+          icon={<TranslationOutlined />} type="primary" />
+      </FloatButton.Group>
 
       {error
         ? <Row
