@@ -26,16 +26,16 @@ export default defineConfig({
         background_color: '#ffffff',
         icons: [
           {
-            src: '/icon/si_reader_icon1.png',
+            src: '/icon/favicon.ico',
             type: 'image/png', 
           },
           {
-            src: '/icon/si_reader_icon2.png',
+            src: '/icon/android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/icon/si_reader_icon3.png',
+            src: '/icon/android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },
