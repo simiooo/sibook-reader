@@ -1,4 +1,4 @@
-import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message } from 'antd'
+import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider } from 'antd'
 import { Document, Outline, Page } from 'react-pdf';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -37,6 +37,7 @@ export default function PdfReader() {
   const db_instance = useBookState(state => state.db_instance)
   const [bookInfo, setBookInfo] = useState<BookItems>()
   const pdf_document_ref = useRef()
+  const [switchOpen, setSwitchOpen] = useState<boolean>(true)
   const navigate = useNavigate()
   const [dragableDisabled, setDragableDisabled] = useState<boolean>(true)
   const container_ref = useRef(null)
@@ -89,7 +90,7 @@ export default function PdfReader() {
   }, [])
 
   useKeyPress('uparrow', () => {
-    setPageNumber(Math.max(1 , pageNumber - 1))
+    setPageNumber(Math.max(1, pageNumber - 1))
   })
   useKeyPress(40, () => {
     setPageNumber(Math.min(numPages, pageNumber + 1))
@@ -201,21 +202,34 @@ export default function PdfReader() {
           align={'middle'}
         >
           <Col>
-            <p><Breadcrumb
-              items={[
-                {
-                  title: <a type="link"><HomeOutlined /></a>,
-                  onClick: () => navigate('/')
-                },
-                {
-                  title: '该书籍',
-                }
-              ]}
-            ></Breadcrumb></p>
+            <Space>
+              
+              <Breadcrumb
+                items={[
+                  {
+                    title: <a type="link"><HomeOutlined /></a>,
+                    onClick: () => navigate('/')
+                  },
+                  {
+                    title: '该书籍',
+                  }
+                ]}
+              ></Breadcrumb>
+              <Divider
+              type="vertical"
+              ></Divider>
+              <Switch 
+              checkedChildren="目录（开）" 
+              unCheckedChildren="目录（关）" 
+              defaultChecked 
+              checked={switchOpen}
+              onChange={setSwitchOpen}
+              />
+            </Space>
 
           </Col>
           <Col>
-            <p>{bookInfo?.name}</p>
+            <h3>{bookInfo?.name}</h3>
           </Col>
         </Row>
       </Col>
@@ -225,7 +239,8 @@ export default function PdfReader() {
             width: '100%'
           }}
         >
-          <Col
+          {
+            switchOpen ? <Col
             xxl={4}
             xl={4}
             lg={6}
@@ -250,15 +265,18 @@ export default function PdfReader() {
               }}
             ></Menu>
           </Col>
+          : undefined  
+          }
+          
           <Col
-            sm={16}
-            xs={16}
-            xl={20}
-            md={16}
-            lg={18}
-            span={20}
+            // sm={16}
+            // xs={16}
+            // xl={20}
+            // md={16}
+            // lg={18}
+            // span={20}
+            flex={'1 1'}
           >
-
             <div
               ref={container_ref}
               className={style.pdf_container}

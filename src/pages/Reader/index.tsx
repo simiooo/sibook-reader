@@ -1,4 +1,4 @@
-import { Button, Col, FloatButton, Menu, Result, message } from 'antd'
+import { Button, Col, Divider, FloatButton, Menu, Result, Space, Switch, message } from 'antd'
 import { Row } from 'antd'
 import { Key, useCallback, useEffect, useRef, useState } from 'react'
 import style from './index.module.css'
@@ -37,6 +37,7 @@ export default function index() {
   const [epubHooks, setEpubHooks] = useState<Function[]>([])
   const [copiedText, setCopiedText] = useState<string>()
   const [floatOpen, setFloatOpen] = useState<boolean>(true)
+  const [switchOpen, setSwitchOpen] = useState<boolean>(true)
 
   const [translatorOpen, setTranslatorOpen] = useState<boolean>(false)
   const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
@@ -101,6 +102,11 @@ export default function index() {
       }
     }
   }
+
+
+  useEffect(() => {
+    rendition?.resize?.()
+  }, [switchOpen])
 
   const rendition_rendered_handler = useCallback(() => {
     
@@ -263,7 +269,7 @@ export default function index() {
               align={'middle'}
             >
               <Col>
-                <p><Breadcrumb
+                <Space><Breadcrumb
                   items={[
                     {
                       title: <a type="link"><HomeOutlined /></a>,
@@ -274,11 +280,22 @@ export default function index() {
                       // onClick: () => reload()
                     }
                   ]}
-                ></Breadcrumb></p>
+                ></Breadcrumb>
+                <Divider
+              type="vertical"
+              ></Divider>
+              <Switch 
+              checkedChildren="目录（开）" 
+              unCheckedChildren="目录（关）" 
+              defaultChecked 
+              checked={switchOpen}
+              onChange={setSwitchOpen}
+              />
+                </Space>
 
               </Col>
               <Col>
-                <p>{bookInfo?.name}</p>
+                <h3>{bookInfo?.name}</h3>
               </Col>
             </Row>
           </Col>
@@ -286,7 +303,7 @@ export default function index() {
             span={24}
           >
             <Row wrap={false}>
-              <Col
+              {switchOpen ? <Col
                 xxl={4}
                 xl={4}
                 lg={6}
@@ -294,6 +311,9 @@ export default function index() {
                 span={4}
                 sm={8}
                 xs={8}
+                style={{
+                  display: switchOpen ? undefined : 'none'
+                }}
               >
                 <div
                   className={style.menu_container}
@@ -314,13 +334,17 @@ export default function index() {
                 </div>
 
               </Col>
+            : undefined  
+            }
               <Col
-                sm={16}
-                xs={16}
-                xl={20}
-                md={16}
-                lg={18}
-                span={20}>
+                // sm={16}
+                // xs={16}
+                // xl={20}
+                // md={16}
+                // lg={18}
+                // span={20}
+                flex="1 1"
+                >
                 <div
                   id={'article'}
                   ref={container_ref}

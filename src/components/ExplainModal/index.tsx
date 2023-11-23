@@ -1,6 +1,5 @@
 import { Col, Input, List, Modal, ModalProps, Row, Spin, Alert, Form, Select, Divider } from 'antd';
 import React, { useEffect, useMemo, useState } from 'react'
-import VirtualList from 'rc-virtual-list';
 import { ChatCompletion, OPENAI_PATHNAME, openai_stream_reader, useBookState } from '../../store';
 import { useAntdTable, useRequest } from 'ahooks';
 import { languages } from '../../utils/locale';
@@ -33,6 +32,9 @@ export default function ExplainModal(p: ExplainModalProps) {
                     message: p.text,
                 }
             })
+            if(openai_res.status !== 200) {
+                throw Error(openai_res.statusText?.length > 0 ? openai_res.statusText : '服务端异常, 请检查ai辅助设置是否正确')
+            }
             const reader = openai_res.body.getReader();
             openai_stream_reader(reader, (line) => {
                 if (line.startsWith('data:')) {
