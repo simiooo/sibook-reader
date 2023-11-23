@@ -20,6 +20,7 @@ import { MenuItemType } from 'antd/es/menu/hooks/useItems'
 import { RootObject, SubItem } from './type'
 import TranslateModal from '../../components/TranslateModal'
 import ExplainModal from '../../components/ExplainModal'
+import FloatAiMenu from '../../components/FloatAiMenu'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -214,34 +215,17 @@ export default function index() {
 
   return (
     <Spin spinning={bookLoading}>
-      <ExplainModal
-        open={explainerOpen}
-        onCancel={() => setExplainerOpen(false)}
-        text={copiedText}
-      >
-
-      </ExplainModal>
-      <TranslateModal
-        open={translatorOpen}
-        onCancel={() => setTranslatorOpen(false)}
-        text={copiedText}
-      ></TranslateModal>
-      <FloatButton.Group
-        open={floatOpen}
-        shape="square" 
-        trigger="click"
-        icon={<MoreOutlined />}
-        onOpenChange={setFloatOpen}
-        type='primary'
-        // badge={{ dot: true }}
-        style={{ right: 24 , bottom: 24}}>
-        <FloatButton
-          onClick={() => setExplainerOpen(true)}
-          icon={<BulbOutlined />} type="primary" />
-        <FloatButton
-          onClick={() => setTranslatorOpen(true)}
-          icon={<TranslationOutlined />} type="primary" />
-      </FloatButton.Group>
+      <FloatAiMenu
+      copiedText={copiedText}
+      translator={{
+        value: translatorOpen,
+        onCancel: setTranslatorOpen
+      }}
+      explainer={{
+        value: explainerOpen,
+        onCancel: setExplainerOpen
+      }}
+      ></FloatAiMenu>
 
       {error
         ? <Row
