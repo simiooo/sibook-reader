@@ -104,9 +104,9 @@ export default function index() {
   }
 
 
-  useEffect(() => {
-    rendition?.resize?.()
-  }, [switchOpen])
+  // useEffect(() => {
+  //   rendition?.resize?.()
+  // }, [switchOpen])
 
   const rendition_rendered_handler = useCallback(() => {
     
