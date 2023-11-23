@@ -26,7 +26,7 @@ export default defineConfig({
         background_color: '#ffffff',
         icons: [
           {
-            src: '/icon/favicon.ico',
+            src: '/icon/favicon.png',
             type: 'image/png', 
           },
           {
