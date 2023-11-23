@@ -1,8 +1,9 @@
-import { Modal, ModalProps, Divider, Row, Col, Spin, Alert, Input } from 'antd';
-import React, { useEffect, useState } from 'react'
-import { ChatCompletion, useBookState } from '../../store';
-import { useRequest } from 'ahooks';
+import { Modal, ModalProps, Divider, Row, Col, Spin, Alert, Input, Select, Form } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react'
+import { ChatCompletion, openai_stream_reader, useBookState } from '../../store';
+import { useAntdTable, useRequest } from 'ahooks';
 import style from './index.module.css'
+import { languages } from '../../utils/locale';
 
 export interface TranslateModalProps extends ModalProps {
     text?: string;
@@ -10,35 +11,62 @@ export interface TranslateModalProps extends ModalProps {
 
 export default function TranslateModal(p: TranslateModalProps) {
     const { text, ...modalProps } = p
-    const [res, setRes] = useState<string>()
+    const [res, setRes] = useState<string[]>([])
     const [error, setError] = useState<Error>()
     const request = useBookState(state => state.openaiRequest)
+    const [form] = Form.useForm()
 
-    const { loading } = useRequest(async () => {
+    const { loading, search } = useAntdTable(async (_, params) => {
         setError(undefined)
+        setRes([])
+        let res = []
         if (!p.text || !p.open) {
             return
         }
+        if (!params?.target) {
+            return
+        }
         try {
-            const res = await request({
+            const openai_res = await request({
                 type: 'translator',
                 message: {
-                    source: '英语',
-                    target: '中文',
+                    source: params?.source ?? '任意',
+                    target: params?.target ?? '中文',
                     message: p?.text
                 }
             })
-            const answer = (await res.json()) as ChatCompletion
-            setRes(answer?.choices?.[0]?.message?.content)
+            const reader = openai_res.body.getReader();
+
+            openai_stream_reader(reader, (line) => {
+                if (line.startsWith('data:')) {
+                    const data = line.replace('data: ', '');
+                    if (data === '[DONE]') {
+
+                    } else {
+                        const json_data = JSON.parse(data)
+                        res.push(json_data?.choices?.[0]?.delta?.content)
+                        setRes([...res])
+                    }
+                }
+            })
         } catch (error) {
             setError(error instanceof Error ? error : Error(error))
         }
+        return {
+            list: [],
+            total: 0,
+        }
     }, {
+        form: form,
         refreshDeps: [
             p.text,
             p.open
         ]
     })
+
+    const renderRes = useMemo(() => {
+        return `${res.join('')}${loading ? '_' : ''}`
+    }, [res, loading])
     return (
         <Modal
             {...modalProps}
@@ -46,36 +74,66 @@ export default function TranslateModal(p: TranslateModalProps) {
             width={'80vw'}
             title="翻译"
         >
-            <Row
-                gutter={[16, 16]}
+            <Form
+                form={form}
+                onValuesChange={() => {
+                    search.submit()
+                }}
             >
-                <Col span={12}>
-                    <Input.TextArea
-                        value={p.text}
-                        placeholder={'请复制内容'}
-                        // disabled
-                        rows={16}
-                    ></Input.TextArea>
-
-                </Col>
-                <Col span={12}>
-                    <Spin
-                        spinning={loading}
-                    >
+                <Row
+                    gutter={[16, 16]}
+                >
+                    <Col span={12}>
                         <Input.TextArea
-                            value={res}
+                            value={p.text}
+                            placeholder={'请复制内容'}
                             // disabled
                             rows={16}
                         ></Input.TextArea>
-                    </Spin>
-                </Col>
-                {
-                    error ? <Alert
-                        type='error'
-                        message={error.message}
-                    ></Alert> : undefined
-                }
-            </Row>
+                        <div style={{ height: '1rem' }}></div>
+                        <Form.Item
+                            noStyle
+                            name="source"
+                        >
+                            <Select
+                                placeholder='请选择待翻译语言'
+                                options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
+                            ></Select>
+                        </Form.Item>
+
+                    </Col>
+                    <Col span={12}>
+                        <Spin
+                            spinning={loading}
+                        >
+                            <Input.TextArea
+                                value={renderRes}
+                                // disabled
+                                rows={16}
+                            ></Input.TextArea>
+                            <div style={{ height: '1rem' }}></div>
+
+                            <Form.Item
+                                noStyle
+                                name="target"
+                            >
+                                <Select
+                                    placeholder='请选择目标语言'
+                                    options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
+                                ></Select>
+                            </Form.Item>
+
+                        </Spin>
+                    </Col>
+                    {
+                        error ? <Alert
+                            type='error'
+                            message={error.message}
+                        ></Alert> : undefined
+                    }
+                </Row>
+            </Form>
+
             <Divider></Divider>
         </Modal>
     )

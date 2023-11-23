@@ -1,8 +1,9 @@
 import { Col, Input, List, Modal, ModalProps, Row, Spin, Alert, Form, Select, Divider } from 'antd';
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import VirtualList from 'rc-virtual-list';
-import { ChatCompletion, useBookState } from '../../store';
+import { ChatCompletion, OPENAI_PATHNAME, openai_stream_reader, useBookState } from '../../store';
 import { useAntdTable, useRequest } from 'ahooks';
+import { languages } from '../../utils/locale';
 
 export interface ExplainModalProps extends ModalProps {
     text?: string;
@@ -10,28 +11,45 @@ export interface ExplainModalProps extends ModalProps {
 
 export default function ExplainModal(p: ExplainModalProps) {
     const { text, ...modalProps } = p
-    const [res, setRes] = useState<string>()
+    const [res, setRes] = useState<string[]>([])
+
     const [error, setError] = useState<Error>()
     const request = useBookState(state => state.openaiRequest)
     const [form] = Form.useForm()
 
-    const { loading, runAsync, search } = useAntdTable(async ({}, params) => {
+
+    const { loading, runAsync, search } = useAntdTable(async ({ }, params) => {
         setError(undefined)
-        if (!p.text || !p.open) {
+        let res = []
+        if (!p.text || !p.open || !params?.language) {
             return
         }
+        
         try {
-            const res = await request({
+            const openai_res = await request({
                 type: 'explainer',
                 message: {
-                    language: params?.language ?? 'English',
+                    language: params?.language,
                     message: p.text,
                 }
             })
-            const answer = (await res.json()) as ChatCompletion
-            setRes(answer?.choices?.[0]?.message?.content)
+            const reader = openai_res.body.getReader();
+            openai_stream_reader(reader, (line) => {
+                if (line.startsWith('data:')) {
+                    const data = line.replace('data: ', '');
+                    if (data === '[DONE]') {
+
+                    } else {
+                        const json_data = JSON.parse(data)
+                        res.push(json_data?.choices?.[0]?.delta?.content)
+                        setRes([...res])
+                    }
+                }
+            })
         } catch (error) {
             setError(error instanceof Error ? error : Error(error))
+        } finally {
+            setRes([])
         }
         return {
             list: [],
@@ -40,10 +58,14 @@ export default function ExplainModal(p: ExplainModalProps) {
     }, {
         refreshDeps: [
             p.text,
-            p.open
+            p.open,
         ],
         form
     })
+
+    const renderRes = useMemo(() => {
+        return `${res.join('')}${loading ? '_' : ''}`
+    }, [res, loading])
 
     return (
         <Modal
@@ -67,35 +89,22 @@ export default function ExplainModal(p: ExplainModalProps) {
                         <Spin spinning={loading}>
                             <Input.TextArea
                                 rows={10}
-                                value={res}
+                                value={renderRes}
                             ></Input.TextArea>
                         </Spin>
                         <div
-                        style={{height: '1rem'}}
+                            style={{ height: '1rem' }}
                         > </div>
                         <Form.Item
                             noStyle
                             name="language"
                         >
                             <Select
-                            placeholder={'请选择选择语言'}
-                            style={{
-                                width: '210px'
-                            }}
-                            options={[
-                                {
-                                    label: '英语（美式）',
-                                    value: 'en_US'
-                                },
-                                {
-                                    label: '简体中文',
-                                    value: 'zh_CN'
-                                },
-                                {
-                                    label: '日语',
-                                    value: 'ja_JP'
-                                },
-                            ]}
+                                placeholder={'请选择选择语言'}
+                                style={{
+                                    width: '210px'
+                                }}
+                                options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
                             ></Select>
                         </Form.Item>
                     </Col>

@@ -77,8 +77,6 @@ export default function index() {
   })
 
   const { run: keyUpHandler } = useThrottleFn((e) => {
-    console.log(e);
-
     if (e.keyCode === 38) {
       // 向上
       rendition?.prev()
@@ -106,14 +104,13 @@ export default function index() {
   const rendition_rendered_handler = useCallback(() => {
     
     const contents = rendition.getContents() as any as Contents[]
+    // const handlerContainer: Function[] = []
     for (const content of contents) {
-      const copyHandler = copyHandlerFactory(content)
-      // content.document.removeEventListener('wheel', wheelHandler)
-      // content.document.removeEventListener('copy', copyHandler)
-      // content.document.addEventListener('wheel', wheelHandler)
-      // content.document.addEventListener('copy', copyHandler)
+      let copyHandler = copyHandlerFactory(content)
+      // handlerContainer.push(copyHandler)
       content.document.onwheel = wheelHandler
       content.document.oncopy = copyHandler
+      copyHandler = null
     }
   }, [rendition])
 

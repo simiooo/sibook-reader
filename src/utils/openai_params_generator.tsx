@@ -9,14 +9,16 @@ export function translator(params: {
         "messages": [
             {
                 "role": "user",
-                "content": `下面我让你来充当翻译家，你的目标是把${params?.source ?? '任意'}语言翻译成${params?.target ?? '英语'}，请使用古典主义式的、禅院僧侣式的严谨学术态度进行翻译。请翻译下面这句话：${params?.message ?? '这是一条测试消息。当您看到该消息时，说明翻译失败'}`
+                "content": `下面我让你来充当翻译家，回答中只需要有翻译产物，不要带有无关内容。你的目标是把${params?.source ?? '任意'}语言翻译成${params?.target ?? '英语'}，请使用亚里士多德古典主义式的、禅院僧侣式的严谨学术态度进行翻译。请翻译下面这句话：${params?.message ?? '这是一条测试消息。当您看到该消息时，说明翻译失败'}`
             },
         ],
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-3.5-turbo-1106",
         "temperature": 0.5,
         "presence_penalty": 0,
         "frequency_penalty": 0,
-        "top_p": 1
+        "top_p": 1,
+        "max_tokens": 4096,
+        stream: true,
     }
 }
 
@@ -28,13 +30,16 @@ export function explainer(params: {
         "messages": [
             {
                 "role": "user",
-                "content": `Please play a role as professor to help me understand the statement below(reponse in ${params?.language ?? 'English'} language): ${params?.message}`
+                "content": `Tell me more about statement below in professional way, so i can understand the statement more carefully . If possible , you can act like Learned, Walter Bendix Schönflies Benjamin intellectuals or philosophers . Do not say anything unrelated to the statement . Here is the statement (answer in ${params?.language ?? 'English'} language): ${params?.message}`
             },
         ],
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-3.5-turbo-1106",
         "temperature": 0.5,
         "presence_penalty": 0,
         "frequency_penalty": 0,
-        "top_p": 1
+        "top_p": 1,
+        "max_tokens": 4096,
+        stream: true,
+
     }
 }

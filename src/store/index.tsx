@@ -4,7 +4,7 @@ import { message } from "antd";
 import { explainer, translator } from "../utils/openai_params_generator";
 import { subscribeWithSelector } from 'zustand/middleware'
 const OPENAI_BASE_URL = 'https://api.openai.com'
-const OPENAI_PATHNAME = '/v1/chat/completions'
+export const OPENAI_PATHNAME = '/v1/chat/completions'
 const OPENAI_HEADERS = new Headers()
 OPENAI_HEADERS.append('Content-Type', 'application/json')
 
@@ -72,3 +72,33 @@ useBookState.subscribe((state) => {
 })
 
 
+export function openai_stream_reader(
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    cb: (line: string) => void,
+    ) {
+    return new ReadableStream({
+        start(controller) {
+            function push() {
+                reader.read().then(({ done, value }) => {
+                    if (done) {
+                        controller.close();
+                        return;
+                    }
+                    // 将 Uint8Array 转换为字符串
+                    const string = new TextDecoder().decode(value, { stream: true });
+                    // 处理可能的多行数据
+                    const lines = string.split('\n');
+                    lines.forEach(line => {
+                        cb?.(line)
+                    });
+                    controller.enqueue(value);
+                    push();
+                }).catch(err => {
+                    console.error('Stream reading error:', err);
+                    controller.error(err);
+                });
+            }
+            push();
+        }
+    });
+}
