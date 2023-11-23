@@ -84,6 +84,7 @@ export default function ExplainModal(p: ExplainModalProps) {
                     <Col span="12">
                         <Input.TextArea
                             rows={12}
+                            showCount
                             value={p.text}
                         ></Input.TextArea>
                     </Col>
@@ -91,6 +92,7 @@ export default function ExplainModal(p: ExplainModalProps) {
                         <Spin spinning={loading}>
                             <Input.TextArea
                                 rows={10}
+                                showCount
                                 value={renderRes}
                             ></Input.TextArea>
                         </Spin>

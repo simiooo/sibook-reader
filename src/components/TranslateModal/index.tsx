@@ -90,7 +90,7 @@ export default function TranslateModal(p: TranslateModalProps) {
                         <Input.TextArea
                             value={p.text}
                             placeholder={'请复制内容'}
-                            // disabled
+                            showCount
                             rows={16}
                         ></Input.TextArea>
                         <div style={{ height: '1rem' }}></div>
@@ -111,7 +111,7 @@ export default function TranslateModal(p: TranslateModalProps) {
                         >
                             <Input.TextArea
                                 value={renderRes}
-                                // disabled
+                                showCount
                                 rows={16}
                             ></Input.TextArea>
                             <div style={{ height: '1rem' }}></div>
