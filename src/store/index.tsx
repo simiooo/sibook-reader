@@ -62,7 +62,6 @@ export const useBookState = create<BookStateType>((set, get) => {
 })
 
 useBookState.subscribe((state) => {
-    console.log(state)
     if(state.openai_api_key && state.openai_api_key !== localStorage.getItem('openai_api_key')) {
         localStorage.setItem('openai_api_key', state.openai_api_key)
     }

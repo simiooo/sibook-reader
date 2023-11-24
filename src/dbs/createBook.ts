@@ -51,7 +51,6 @@ export async function uploadBook(
         hash,
       }],
     });
-    console.log('4');
 
     const res_blob = await ctx?.insert({
       into: "BookBlob",
@@ -61,7 +60,6 @@ export async function uploadBook(
         blob: file,
       }],
     });
-    console.log('5');
 
     if (res && res_blob) {
       info.onSuccess?.(res);

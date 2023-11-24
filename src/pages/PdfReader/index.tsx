@@ -342,7 +342,7 @@ export default function PdfReader() {
                     ></Result>}
                     file={blob}
                     onItemClick={(e) => {
-                      
+                      // setIsUserChangePageNumber(true)
                       setPageNumber(e.pageNumber)
                     }}
                     onLoadSuccess={onDocumentLoadSuccess}

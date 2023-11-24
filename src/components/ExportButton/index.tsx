@@ -1,5 +1,5 @@
 import { useRequest } from 'ahooks';
-import { Button } from 'antd'
+import { Button, message } from 'antd'
 import React from 'react'
 import { useBookState } from '../../store';
 
@@ -15,25 +15,55 @@ const download = async (obj: {
     let a_tag: HTMLAnchorElement | null = document.createElement('a')
     a_tag.href = url
     a_tag.download = obj.name ?? '未命名'
-    a_tag.click
+    a_tag.click()
     setTimeout(() => {
         URL.revokeObjectURL(url)
         a_tag = null
     }, 200);
 }
 
+export function useExport() {
+    const db_instance = useBookState(state => state.db_instance)
+    const { runAsync: exportFile, loading } = useRequest(async (keys?: string[]) => {
+        if (!keys) {
+            return
+        }
+        
+        try {
+            await db_instance?.transaction('rw', db_instance.book_blob, db_instance.book_items, async () => {
+                const records = await db_instance.book_items.where('hash').anyOf([...keys].filter(val => val)).toArray()
+                
+                for await (const record of records) {
+                    download({
+                        blob: (await db_instance.book_blob.get(record.hash))?.blob,
+                        name: record.name
+                    })
+                }
+            })
+            message.success('下载成功')
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : error)
+        }
+        
+    }, {
+        manual: true,
+    })
+    return {
+        exportFile,
+        loading,
+    }
+}
+
 export default function ExportButton(p: ExportButtonProps) {
     const db_instance = useBookState(state => state.db_instance)
     const { runAsync: exportFile, loading } = useRequest(async () => {
-        await db_instance?.transaction('rw', db_instance.book_blob, db_instance.book_items, async () => {
-            const records = await db_instance.book_items.where('hash').anyOf([...p.keys].filter(val => val)).toArray()
-            for await (const record of records) {
-                download({
-                    blob: (await db_instance.book_blob.get(record.hash))?.blob,
-                    name: record.name
-                })
-            }
-        })
+        try {
+            await db_instance?.transaction('rw', db_instance.book_blob, db_instance.book_items, async () => {
+                const records = await db_instance.book_items.where('hash').anyOf([...p.keys].filter(val => val)).toArray()
+            })
+        } catch (error) {
+        }
+        
     }, {
         manual: true,
     })
@@ -42,7 +72,7 @@ export default function ExportButton(p: ExportButtonProps) {
 
     return (
         <Button
-        type="link"
+            type="link"
             onClick={exportFile}
             loading={loading}
         >导出按钮</Button>

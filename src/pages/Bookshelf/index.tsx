@@ -1,6 +1,6 @@
 import { Button, Col, Space } from "antd";
 import { Row } from "antd";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { FileTextTwoTone } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
@@ -15,8 +15,8 @@ import { Dropdown } from "antd";
 import { useUpload } from "../../utils/useUpload";
 import { message } from "antd";
 import { useSet } from "ahooks";
-import DropButton from "../../components/DropButton";
-import ExportButton from "../../components/ExportButton";
+import DropButton, { useDropBook } from "../../components/DropButton";
+import ExportButton, { useExport } from "../../components/ExportButton";
 import { ItemType } from "antd/es/breadcrumb/Breadcrumb";
 import { Alert } from "antd";
 import GPTSetting from "../../components/GPTSetting";
@@ -56,42 +56,44 @@ export default function index() {
     }, [listLoading, uploadLoading])
 
     const [selected, { add, remove }] = useSet<string | undefined>([])
+    const { exportFile } = useExport()
+    const { drop } = useDropBook()
+
+    const contextmenuSelectedHandler = useCallback(async (type?: string) => {
+        switch (type) {
+            case 'drop':
+                await drop(Array.from(selected))
+                runAsync()
+                break;
+            case 'export':
+                await exportFile(Array.from(selected))
+                runAsync()
+                break;
+        }
+    }, [selected])
 
     const contextmenuList = useMemo<ItemType[]>(() => {
         let result: any[] = []
         switch (selected.size) {
             case 0:
                 result = [
-
-                ]
-                break;
-            case 1:
-                result = [
-
-                    {
-                        label: <DropButton
-                            keys={selected}
-                        ></DropButton>
-                    },
-                    {
-                        label: <ExportButton
-                            keys={selected}
-                        ></ExportButton>
-                    },
+                    {label: '请选择',
+                    value: 'undefined',
+                    key: 'undefined',}
                 ]
                 break;
             default:
                 result = [
 
                     {
-                        label: <DropButton
-                            keys={selected}
-                        ></DropButton>
+                        label: '删除',
+                        value: 'drop',
+                        key: 'drop',
                     },
                     {
-                        label: <ExportButton
-                            keys={selected}
-                        ></ExportButton>
+                        label: '导出',
+                        value: 'export',
+                        key: 'export',
                     },
                 ]
         }
@@ -105,63 +107,59 @@ export default function index() {
             ref={containerRef}
         >
             <GPTSetting
-            open={aiOpen}
-            onCancel={() => setAiOpen(false)}
-            onOk={() => setAiOpen(false)}
+                open={aiOpen}
+                onCancel={() => setAiOpen(false)}
+                onOk={() => setAiOpen(false)}
             ></GPTSetting>
             <Spin spinning={loading}>
-                <Dropdown
-                    menu={{ items: contextmenuList as any }}
-                    trigger={['contextMenu']}
-                    dropdownRender={(menu) => {
-                        return selected.size > 1 ? menu : <Alert
-                            message={'请选择'}
-                        ></Alert>
-                    }}
-                >
-                    <Content className={style.content}>
-                        <Row gutter={[20, 32]}>
-                            <Col span={24}>
-                                <Row justify={'end'}>
-                                    <Col >
-                                        <Space>
-                                            <BookNewButton
-                                                onChange={async () => {
-                                                    runAsync()
-                                                }}
-                                            ></BookNewButton>
-                                            <Button
-                                                type="link"
-                                                onClick={() => {setAiOpen(true)}}
-                                            >
-                                                ai 辅助设置
-                                            </Button>
 
-                                        </Space>
+                <Content className={style.content}>
+                    <Row gutter={[20, 32]}>
+                        <Col span={24}>
+                            <Row justify={'end'}>
+                                <Col >
+                                    <Space>
+                                        <BookNewButton
+                                            onChange={async () => {
+                                                runAsync()
+                                            }}
+                                        ></BookNewButton>
+                                        <Button
+                                            type="link"
+                                            onClick={() => { setAiOpen(true) }}
+                                        >
+                                            ai 辅助设置
+                                        </Button>
 
-                                    </Col>
-                                </Row>
-                            </Col>
-                            <Col span={24}>
-                                <Row gutter={[20, 20]}>
-                                    <Col span={24}>
-                                        <BookItemList
-                                            data={list}
-                                            selected={selected}
-                                            onAdd={add}
-                                            onRemove={remove}
-                                        ></BookItemList>
-                                    </Col>
-                                </Row>
-                            </Col>
-                            <Col span={24}>
-                                <Row>
-                                    <Col></Col>
-                                </Row>
-                            </Col>
-                        </Row>
-                    </Content>
-                </Dropdown>
+                                    </Space>
+
+                                </Col>
+                            </Row>
+                        </Col>
+                        <Col span={24}>
+                            <Row gutter={[20, 20]}>
+                                <Col span={24}>
+                                    <BookItemList
+                                        data={list}
+                                        selected={selected}
+                                        onAdd={add}
+                                        onRemove={remove}
+                                        contextmenuList={contextmenuList}
+                                        onContextmenuSelect={(e) => {
+                                            contextmenuSelectedHandler(e?.type)
+                                        }}
+                                    ></BookItemList>
+                                </Col>
+                            </Row>
+                        </Col>
+                        <Col span={24}>
+                            <Row>
+                                <Col></Col>
+                            </Row>
+                        </Col>
+                    </Row>
+                </Content>
+
             </Spin>
 
             {dropModalOpen && <div

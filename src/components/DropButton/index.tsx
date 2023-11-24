@@ -1,4 +1,4 @@
-import { Button } from 'antd'
+import { Button, message } from 'antd'
 import React from 'react'
 import { useBookState } from '../../store'
 import { useRequest } from 'ahooks'
@@ -6,6 +6,30 @@ import { Popconfirm } from 'antd';
 
 interface DropButtonProps extends React.RefAttributes<HTMLElement> {
     keys: Set<string | undefined>;
+}
+
+export function useDropBook() {
+    const db_instance = useBookState(state => state.db_instance)
+    const { runAsync: drop, loading } = useRequest(async (keys?: string[]) => {
+        if (!keys) {
+            return
+        }
+        try {
+            await db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
+                await db_instance.book_items.where('hash').anyOf(keys).delete()
+                await db_instance.book_blob.where('id').anyOf(keys).delete()
+            })
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : error)
+        }
+
+    }, {
+        manual: true
+    })
+    return {
+        drop,
+        loading,
+    }
 }
 
 export default function DropButton(p: DropButtonProps) {
@@ -24,11 +48,11 @@ export default function DropButton(p: DropButtonProps) {
     })
     return (
         <Popconfirm
-        title="确认删除吗？"
-        onConfirm={() => {
-            drop()
-        }}
-        okType='danger'
+            title="确认删除吗？"
+            onConfirm={() => {
+                drop()
+            }}
+            okType='danger'
         >
 
             <Button
@@ -36,7 +60,7 @@ export default function DropButton(p: DropButtonProps) {
                 type="link"
                 danger
                 loading={loading}
-                
+
             >删除</Button>
         </Popconfirm>
 
