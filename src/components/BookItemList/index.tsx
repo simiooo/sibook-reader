@@ -57,14 +57,7 @@ export default function BookItemList(p: BookItemListProps) {
                             }}
                             id={ele.key}
                         >
-                            {/* <Button 
-                            size='large'
-                            type="link"
-                            danger={ele.key === 'drop'}
-                            > */}
-                                {ele.label}
-                            {/* </Button> */}
-
+                            {ele.label}
                         </CItem>
                     ))
                 }
