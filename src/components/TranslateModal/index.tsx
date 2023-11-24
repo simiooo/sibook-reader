@@ -35,7 +35,7 @@ export default function TranslateModal(p: TranslateModalProps) {
                     message: p?.text
                 }
             })
-            if(openai_res.status !== 200) {
+            if (openai_res.status !== 200) {
                 throw Error(openai_res.statusText?.length > 0 ? openai_res.statusText : '服务端异常, 请检查ai辅助设置是否正确')
             }
             const reader = openai_res.body.getReader();
@@ -99,6 +99,8 @@ export default function TranslateModal(p: TranslateModalProps) {
                             name="source"
                         >
                             <Select
+                                showSearch
+                                filterOption={true}
                                 placeholder='请选择待翻译语言'
                                 options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
                             ></Select>
@@ -121,6 +123,8 @@ export default function TranslateModal(p: TranslateModalProps) {
                                 name="target"
                             >
                                 <Select
+                                    showSearch
+                                    filterOption={true}
                                     placeholder='请选择目标语言'
                                     options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
                                 ></Select>
