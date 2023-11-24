@@ -5,6 +5,9 @@ import 'normalize.css'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
 import { ConfigProvider } from 'antd'
+import { inject } from '@vercel/analytics';
+
+inject()
 
 const green = '#80aa51'
 
