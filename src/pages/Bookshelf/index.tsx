@@ -1,7 +1,7 @@
-import { Button, Col, Space } from "antd";
+import { Button, Col, Result, Space, Divider } from 'antd';
 import { Row } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FileTextTwoTone } from '@ant-design/icons'
+import { FileTextTwoTone, SmileOutlined } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
@@ -77,9 +77,11 @@ export default function index() {
         switch (selected.size) {
             case 0:
                 result = [
-                    {label: '请选择',
-                    value: 'undefined',
-                    key: 'undefined',}
+                    {
+                        label: '请选择',
+                        value: 'undefined',
+                        key: 'undefined',
+                    }
                 ]
                 break;
             default:
@@ -137,9 +139,9 @@ export default function index() {
                             </Row>
                         </Col>
                         <Col span={24}>
-                            <Row gutter={[20, 20]}>
+                            <Row justify={'center'} gutter={[20, 20]}>
                                 <Col span={24}>
-                                    <BookItemList
+                                    {list?.length > 0 ? <BookItemList
                                         data={list}
                                         selected={selected}
                                         onAdd={add}
@@ -148,7 +150,13 @@ export default function index() {
                                         onContextmenuSelect={(e) => {
                                             contextmenuSelectedHandler(e?.type)
                                         }}
-                                    ></BookItemList>
+                                    ></BookItemList> : <div>
+                                        <Divider></Divider>
+                                        <Result
+                                            icon={<SmileOutlined />}
+                                            title="请上传书籍~"
+                                        />
+                                    </div>}
                                 </Col>
                             </Row>
                         </Col>

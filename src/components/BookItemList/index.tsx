@@ -11,6 +11,7 @@ import { useRef } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
 import { useEventListener } from 'ahooks';
+import { motion } from "framer-motion";
 
 
 interface BookItemListProps {
@@ -102,7 +103,16 @@ export default function BookItemList(p: BookItemListProps) {
                         key={ele?.hash ?? ele?.name ?? index}
                         xxl={6}
                     >
-                        <Card
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{
+                                duration: 0.8,
+                                delay: 0.5 + index * 0.25,
+                                ease: [0, 0.71, 0.2, 1.01]
+                            }}
+                        >
+                            <Card
                             data-hash={ele?.hash}
                             extra={<Tag color="#212121">{ele?.fileType}</Tag>}
                             className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
@@ -120,6 +130,8 @@ export default function BookItemList(p: BookItemListProps) {
                                 {ele?.name}
                             </Tooltip>}
                         >{ele?.des}</Card>
+                        </motion.div>
+                        
                     </Col>
                 })
             }
