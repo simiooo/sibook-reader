@@ -7,7 +7,7 @@ import { useBookState } from '../../store';
 import { BookItems } from '../../dbs/db';
 import { useNavigate, useParams } from 'react-router-dom';
 import Draggable from 'react-draggable';
-import { HomeOutlined } from '@ant-design/icons';
+import { HomeOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
@@ -53,7 +53,7 @@ export default function PdfReader() {
   const [copiedText, setCopiedText] = useState<string>()
   const page_ref = useRef<null>()
   const pageSize = useSize(page_ref)
-  const [ pageProxy , {set, get}] = useMap<number, PDFPageProxy>()
+  const [pageProxy, { set, get }] = useMap<number, PDFPageProxy>()
   const [maxWidthPage, setMaxWidthPage] = useState<PDFPageProxy>()
 
   const size = useSize(container_ref);
@@ -61,10 +61,10 @@ export default function PdfReader() {
   const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([])
   const [menuOpenKeys, setMenuOpenKeys] = useState<string[]>([])
   const onPageLoadSuccess = useCallback((e: PDFPageProxy) => {
-    if(!maxWidthPage) {
+    if (!maxWidthPage) {
       setMaxWidthPage(e)
     }
-    if((e as any)?.originalWidth > (maxWidthPage as any)?.originalWidth) {
+    if ((e as any)?.originalWidth > (maxWidthPage as any)?.originalWidth) {
       setMaxWidthPage(e)
     }
     set(e._pageIndex, e)
@@ -122,7 +122,7 @@ export default function PdfReader() {
     }
   })
 
-  const {run: changePageNumberByInput} = useThrottleFn((e: number) => {
+  const { run: changePageNumberByInput } = useThrottleFn((e: number) => {
     setIsUserChangePageNumber(true)
     setPageNumber(e)
   }, {
@@ -133,18 +133,16 @@ export default function PdfReader() {
     if (event.ctrlKey) {
       if (event.keyCode === 187 || event.key === '+') {
         event.preventDefault();
-        const tempScale = Math.min(scale + SCALE_GAP, 100)
-        setScale(tempScale)
+        scaleUp()
 
       } else if (event.keyCode === 189 || event.key === '-') {
         event.preventDefault();
-        const tempScale = Math.max(scale - SCALE_GAP, 0)
-        setScale(tempScale)
+        scaleDown()
       }
     }
   }, [scale])
 
-  useKeyPress('ctrl', (e) => {
+  const dragHandler = useCallback((e: KeyboardEvent | MouseEvent) => {
     switch (e.type) {
       case 'keydown':
         setDragableDisabled(false)
@@ -153,24 +151,32 @@ export default function PdfReader() {
         setDragableDisabled(true)
         break
     }
-  }, {
+  }, [])
+
+  useKeyPress('ctrl', dragHandler, {
     events: ['keydown', 'keyup']
   })
 
   const scrollHandlerForDocument = (e) => {
     if (e?.ctrlKey) {
       e.preventDefault()
-
     }
   }
+
+  const scaleUp = useCallback(() => {
+    setScale(Math.min(scale + SCALE_GAP, 100))
+  }, [scale])
+  const scaleDown = useCallback(() => {
+    setScale(Math.max(scale - SCALE_GAP, 0))
+  }, [scale])
 
   const scrollHandler = useCallback((event) => {
     if (event.ctrlKey) {
       event.preventDefault();
       if (event.deltaY < 0) {
-        setScale(Math.min(scale + SCALE_GAP, 100))
+        scaleUp()
       } else {
-        setScale(Math.max(scale - SCALE_GAP, 0))
+        scaleDown()
       }
     } else {
 
@@ -178,7 +184,7 @@ export default function PdfReader() {
   }, [scale, pageNumber, numPages])
 
   useEffect(() => {
-    if(isUserChangePageNumber) {
+    if (isUserChangePageNumber) {
       list_ref.current?.scrollToRow(pageNumber)
     }
   }, [pageNumber])
@@ -307,23 +313,25 @@ export default function PdfReader() {
               ref={container_ref}
               className={style.pdf_container}
               id="pdf_container">
-                <Row
+              <Row
                 className={style.float_tooltip}
-                >
-                  <Col>
+                align={'middle'}
+              >
+                <Col>
                   <Space>
-                  <InputNumber
-                  bordered={false}
-                  value={pageNumber}
-                  onChange={changePageNumberByInput}
-                  style={{
-                    width: '50px'
-                  }}
-                  ></InputNumber>
-                  <span>{`/ ${numPages}`}</span>
+                    <InputNumber
+                      bordered={false}
+                      value={pageNumber}
+                      onChange={changePageNumberByInput}
+                      style={{
+                        width: '50px'
+                      }}
+                    ></InputNumber>
+                    <span>{`/ ${numPages}`}</span>
                   </Space>
-                  </Col>
-                </Row>
+                </Col>
+                
+              </Row>
               <Draggable
                 disabled={dragableDisabled}
               >
@@ -360,11 +368,11 @@ export default function PdfReader() {
                       rowHeight={(renderPageHeight + 10) * scale}
                       ref={list_ref}
                       className={style.list_container}
-                      rowRenderer={({key, style, index}) => {
+                      rowRenderer={({ key, style, index }) => {
                         return (
                           <div
-                          key={key}
-                          style={style}
+                            key={key}
+                            style={style}
                           >
                             <Page
                               className={'pddf_pages_si'}
@@ -374,7 +382,7 @@ export default function PdfReader() {
                               onLoadSuccess={onPageLoadSuccess}
                             ></Page>
                           </div>
-                          
+
                         )
                       }}
                     >
@@ -393,30 +401,24 @@ export default function PdfReader() {
                   </Document>
                 </div>
               </Draggable>
+              <div className={style.scale_controller}>
+                <Space
+                size={'middle'}
+                >
+                  <div
+                  onClick={scaleUp}
+                  ><PlusCircleOutlined /></div>
+                  <div
+                  onClick={scaleDown}
+                  ><MinusCircleOutlined /></div>
+                </Space>
+              </div>
             </div>
 
 
           </Col>
         </Row>
       </Col>
-      {/* {createPortal(
-        <div className={style.reader_progress}><Row>
-          <Col
-            span={24}
-          >
-            <Slider
-              tooltip={{
-                formatter: (v) => `${v}%`
-              }}
-              onChange={(v) => {
-                setPageNumber(Math.max(1, Math.round(v / 100 * numPages)))
-              }}
-              value={renderProgress} />
-
-          </Col>
-        </Row></div>
-        , document.body
-      )} */}
     </Row>
   )
 }
