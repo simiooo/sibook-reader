@@ -1,4 +1,4 @@
-import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider } from 'antd'
+import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber } from 'antd'
 import { Document, Outline, Page } from 'react-pdf';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -11,10 +11,13 @@ import { HomeOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
-import { useDebounce, useEventListener, useKeyPress, usePrevious, useSize, useThrottle } from 'ahooks';
+import { useDebounce, useEventListener, useKeyPress, useMap, usePrevious, useSize, useThrottle, useThrottleFn } from 'ahooks';
 import { createPortal } from 'react-dom';
 import { MenuItemType } from 'antd/es/menu/hooks/useItems';
+import List from 'react-virtualized/dist/commonjs/List';
+
 import FloatAiMenu from '../../components/FloatAiMenu';
+import { PDFPageProxy } from 'pdfjs-dist/types/web/interfaces';
 
 const SCALE_GAP = 0.1
 
@@ -36,6 +39,7 @@ const pdfToMenuItemHandler = (pdfItems?: any[]) => {
 export default function PdfReader() {
   const db_instance = useBookState(state => state.db_instance)
   const [bookInfo, setBookInfo] = useState<BookItems>()
+  const list_ref = useRef(null)
   const pdf_document_ref = useRef()
   const [switchOpen, setSwitchOpen] = useState<boolean>(true)
   const navigate = useNavigate()
@@ -47,12 +51,24 @@ export default function PdfReader() {
   const [translatorOpen, setTranslatorOpen] = useState<boolean>(false)
   const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
   const [copiedText, setCopiedText] = useState<string>()
+  const page_ref = useRef<null>()
+  const pageSize = useSize(page_ref)
+  const [ pageProxy , {set, get}] = useMap<number, PDFPageProxy>()
+  const [maxWidthPage, setMaxWidthPage] = useState<PDFPageProxy>()
 
   const size = useSize(container_ref);
   const { book_id } = useParams()
   const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([])
   const [menuOpenKeys, setMenuOpenKeys] = useState<string[]>([])
-
+  const onPageLoadSuccess = useCallback((e: PDFPageProxy) => {
+    if(!maxWidthPage) {
+      setMaxWidthPage(e)
+    }
+    if((e as any)?.originalWidth > (maxWidthPage as any)?.originalWidth) {
+      setMaxWidthPage(e)
+    }
+    set(e._pageIndex, e)
+  }, [maxWidthPage])
   const pdfoutlineRef = useRef<HTMLDivElement>(null)
 
 
@@ -61,18 +77,17 @@ export default function PdfReader() {
   const [blob, setBlob] = useState<{ data: Uint8Array }>()
   const [numPages, setNumPages] = useState<number>();
   const [pageNumber, setPageNumber] = useState<number>(1);
+  const [isUserChangePageNumber, setIsUserChangePageNumber] = useState<boolean>(false)
   const previewPageNumber = usePrevious(pageNumber)
   function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number }): void {
     setNumPages(numPages);
     const cachePageNumber = Number(localStorage.getItem(`book_id:${book_id}`))
     setPageNumber(Number.isNaN(cachePageNumber) ? 1 : Math.max(1, cachePageNumber))
   }
-  const renderProgress = useMemo(() => {
-    return (pageNumber / numPages) * 100
-  }, [
-    pageNumber,
-    numPages
-  ])
+
+  const renderPageHeight = useMemo(() => {
+    return scale * ((size?.height ?? 20) - 20)
+  }, [size, scale])
 
   useEffect(() => {
     if (previewPageNumber) {
@@ -105,6 +120,13 @@ export default function PdfReader() {
       console.error(error instanceof Error ? error.message : error)
       message.error('粘贴失败')
     }
+  })
+
+  const {run: changePageNumberByInput} = useThrottleFn((e: number) => {
+    setIsUserChangePageNumber(true)
+    setPageNumber(e)
+  }, {
+    wait: 2000
   })
 
   const keydownHandler = useCallback((event) => {
@@ -151,13 +173,15 @@ export default function PdfReader() {
         setScale(Math.max(scale - SCALE_GAP, 0))
       }
     } else {
-      if ((event as any).wheelDeltaY > 0) {
-        setPageNumber(Math.max(1, pageNumber - 1))
-      } else if ((event as any).wheelDeltaY < 0) {
-        setPageNumber(Math.min(numPages, pageNumber + 1))
-      }
+
     }
   }, [scale, pageNumber, numPages])
+
+  useEffect(() => {
+    if(isUserChangePageNumber) {
+      list_ref.current?.scrollToRow(pageNumber)
+    }
+  }, [pageNumber])
 
   useEventListener('wheel', scrollHandler, {
     target: pdf_document_ref
@@ -171,6 +195,13 @@ export default function PdfReader() {
 
     }
   }, [scale, pageNumber, numPages])
+
+  const renderPages = useMemo(() => {
+    return new Array(numPages).fill(1).map((ele, index) => ({ key: index }))
+  }, [numPages])
+
+
+
 
   useEffect(() => {
     if (!book_id) {
@@ -203,7 +234,7 @@ export default function PdfReader() {
         >
           <Col>
             <Space>
-              
+
               <Breadcrumb
                 items={[
                   {
@@ -216,14 +247,14 @@ export default function PdfReader() {
                 ]}
               ></Breadcrumb>
               <Divider
-              type="vertical"
+                type="vertical"
               ></Divider>
-              <Switch 
-              checkedChildren="目录（开）" 
-              unCheckedChildren="目录（关）" 
-              defaultChecked 
-              checked={switchOpen}
-              onChange={setSwitchOpen}
+              <Switch
+                checkedChildren="目录（开）"
+                unCheckedChildren="目录（关）"
+                defaultChecked
+                checked={switchOpen}
+                onChange={setSwitchOpen}
               />
             </Space>
 
@@ -241,52 +272,64 @@ export default function PdfReader() {
         >
           {
             switchOpen ? <Col
-            xxl={4}
-            xl={4}
-            lg={6}
-            md={8}
-            span={4}
-            sm={8}
-            xs={8}
-            className={style.menu_container}
-          >
-            <Menu
-              items={pdfOutline}
-              openKeys={menuOpenKeys}
-              selectedKeys={menuSelectedKeys}
-              onOpenChange={(e) => {
-                setMenuOpenKeys(e)
-              }}
-              onSelect={(e) => {
-                const tag = pdfoutlineRef.current?.querySelectorAll(e.keyPath.slice(0, -1).map(ele => 'ul').join(' ') + ' a') as NodeListOf<HTMLAnchorElement>
-                const el = [...tag].find(ele => ele.innerText === e.key)
-                el?.click?.()
-                setMenuSelectedKeys(e.selectedKeys)
-              }}
-            ></Menu>
-          </Col>
-          : undefined  
+              xxl={4}
+              xl={4}
+              lg={6}
+              md={8}
+              span={4}
+              sm={8}
+              xs={8}
+              className={style.menu_container}
+            >
+              <Menu
+                items={pdfOutline}
+                openKeys={menuOpenKeys}
+                selectedKeys={menuSelectedKeys}
+                onOpenChange={(e) => {
+                  setMenuOpenKeys(e)
+                }}
+                onSelect={(e) => {
+                  setIsUserChangePageNumber(true)
+                  const tag = pdfoutlineRef.current?.querySelectorAll(e.keyPath.slice(0, -1).map(ele => 'ul').join(' ') + ' a') as NodeListOf<HTMLAnchorElement>
+                  const el = [...tag].find(ele => ele.innerText === e.key)
+                  el?.click?.()
+                  setMenuSelectedKeys(e.selectedKeys)
+                }}
+              ></Menu>
+            </Col>
+              : undefined
           }
-          
+
           <Col
-            // sm={16}
-            // xs={16}
-            // xl={20}
-            // md={16}
-            // lg={18}
-            // span={20}
             flex={'1 1'}
           >
             <div
               ref={container_ref}
               className={style.pdf_container}
               id="pdf_container">
+                <Row
+                className={style.float_tooltip}
+                >
+                  <Col>
+                  <Space>
+                  <InputNumber
+                  bordered={false}
+                  value={pageNumber}
+                  onChange={changePageNumberByInput}
+                  style={{
+                    width: '50px'
+                  }}
+                  ></InputNumber>
+                  <span>{`/ ${numPages}`}</span>
+                  </Space>
+                  </Col>
+                </Row>
               <Draggable
                 disabled={dragableDisabled}
               >
                 <div
                   style={{
-                    background: 'transparent'
+                    background: 'transparent',
                   }}
                 >
                   <Document
@@ -299,14 +342,44 @@ export default function PdfReader() {
                     ></Result>}
                     file={blob}
                     onItemClick={(e) => {
+                      
                       setPageNumber(e.pageNumber)
                     }}
                     onLoadSuccess={onDocumentLoadSuccess}
                   >
-                    <Page
-                      height={size?.height - 20}
-                      scale={ThrottleScale}
-                      pageNumber={pageNumber} />
+                    <List
+                      rowCount={renderPages.length}
+                      onRowsRendered={e => {
+                        setIsUserChangePageNumber(false)
+                        setPageNumber(e.startIndex + 1)
+                      }}
+                      height={renderPageHeight}
+                      // width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
+                      width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
+                      // width={size?.height * scale}
+                      rowHeight={(renderPageHeight + 10) * scale}
+                      ref={list_ref}
+                      className={style.list_container}
+                      rowRenderer={({key, style, index}) => {
+                        return (
+                          <div
+                          key={key}
+                          style={style}
+                          >
+                            <Page
+                              className={'pddf_pages_si'}
+                              height={(renderPageHeight)}
+                              scale={ThrottleScale}
+                              pageNumber={index + 1}
+                              onLoadSuccess={onPageLoadSuccess}
+                            ></Page>
+                          </div>
+                          
+                        )
+                      }}
+                    >
+                    </List>
+
                     <Outline
                       inputRef={pdfoutlineRef}
                       className={style.outline}
@@ -326,10 +399,7 @@ export default function PdfReader() {
           </Col>
         </Row>
       </Col>
-      <Col span={24}>
-
-      </Col>
-      {createPortal(
+      {/* {createPortal(
         <div className={style.reader_progress}><Row>
           <Col
             span={24}
@@ -346,7 +416,7 @@ export default function PdfReader() {
           </Col>
         </Row></div>
         , document.body
-      )}
+      )} */}
     </Row>
   )
 }
