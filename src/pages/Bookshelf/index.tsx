@@ -52,6 +52,7 @@ export default function index() {
     })
 
     const loading = useMemo(() => {
+        console.log(listLoading, uploadLoading)
         return listLoading || uploadLoading
     }, [listLoading, uploadLoading])
 

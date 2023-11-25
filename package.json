@@ -17,6 +17,7 @@
     "ahooks": "^3.7.8",
     "antd": "^5.10.2",
     "autoprefixer": "^10.4.16",
+    "crypto-js": "^4.2.0",
     "dayjs": "^1.11.10",
     "dexie": "^3.2.4",
     "dexie-react-hooks": "^1.1.7",
