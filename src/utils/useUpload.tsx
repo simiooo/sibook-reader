@@ -36,7 +36,7 @@ export function useUpload() {
                     const hash = sha256(file).toString()
 
                     const hasSame = await db_instance?.book_items.where('hash').equals(hash).toArray()
-
+                    console.log(hasSame)
                     if ((hasSame ?? [])?.length > 0) {
                         throw (Error('请勿重复上传文件'))
                     }
