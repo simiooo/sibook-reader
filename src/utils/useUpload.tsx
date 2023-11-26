@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useBookState } from "../store";
-import sha256 from 'crypto-js/sha256';
 import dayjs from 'dayjs'
 import { readFileAsArrayBuffer } from "../dbs/createBook";
 import { message } from "antd";
+import { sha256 } from "./sha256";
+import Dexie from "dexie";
 
 
 
@@ -26,17 +27,14 @@ export function useUpload() {
                     throw Error(`请传入不大于${MAX_LIMIT / 1024 / 1024}MB 的书籍`)
                 }
                 const file = await readFileAsArrayBuffer(info.file)
-
+                const hash = await sha256(file)
                 const res = db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
                     if (!info?.file) {
                         throw Error('请传入文件')
                     }
-                    console.log(file);
                     
-                    const hash = sha256(file).toString()
 
                     const hasSame = await db_instance?.book_items.where('hash').equals(hash).toArray()
-                    console.log(hasSame)
                     if ((hasSame ?? [])?.length > 0) {
                         throw (Error('请勿重复上传文件'))
                     }

@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import sha256 from 'crypto-js/sha256';
+import { sha256 } from "../utils/sha256";
 
 export async function readFileAsArrayBuffer(
   file: File,
@@ -29,7 +29,7 @@ export async function uploadBook(
     }
     const file = await readFileAsArrayBuffer(info.file);
 
-    const hash = sha256(file).toString()
+    const hash = await sha256(file)
     const hasSame = await ctx?.select({
       from: "BookItems",
       where: {
