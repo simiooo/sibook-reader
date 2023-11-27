@@ -7,7 +7,7 @@ import { useBookState } from '../../store';
 import { BookItems } from '../../dbs/db';
 import { useNavigate, useParams } from 'react-router-dom';
 import Draggable from 'react-draggable';
-import { HomeOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { CameraOutlined, HomeOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
@@ -137,7 +137,7 @@ export default function PdfReader() {
   })
 
   useEffect(() => {
-    if(pageNumber !== pagination) {
+    if (pageNumber !== pagination) {
       setPagination(pageNumber)
     }
   }, [pageNumber])
@@ -423,15 +423,25 @@ export default function PdfReader() {
                   size={'middle'}
                 >
                   <motion.div
+                    title="放大"
                     whileTap={{ scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={scaleUp}
                   ><PlusCircleOutlined /></motion.div>
                   <motion.div
+                    title="缩小"
                     whileTap={{ scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={scaleDown}
                   ><MinusCircleOutlined /></motion.div>
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    title="文字转图片"
+                    onClick={shotCompleteHandler}
+                  >
+                    <CameraOutlined />
+                  </motion.div>
                 </Space>
               </div>
               <Row
@@ -446,7 +456,7 @@ export default function PdfReader() {
                       onChange={(e) => setPagination(e)}
                       onBlur={(e) => {
                         const target = Number(e.target?.value)
-                        if(Number.isNaN(target)) {
+                        if (Number.isNaN(target)) {
                           return
                         }
                         changePageNumberByInput(target)
