@@ -12,7 +12,12 @@ export interface BookStateType {
     db_instance: BookClassedDexie | null;
     openai_base_url?: string;
     openai_api_key?: string;
-    openai_update?: (params: {openai_base_url?: string, openai_api_key?: string}) => void;
+    openai_api_model?: string;
+    openai_update?: (params: {
+        openai_base_url?: string, 
+        openai_api_key?: string,
+        openai_api_model?: string,
+    }) => void;
     openaiRequest?: <T extends Object>(body: {
         type: 'translator' | 'explainer';
         message: T;
@@ -45,9 +50,11 @@ export const useBookState = create<BookStateType>((set, get) => {
         db_instance: db,
         openai_base_url: localStorage.getItem('openai_base_url') ?? OPENAI_BASE_URL,
         openai_api_key: localStorage.getItem('openai_api_key') ?? undefined,
-        openai_update: ({openai_base_url, openai_api_key}) => set((state) => ({
+        openai_api_model: localStorage.getItem('openai_api_model') ?? undefined,
+        openai_update: ({openai_base_url, openai_api_key, openai_api_model}) => set((state) => ({
             openai_base_url,
             openai_api_key,
+            openai_api_model,
         })),
         openaiRequest: async (body) => {
             const url = new URL(OPENAI_PATHNAME, get().openai_base_url)
@@ -55,7 +62,7 @@ export const useBookState = create<BookStateType>((set, get) => {
             return fetch(url, {
                 method: 'POST',
                 headers: OPENAI_HEADERS,
-                body: JSON.stringify(body.type == 'translator' ? translator(body.message) : explainer(body.message))
+                body: JSON.stringify(body.type == 'translator' ? translator(body.message, {model: get().openai_api_model}) : explainer(body.message, {model: get().openai_api_model}))
             })
         }
     }
@@ -67,6 +74,9 @@ useBookState.subscribe((state) => {
     }
     if(state.openai_base_url && state.openai_base_url !== localStorage.getItem('openai_base_url')) {
         localStorage.setItem('openai_base_url', state.openai_base_url)
+    }
+    if(state.openai_api_model && state.openai_api_model !== localStorage.getItem('openai_api_model')) {
+        localStorage.setItem('openai_api_model', state.openai_api_model)
     }
 })
 

@@ -18,6 +18,10 @@ import List from 'react-virtualized/dist/commonjs/List';
 
 import FloatAiMenu from '../../components/FloatAiMenu';
 import { PDFPageProxy } from 'pdfjs-dist/types/web/interfaces';
+import { motion } from 'framer-motion';
+import ScreenShot from 'js-web-screen-shot'
+import { ImgToText } from '../../utils/imgToText';
+import { Console } from 'console';
 
 const SCALE_GAP = 0.1
 
@@ -111,7 +115,7 @@ export default function PdfReader() {
     setPageNumber(Math.min(numPages, pageNumber + 1))
   })
 
-  useEventListener('copy', async () => {
+  const copyHandler = useCallback(async () => {
     try {
       const res = await window.navigator.clipboard.readText()
       message.success('复制成功')
@@ -120,14 +124,45 @@ export default function PdfReader() {
       console.error(error instanceof Error ? error.message : error)
       message.error('粘贴失败')
     }
-  })
+  }, [])
 
+  useEventListener('copy', copyHandler)
+
+  const [pagination, setPagination] = useState<number>(0)
   const { run: changePageNumberByInput } = useThrottleFn((e: number) => {
     setIsUserChangePageNumber(true)
     setPageNumber(e)
   }, {
-    wait: 2000
+    wait: 50
   })
+
+  useEffect(() => {
+    if(pageNumber !== pagination) {
+      setPagination(pageNumber)
+    }
+  }, [pageNumber])
+
+  const shotCompleteHandler = useCallback((e) => {
+    new ScreenShot({
+      completeCallback: async (screen) => {
+        try {
+          const text = await ImgToText(screen?.base64?.slice(22))
+          await navigator.clipboard.writeText(text)
+          message.success('识别成功,请在 ai 辅助功能中使用')
+          await copyHandler()
+        } catch (error) {
+          message.error(error instanceof Error ? error.message : error)
+        }
+
+      },
+      enableWebRtc: true,
+      hiddenToolIco: {
+        'save': true,
+      },
+    })
+  }, [])
+
+  useKeyPress('alt.a', shotCompleteHandler)
 
   const keydownHandler = useCallback((event) => {
     if (event.ctrlKey) {
@@ -313,25 +348,7 @@ export default function PdfReader() {
               ref={container_ref}
               className={style.pdf_container}
               id="pdf_container">
-              <Row
-                className={style.float_tooltip}
-                align={'middle'}
-              >
-                <Col>
-                  <Space>
-                    <InputNumber
-                      bordered={false}
-                      value={pageNumber}
-                      onChange={changePageNumberByInput}
-                      style={{
-                        width: '50px'
-                      }}
-                    ></InputNumber>
-                    <span>{`/ ${numPages}`}</span>
-                  </Space>
-                </Col>
-                
-              </Row>
+
               <Draggable
                 disabled={dragableDisabled}
               >
@@ -403,16 +420,46 @@ export default function PdfReader() {
               </Draggable>
               <div className={style.scale_controller}>
                 <Space
-                size={'middle'}
+                  size={'middle'}
                 >
-                  <div
-                  onClick={scaleUp}
-                  ><PlusCircleOutlined /></div>
-                  <div
-                  onClick={scaleDown}
-                  ><MinusCircleOutlined /></div>
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    onClick={scaleUp}
+                  ><PlusCircleOutlined /></motion.div>
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    onClick={scaleDown}
+                  ><MinusCircleOutlined /></motion.div>
                 </Space>
               </div>
+              <Row
+                className={style.float_tooltip}
+                align={'middle'}
+              >
+                <Col>
+                  <Space>
+                    <InputNumber
+                      bordered={false}
+                      value={pagination}
+                      onChange={(e) => setPagination(e)}
+                      onBlur={(e) => {
+                        const target = Number(e.target?.value)
+                        if(Number.isNaN(target)) {
+                          return
+                        }
+                        changePageNumberByInput(target)
+                      }}
+                      style={{
+                        width: '50px'
+                      }}
+                    ></InputNumber>
+                    <span>{`/ ${numPages ?? '0'}`}</span>
+                  </Space>
+                </Col>
+
+              </Row>
             </div>
 
 

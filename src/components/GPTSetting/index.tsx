@@ -1,6 +1,7 @@
-import { Button, Divider, Form, Input, Modal, ModalProps } from 'antd'
+import { Button, Divider, Form, Input, Modal, ModalProps, Select } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useBookState } from '../../store'
+import { AI_MODELS } from '../../utils/openaiModels'
 
 export interface GPTSettingProps extends ModalProps {
 
@@ -10,13 +11,14 @@ export default function GPTSetting(p: GPTSettingProps) {
     const { ...modals } = p
     const formValue = useBookState(state => ({
         openai_base_url: state.openai_base_url,
-        openai_api_key: state.openai_api_key
+        openai_api_key: state.openai_api_key,
+        openai_api_model: state.openai_api_model ?? 'gpt-3.5-turbo-1106'
     }))
     const openai_update = useBookState(state => state.openai_update)
     const [form] = Form.useForm()
-    useEffect(() => {
-        form.setFieldsValue(formValue)
-    }, [formValue])
+    // useEffect(() => {
+    //     form.setFieldsValue(formValue)
+    // }, [formValue])
 
     return (
         <Modal
@@ -27,6 +29,7 @@ export default function GPTSetting(p: GPTSettingProps) {
         >
             <Divider></Divider>
             <Form
+                initialValues={formValue}
                 form={form}
                 labelCol={{ span: 8 }}
                 wrapperCol={{ span: 16 }}
@@ -47,7 +50,7 @@ export default function GPTSetting(p: GPTSettingProps) {
                 >
                     <Input
                         style={{
-                            width: '300px'
+                            maxWidth: '300px'
                         }}
                         placeholder='请输入基础url'
                     ></Input>
@@ -65,11 +68,25 @@ export default function GPTSetting(p: GPTSettingProps) {
                 >
                     <Input
                         style={{
-                            width: '300px'
+                            maxWidth: '300px'
                         }}
                         type="password"
                         placeholder='请输入api密钥，该密钥存储在本地。'
                     ></Input>
+                </Form.Item>
+                <Form.Item
+                label="模型"
+                name="openai_api_model"
+                >
+                    <Select
+                    style={{
+                        maxWidth: '300px',
+                    }}
+                    options={AI_MODELS.map(ele => ({
+                        label: ele.model,
+                        value: ele.model,
+                    }))}
+                    ></Select>
                 </Form.Item>
                 <Form.Item
                 wrapperCol={{offset: 8}}
