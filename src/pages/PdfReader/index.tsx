@@ -87,7 +87,11 @@ export default function PdfReader() {
   function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number }): void {
     setNumPages(numPages);
     const cachePageNumber = Number(localStorage.getItem(`book_id:${book_id}`))
+    setIsUserChangePageNumber(true)
     setPageNumber(Number.isNaN(cachePageNumber) ? 1 : Math.max(1, cachePageNumber))
+    setTimeout(() => {
+      setIsUserChangePageNumber(false)
+    }, 0);
   }
 
   const renderPageHeight = useMemo(() => {
@@ -95,7 +99,7 @@ export default function PdfReader() {
   }, [size, scale])
 
   useEffect(() => {
-    if (previewPageNumber) {
+    if (previewPageNumber && previewPageNumber !== pageNumber) {
       localStorage.setItem(`book_id:${book_id}`, String(pageNumber || 1))
     }
   }, [pageNumber, previewPageNumber])
@@ -227,6 +231,10 @@ export default function PdfReader() {
       list_ref.current?.scrollToRow(pageNumber)
     }
   }, [pageNumber])
+  useEffect(() => {
+    list_ref?.current?.scrollToRow?.(pageNumber)
+  }, [scale])
+
 
   useEventListener('wheel', scrollHandler, {
     target: pdf_document_ref
