@@ -86,7 +86,7 @@ export default function BookItemList(p: BookItemListProps) {
                 }}
             />
             {
-                (p.data ?? []).map((ele, index) => {
+                (p.data.sort((pre, val) => val?.sort - pre.sort) ?? []).map((ele, index) => {
                     return <Col
                         // flex={'1 1'}
                         span={6}

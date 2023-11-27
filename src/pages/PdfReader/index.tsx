@@ -1,4 +1,4 @@
-import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber } from 'antd'
+import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber, Modal } from 'antd'
 import { Document, Outline, Page } from 'react-pdf';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -9,9 +9,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Draggable from 'react-draggable';
 import { CameraOutlined, HomeOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import style from './index.module.css'
+const stylecss = style
 import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
-import { useDebounce, useEventListener, useKeyPress, useMap, usePrevious, useSize, useThrottle, useThrottleFn } from 'ahooks';
+import { useDebounce, useDebounceFn, useEventListener, useKeyPress, useMap, usePrevious, useSize, useThrottle, useThrottleFn } from 'ahooks';
 import { createPortal } from 'react-dom';
 import { MenuItemType } from 'antd/es/menu/hooks/useItems';
 import List from 'react-virtualized/dist/commonjs/List';
@@ -19,9 +20,11 @@ import List from 'react-virtualized/dist/commonjs/List';
 import FloatAiMenu from '../../components/FloatAiMenu';
 import { PDFPageProxy } from 'pdfjs-dist/types/web/interfaces';
 import { motion } from 'framer-motion';
-import ScreenShot from 'js-web-screen-shot'
+import Cropper, { ReactCropperElement } from "react-cropper";
+import "cropperjs/dist/cropper.css";
 import { ImgToText } from '../../utils/imgToText';
-import { Console } from 'console';
+import { readFileAsArrayBuffer } from '../../dbs/createBook';
+
 
 const SCALE_GAP = 0.1
 
@@ -44,7 +47,7 @@ export default function PdfReader() {
   const db_instance = useBookState(state => state.db_instance)
   const [bookInfo, setBookInfo] = useState<BookItems>()
   const list_ref = useRef(null)
-  const pdf_document_ref = useRef()
+  const pdf_document_ref = useRef<HTMLDivElement>()
   const [switchOpen, setSwitchOpen] = useState<boolean>(true)
   const navigate = useNavigate()
   const [dragableDisabled, setDragableDisabled] = useState<boolean>(true)
@@ -59,6 +62,15 @@ export default function PdfReader() {
   const pageSize = useSize(page_ref)
   const [pageProxy, { set, get }] = useMap<number, PDFPageProxy>()
   const [maxWidthPage, setMaxWidthPage] = useState<PDFPageProxy>()
+
+
+
+  const [cropOpen, setCropOpen] = useState<boolean>(false)
+  const [screenShot, setScreenShot] = useState<string>()
+  const cropRef = useRef()
+  const [isPageSelecting, setIsPageSelecting] = useState<boolean>(false)
+  const [resultImg, setResultImg] = useState<Uint8Array | null>()
+  const [isRecognizing, setIsRecognizing] = useState<boolean>(false)
 
   const size = useSize(container_ref);
   const { book_id } = useParams()
@@ -75,12 +87,10 @@ export default function PdfReader() {
   }, [maxWidthPage])
   const pdfoutlineRef = useRef<HTMLDivElement>(null)
 
-
-  const [pdf, setPdf] = useState()
   const [ocrPending, setOcrPending] = useState<boolean>(false)
 
   const [blob, setBlob] = useState<{ data: Uint8Array }>()
-  const [numPages, setNumPages] = useState<number>();
+  const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [isUserChangePageNumber, setIsUserChangePageNumber] = useState<boolean>(false)
   const previewPageNumber = usePrevious(pageNumber)
@@ -141,36 +151,37 @@ export default function PdfReader() {
     wait: 50
   })
 
+  // 同步页码组件用
   useEffect(() => {
     if (pageNumber !== pagination) {
       setPagination(pageNumber)
     }
   }, [pageNumber])
 
-  const shotCompleteHandler = useCallback((e) => {
-    
-    new ScreenShot({
-      completeCallback: async (screen) => {
-        try {
-          setOcrPending(true)
-          const text = await ImgToText(screen?.base64?.slice(22))
-          await navigator.clipboard.writeText(text)
-          message.success('识别成功,请在 ai 辅助功能中使用')
-          await copyHandler()
-        } catch (error) {
-          message.error(error instanceof Error ? error.message : error)
-        } finally {
-          setOcrPending(false)
-        }
-      },
-      enableWebRtc: true,
-      hiddenToolIco: {
-        'save': true,
-      },
-    })
-  }, [])
 
-  useKeyPress('alt.a', shotCompleteHandler)
+
+  const shotCompleteHandler = useCallback(async () => {
+    try {
+      setIsRecognizing(true)
+      const text = await ImgToText(resultImg)
+      await navigator.clipboard.writeText(text)
+      message.success('读取文字成功，请在ai辅助功能里使用')
+      await copyHandler()
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : error)
+    } finally {
+      setIsRecognizing(false)
+      setCropOpen(false)
+      setIsPageSelecting(false)
+      setScreenShot(null)
+    }
+
+  }, [resultImg])
+
+  useKeyPress('alt.a', () => {
+    setScreenShot(null)
+    setIsPageSelecting(true)
+  })
 
   const keydownHandler = useCallback((event) => {
     if (event.ctrlKey) {
@@ -226,6 +237,7 @@ export default function PdfReader() {
     }
   }, [scale, pageNumber, numPages])
 
+
   useEffect(() => {
     if (isUserChangePageNumber) {
       list_ref.current?.scrollToRow(pageNumber)
@@ -249,13 +261,49 @@ export default function PdfReader() {
     }
   }, [scale, pageNumber, numPages])
 
-  const renderPages = useMemo(() => {
-    return new Array(numPages).fill(1).map((ele, index) => ({ key: index }))
-  }, [numPages])
+  const { run: cropHandler } = useDebounceFn(async (e: Cropper.CropEvent<HTMLImageElement>) => {
+    if (!cropRef.current) {
+      return
+    }
+    try {
+      ; (cropRef.current as any)?.cropper?.getCroppedCanvas()?.toBlob(async (data) => {
+        setResultImg(await readFileAsArrayBuffer(data))
+      })
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : error)
+    }
 
+  }, {
+    wait: 300
+  })
 
+  useEffect(() => {
+    if (isPageSelecting && screenShot) {
+      setCropOpen(true)
+    }
+  }, [
+    screenShot,
+    isPageSelecting
+  ])
 
+  useEffect(() => {
+    if(!pdf_document_ref.current) {
+      return
+    }
+    const textContainer = Array.from(pdf_document_ref.current?.querySelectorAll<HTMLDivElement>('.react-pdf__Page__textContent')) ?? []
+    if(isPageSelecting) {
+      for(const ele of textContainer) {
+        ele.style.pointerEvents = 'none'
+      }
+    } else {
+      for(const ele of textContainer) {
+        ele.style.pointerEvents = undefined
+      }
+    }
+    
+  }, [isPageSelecting])
 
+  //初始化书籍
   useEffect(() => {
     if (!book_id) {
       return
@@ -358,7 +406,10 @@ export default function PdfReader() {
           >
             <div
               ref={container_ref}
-              className={style.pdf_container}
+              className={[
+                style.pdf_container,
+                isPageSelecting ? style.pdf_container_selecting : undefined
+              ].filter(val => val).join(' ')}
               id="pdf_container">
 
               <Draggable
@@ -379,21 +430,18 @@ export default function PdfReader() {
                     ></Result>}
                     file={blob}
                     onItemClick={(e) => {
-                      // setIsUserChangePageNumber(true)
                       setPageNumber(e.pageNumber)
                     }}
                     onLoadSuccess={onDocumentLoadSuccess}
                   >
                     <List
-                      rowCount={renderPages.length}
+                      rowCount={numPages ?? 0}
                       onRowsRendered={e => {
                         setIsUserChangePageNumber(false)
                         setPageNumber(e.startIndex + 1)
                       }}
                       height={renderPageHeight}
-                      // width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
                       width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
-                      // width={size?.height * scale}
                       rowHeight={(renderPageHeight + 10) * scale}
                       ref={list_ref}
                       className={style.list_container}
@@ -402,9 +450,32 @@ export default function PdfReader() {
                           <div
                             key={key}
                             style={style}
+                            onClick={(e) => {
+                              if (!isPageSelecting) {
+                                return
+                              }
+                              let parent = (e.target as HTMLDivElement | null)?.parentElement
+                              let canvas = parent.querySelector('canvas');
+                              while (!canvas) {
+                                if (!parent) {
+                                  break
+                                }
+                                parent = parent.parentElement
+                                canvas = parent.querySelector('canvas')
+                              }
+                              try {
+                                setScreenShot(canvas.toDataURL('image/png', 1))
+                              } catch (error) {
+                                message.error('选择文档失败')
+                                setScreenShot(null)
+                              }
+                            }}
                           >
                             <Page
-                              className={'pddf_pages_si'}
+                              className={[
+                                style.pddf_pages_si,
+                                stylecss.pdf_page_selecting
+                              ].join(' ')}
                               height={(renderPageHeight)}
                               scale={ThrottleScale}
                               pageNumber={index + 1}
@@ -447,21 +518,25 @@ export default function PdfReader() {
                     onClick={scaleDown}
                   ><MinusCircleOutlined /></motion.div>
                   {
-                    ocrPending ?  <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    ocrPending ? <motion.div
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
                       <LoadingOutlined />
                     </motion.div> : <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    title="文字转图片"
-                    onClick={shotCompleteHandler}
-                  >
-                    <CameraOutlined />
-                  </motion.div>
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      title="文字转图片"
+                      onClick={() => {
+                        message.success('请单机选择书籍的某一页')
+                        setScreenShot(null)
+                        setIsPageSelecting(true)
+                      }}
+                    >
+                      <CameraOutlined />
+                    </motion.div>
                   }
-                  
+
                 </Space>
               </div>
               <Row
@@ -496,6 +571,49 @@ export default function PdfReader() {
           </Col>
         </Row>
       </Col>
+      <Modal
+        open={cropOpen}
+        footer={null}
+        title={'裁切图片'}
+        onCancel={() => {
+          setIsPageSelecting(false)
+          setScreenShot(null)
+          setCropOpen(false)
+        }}
+        width={'90vw'}
+      >
+        {/* <Divider></Divider> */}
+        <Row gutter={[12, 12]}>
+          <Col span={24}>
+            <Row justify={'end'}>
+              <Col>
+                <Space>
+                  <Button
+                    loading={isRecognizing}
+                    onClick={() => {
+                      shotCompleteHandler()
+                    }}
+                  >完成</Button>
+                </Space>
+              </Col>
+            </Row>
+
+          </Col>
+          <Col span={24}>
+            <Cropper
+              src={screenShot}
+              style={{ height: 600, width: "100%" }}
+              // Cropper.js options
+              initialAspectRatio={16 / 9}
+              guides={false}
+              crop={cropHandler}
+              ref={cropRef}
+            />
+          </Col>
+        </Row>
+
+
+      </Modal>
     </Row>
   )
 }

@@ -22,6 +22,7 @@
     justify-content: center;
     border-radius: 8px;
     position: relative;
+    border: 2px solid transparent;
     .float_tooltip, .scale_controller{
       position: absolute;
       right: 1rem;
@@ -61,7 +62,20 @@
       display: none;
     }
   }
-
+  .pddf_pages_si{
+    /* border: 2px solid transparent; */
+  }
+  .pdf_container_selecting{
+    border: 2px solid #222;
+    background-color: #b2b2b2;
+    .pdf_page_selecting{
+      &:hover{
+        border: 2px solid #222;
+      }
+    }
+    
+  }
+  
 
 }
 
