@@ -7,7 +7,7 @@ import { useBookState } from '../../store';
 import { BookItems } from '../../dbs/db';
 import { useNavigate, useParams } from 'react-router-dom';
 import Draggable from 'react-draggable';
-import { CameraOutlined, HomeOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { CameraOutlined, HomeOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
@@ -77,6 +77,7 @@ export default function PdfReader() {
 
 
   const [pdf, setPdf] = useState()
+  const [ocrPending, setOcrPending] = useState<boolean>(false)
 
   const [blob, setBlob] = useState<{ data: Uint8Array }>()
   const [numPages, setNumPages] = useState<number>();
@@ -143,17 +144,20 @@ export default function PdfReader() {
   }, [pageNumber])
 
   const shotCompleteHandler = useCallback((e) => {
+    
     new ScreenShot({
       completeCallback: async (screen) => {
         try {
+          setOcrPending(true)
           const text = await ImgToText(screen?.base64?.slice(22))
           await navigator.clipboard.writeText(text)
           message.success('识别成功,请在 ai 辅助功能中使用')
           await copyHandler()
         } catch (error) {
           message.error(error instanceof Error ? error.message : error)
+        } finally {
+          setOcrPending(false)
         }
-
       },
       enableWebRtc: true,
       hiddenToolIco: {
@@ -434,7 +438,13 @@ export default function PdfReader() {
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={scaleDown}
                   ><MinusCircleOutlined /></motion.div>
-                  <motion.div
+                  {
+                    ocrPending ?  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      <LoadingOutlined />
+                    </motion.div> : <motion.div
                     whileTap={{ scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     title="文字转图片"
@@ -442,6 +452,8 @@ export default function PdfReader() {
                   >
                     <CameraOutlined />
                   </motion.div>
+                  }
+                  
                 </Space>
               </div>
               <Row
