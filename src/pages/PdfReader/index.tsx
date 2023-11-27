@@ -179,7 +179,7 @@ export default function PdfReader() {
         scaleDown()
       }
     }
-  }, [scale])
+  }, [scale, pageNumber, numPages])
 
   const dragHandler = useCallback((e: KeyboardEvent | MouseEvent) => {
     switch (e.type) {
@@ -190,7 +190,7 @@ export default function PdfReader() {
         setDragableDisabled(true)
         break
     }
-  }, [])
+  }, [scale, pageNumber, numPages])
 
   useKeyPress('ctrl', dragHandler, {
     events: ['keydown', 'keyup']
@@ -204,10 +204,10 @@ export default function PdfReader() {
 
   const scaleUp = useCallback(() => {
     setScale(Math.min(scale + SCALE_GAP, 100))
-  }, [scale])
+  }, [scale, pageNumber, numPages])
   const scaleDown = useCallback(() => {
     setScale(Math.max(scale - SCALE_GAP, 0))
-  }, [scale])
+  }, [scale, pageNumber, numPages])
 
   const scrollHandler = useCallback((event) => {
     if (event.ctrlKey) {
