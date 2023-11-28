@@ -97,6 +97,8 @@ export default function PdfReader() {
   function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number }): void {
     setNumPages(numPages);
     const cachePageNumber = Number(localStorage.getItem(`book_id:${book_id}`))
+    const init_scale = localStorage.getItem(`scale:${book_id}`) ?? 1
+    setScale(Number.isNaN(Number(init_scale)) ? 1 : Number(init_scale))
     setIsUserChangePageNumber(true)
     setPageNumber(Number.isNaN(cachePageNumber) ? 1 : Math.max(1, cachePageNumber))
     setTimeout(() => {
@@ -120,6 +122,7 @@ export default function PdfReader() {
       const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
       setBlob({ data: book_blob.blob })
       setBookInfo(book_info)
+
     })
   }, [])
 
@@ -218,10 +221,14 @@ export default function PdfReader() {
   }
 
   const scaleUp = useCallback(() => {
-    setScale(Math.min(scale + SCALE_GAP, 100))
+    const result_scale = Math.min(scale + SCALE_GAP, 100)
+    setScale(result_scale)
+    localStorage.setItem(`scale:${book_id}`, String(result_scale))
   }, [scale, pageNumber, numPages])
   const scaleDown = useCallback(() => {
-    setScale(Math.max(scale - SCALE_GAP, 0))
+    const result_scale = Math.max(scale - SCALE_GAP, 0)
+    setScale(result_scale)
+    localStorage.setItem(`scale:${book_id}`, String(result_scale))
   }, [scale, pageNumber, numPages])
 
   const scrollHandler = useCallback((event) => {
@@ -287,20 +294,20 @@ export default function PdfReader() {
   ])
 
   useEffect(() => {
-    if(!pdf_document_ref.current) {
+    if (!pdf_document_ref.current) {
       return
     }
     const textContainer = Array.from(pdf_document_ref.current?.querySelectorAll<HTMLDivElement>('.react-pdf__Page__textContent')) ?? []
-    if(isPageSelecting) {
-      for(const ele of textContainer) {
+    if (isPageSelecting) {
+      for (const ele of textContainer) {
         ele.style.pointerEvents = 'none'
       }
     } else {
-      for(const ele of textContainer) {
+      for (const ele of textContainer) {
         ele.style.pointerEvents = undefined
       }
     }
-    
+
   }, [isPageSelecting])
 
   //初始化书籍
