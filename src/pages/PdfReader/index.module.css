@@ -66,11 +66,14 @@
     /* border: 2px solid transparent; */
   }
   .pdf_container_selecting{
-    border: 2px solid #222;
+    /* border: 2px solid #222; */
     background-color: #b2b2b2;
+    
     .pdf_page_selecting{
+      border: 2px solid transparent;
       &:hover{
         border: 2px solid #222;
+        /* box-shadow: 2px 6px 4px 0px #222; */
       }
     }
     

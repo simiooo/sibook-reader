@@ -297,7 +297,7 @@ export default function PdfReader() {
     if (!pdf_document_ref.current) {
       return
     }
-    const textContainer = Array.from(pdf_document_ref.current?.querySelectorAll<HTMLDivElement>('.react-pdf__Page__textContent')) ?? []
+    const textContainer = Array.from(pdf_document_ref.current?.querySelectorAll<HTMLDivElement>('.react-pdf__Page__textContent, .react-pdf__Page__annotations')) ?? []
     if (isPageSelecting) {
       for (const ele of textContainer) {
         ele.style.pointerEvents = 'none'
