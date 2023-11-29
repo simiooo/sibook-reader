@@ -20,7 +20,6 @@ export default function index(p: IndexProp) {
     return (
         <Upload
             onChange={p.onChange}
-            capture={true}
             showUploadList={false}
             customRequest={upload as any}
             multiple={true}

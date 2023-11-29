@@ -46,6 +46,15 @@ export default function BookItemList(p: BookItemListProps) {
         e.preventDefault()
         show({ event: e })
     })
+    const openHandler = (ele) => {
+        if (ele?.fileType === 'application/epub+zip') {
+            navigate(`/reader/${ele.hash}`)
+        } else if (ele?.fileType === 'application/pdf') {
+            navigate(`/pdf_reader/${ele.hash}`)
+        } else {
+            message.error(t('暂不支持'))
+        }
+    }
 
     return (
         <Row
@@ -133,15 +142,8 @@ export default function BookItemList(p: BookItemListProps) {
                                 data-hash={ele?.hash}
                                 extra={<Tag color={tagMap[ele?.fileType]?.color}>{tagMap[ele?.fileType]?.type }</Tag>}
                                 className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
-                                onDoubleClick={() => {
-                                    if (ele?.fileType === 'application/epub+zip') {
-                                        navigate(`/reader/${ele.hash}`)
-                                    } else if (ele?.fileType === 'application/pdf') {
-                                        navigate(`/pdf_reader/${ele.hash}`)
-                                    } else {
-                                        message.error(t('暂不支持'))
-                                    }
-                                }}
+                                onDoubleClick={() => openHandler(ele)}
+                                onTouchEnd={() => openHandler(ele)}
                                 title={<Tooltip
                                 >
                                     <Tooltip

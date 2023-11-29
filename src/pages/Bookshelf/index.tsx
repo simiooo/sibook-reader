@@ -122,19 +122,24 @@ export default function index() {
                         <Col span={24}>
                             <Row justify={'end'}>
                                 <Col >
-                                    <Space>
+                                    <Space
+                                    wrap={true}
+                                    >
                                         <BookNewButton
                                             onChange={async () => {
                                                 runAsync()
                                             }}
+                                            
                                         ></BookNewButton>
                                         <Button
+                                        size='small'
                                             type="link"
                                             onClick={() => { setAiOpen(true) }}
                                         >
                                             {t('ai 辅助设置')}
                                         </Button>
                                         <Select
+                                            size='small'
                                             bordered={false}
                                             placeholder={
                                                 <TranslationOutlined title={t('选择语言')} />}
