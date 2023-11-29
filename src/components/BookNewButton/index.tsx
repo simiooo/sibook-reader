@@ -2,6 +2,7 @@ import { ButtonProps, Upload } from 'antd'
 import { Button } from 'antd'
 import { useMemo } from 'react'
 import { useUpload } from '../../utils/useUpload'
+import { useTranslation } from 'react-i18next'
 
 
 
@@ -11,6 +12,7 @@ interface IndexProp  extends ButtonProps{
 
 export default function index(p: IndexProp) {
     // const db_instance = useBookState((state) => state.db_instance)
+    const {t} = useTranslation()
     const {upload, loading} = useUpload()
     const renderType = useMemo(() => {
         return p.type ?? 'primary'
@@ -27,7 +29,7 @@ export default function index(p: IndexProp) {
             type={renderType}
             loading={loading}
             size='large'
-            >上传</Button>
+            >{t('上传')}</Button>
         </Upload>
     )
 }

@@ -1,7 +1,7 @@
-import { Button, Col, Result, Space, Divider } from 'antd';
+import { Button, Col, Result, Space, Divider, Select } from 'antd';
 import { Row } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FileTextTwoTone, SmileOutlined } from '@ant-design/icons'
+import { FileTextTwoTone, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
@@ -20,6 +20,7 @@ import ExportButton, { useExport } from "../../components/ExportButton";
 import { ItemType } from "antd/es/breadcrumb/Breadcrumb";
 import { Alert } from "antd";
 import GPTSetting from "../../components/GPTSetting";
+import { useTranslation } from 'react-i18next';
 
 export default function index() {
     const db_instance = useBookState(state => state.db_instance)
@@ -30,6 +31,7 @@ export default function index() {
         const res = await db_instance?.book_items?.toArray()
         setList(res ?? [])
     })
+    const { t, i18n } = useTranslation()
     const [dropModalOpen, setDropModalOpen] = useState<boolean>()
     const containerRef = useRef<HTMLElement>(null)
     useDrop(() => containerRef.current, {
@@ -78,7 +80,7 @@ export default function index() {
             case 0:
                 result = [
                     {
-                        label: '请选择',
+                        label: t('请选择'),
                         value: 'undefined',
                         key: 'undefined',
                     }
@@ -88,12 +90,12 @@ export default function index() {
                 result = [
 
                     {
-                        label: '删除',
+                        label: t('删除'),
                         value: 'drop',
                         key: 'drop',
                     },
                     {
-                        label: '导出',
+                        label: t('导出'),
                         value: 'export',
                         key: 'export',
                     },
@@ -130,9 +132,31 @@ export default function index() {
                                             type="link"
                                             onClick={() => { setAiOpen(true) }}
                                         >
-                                            ai 辅助设置
+                                            {t('ai 辅助设置')}
                                         </Button>
-
+                                        <Select
+                                            bordered={false}
+                                            placeholder={
+                                                <TranslationOutlined title={t('选择语言')} />}
+                                            onChange={(e) => {i18n.changeLanguage(e)
+                                            }}
+                                            
+                                            value={i18n.language}
+                                            options={[
+                                                {
+                                                    label: <Space><TranslationOutlined /><span>Chinese</span></Space>,
+                                                    value: 'zh',
+                                                },
+                                                {
+                                                    label: <Space><TranslationOutlined /><span>Japanese</span> </Space>,
+                                                    value: 'ja',
+                                                },
+                                                {
+                                                    label: <Space><TranslationOutlined /><span>English</span> </Space>,
+                                                    value: 'en',
+                                                },
+                                            ]}
+                                        ></Select>
                                     </Space>
 
                                 </Col>
@@ -154,7 +178,7 @@ export default function index() {
                                         <Divider></Divider>
                                         <Result
                                             icon={<SmileOutlined />}
-                                            title="请上传书籍~"
+                                            title={t("请上传书籍~")}
                                         />
                                     </div>}
                                 </Col>

@@ -2,6 +2,7 @@ import { useRequest } from 'ahooks';
 import { Button, message } from 'antd'
 import React from 'react'
 import { useBookState } from '../../store';
+import { useTranslation } from 'react-i18next';
 
 interface ExportButtonProps extends React.RefAttributes<HTMLElement> {
     keys: Set<string | undefined>;
@@ -24,6 +25,7 @@ const download = async (obj: {
 
 export function useExport() {
     const db_instance = useBookState(state => state.db_instance)
+    const {t} = useTranslation()
     const { runAsync: exportFile, loading } = useRequest(async (keys?: string[]) => {
         if (!keys) {
             return
@@ -40,7 +42,7 @@ export function useExport() {
                     })
                 }
             })
-            message.success('下载成功')
+            message.success(t('下载成功'))
         } catch (error) {
             message.error(error instanceof Error ? error.message : error)
         }
@@ -56,6 +58,7 @@ export function useExport() {
 
 export default function ExportButton(p: ExportButtonProps) {
     const db_instance = useBookState(state => state.db_instance)
+    const {t} = useTranslation()
     const { runAsync: exportFile, loading } = useRequest(async () => {
         try {
             await db_instance?.transaction('rw', db_instance.book_blob, db_instance.book_items, async () => {
@@ -75,6 +78,6 @@ export default function ExportButton(p: ExportButtonProps) {
             type="link"
             onClick={exportFile}
             loading={loading}
-        >导出按钮</Button>
+        >{t('导出按钮')}</Button>
     )
 }

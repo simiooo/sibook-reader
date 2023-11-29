@@ -24,6 +24,7 @@ import Cropper, { ReactCropperElement } from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import { ImgToText } from '../../utils/imgToText';
 import { readFileAsArrayBuffer } from '../../dbs/createBook';
+import { useTranslation } from 'react-i18next';
 
 
 const SCALE_GAP = 0.1
@@ -48,6 +49,7 @@ export default function PdfReader() {
   const [bookInfo, setBookInfo] = useState<BookItems>()
   const list_ref = useRef(null)
   const pdf_document_ref = useRef<HTMLDivElement>()
+  const {t} = useTranslation()
   const [switchOpen, setSwitchOpen] = useState<boolean>(true)
   const navigate = useNavigate()
   const [dragableDisabled, setDragableDisabled] = useState<boolean>(true)
@@ -136,11 +138,11 @@ export default function PdfReader() {
   const copyHandler = useCallback(async () => {
     try {
       const res = await window.navigator.clipboard.readText()
-      message.success('复制成功')
+      message.success(t('复制成功'))
       setCopiedText(res)
     } catch (error) {
       console.error(error instanceof Error ? error.message : error)
-      message.error('粘贴失败')
+      message.error(t('粘贴失败'))
     }
   }, [])
 
@@ -168,7 +170,7 @@ export default function PdfReader() {
       setIsRecognizing(true)
       const text = await ImgToText(resultImg)
       await navigator.clipboard.writeText(text)
-      message.success('读取文字成功，请在ai辅助功能里使用')
+      message.success(t('读取文字成功，请在ai辅助功能里使用'))
       await copyHandler()
     } catch (error) {
       message.error(error instanceof Error ? error.message : error)
@@ -350,7 +352,7 @@ export default function PdfReader() {
                     onClick: () => navigate('/')
                   },
                   {
-                    title: '该书籍',
+                    title: t('该书籍'),
                   }
                 ]}
               ></Breadcrumb>
@@ -358,8 +360,8 @@ export default function PdfReader() {
                 type="vertical"
               ></Divider>
               <Switch
-                checkedChildren="目录（开）"
-                unCheckedChildren="目录（关）"
+                checkedChildren={t("目录（开）")}
+                unCheckedChildren={t("目录（关）")}
                 defaultChecked
                 checked={switchOpen}
                 onChange={setSwitchOpen}
@@ -433,7 +435,7 @@ export default function PdfReader() {
                     loading={<Spin spinning={true}></Spin>}
                     error={<Result
                       status="error"
-                      title="书籍加载失败"
+                      title={t("书籍加载失败")}
                     ></Result>}
                     file={blob}
                     onItemClick={(e) => {
@@ -473,7 +475,7 @@ export default function PdfReader() {
                               try {
                                 setScreenShot(canvas.toDataURL('image/png', 1))
                               } catch (error) {
-                                message.error('选择文档失败')
+                                message.error(t('选择文档失败'))
                                 setScreenShot(null)
                               }
                             }}
@@ -513,13 +515,13 @@ export default function PdfReader() {
                   size={'middle'}
                 >
                   <motion.div
-                    title="放大"
+                    title={t("放大")}
                     whileTap={{ scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={scaleUp}
                   ><PlusCircleOutlined /></motion.div>
                   <motion.div
-                    title="缩小"
+                    title={t("缩小")}
                     whileTap={{ scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={scaleDown}
@@ -533,9 +535,9 @@ export default function PdfReader() {
                     </motion.div> : <motion.div
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      title="文字转图片"
+                      title={t("文字转图片")}
                       onClick={() => {
-                        message.success('请单机选择书籍的某一页')
+                        message.success(t('请单机选择书籍的某一页'))
                         setScreenShot(null)
                         setIsPageSelecting(true)
                       }}
@@ -581,7 +583,7 @@ export default function PdfReader() {
       <Modal
         open={cropOpen}
         footer={null}
-        title={'裁切图片'}
+        title={t('裁切图片')}
         onCancel={() => {
           setIsPageSelecting(false)
           setScreenShot(null)
@@ -600,7 +602,7 @@ export default function PdfReader() {
                     onClick={() => {
                       shotCompleteHandler()
                     }}
-                  >完成</Button>
+                  >{t('完成')}</Button>
                 </Space>
               </Col>
             </Row>

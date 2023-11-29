@@ -18,6 +18,7 @@ import { Spin } from 'antd'
 import { useKeyPress } from 'ahooks'
 import { MenuItemType } from 'antd/es/menu/hooks/useItems'
 import FloatAiMenu from '../../components/FloatAiMenu'
+import { useTranslation } from 'react-i18next'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -30,6 +31,7 @@ export default function index() {
   const [rendition, setRendition] = useState<Rendition>()
   const [bookLoading, setBookLoading] = useState<boolean>(false)
   const [isUserChangingLocation, setIsUserChangingLocation] = useState(false);
+  const {t} = useTranslation()
   const [error, setError] = useState<boolean>(false)
   const [epubHooks, setEpubHooks] = useState<Function[]>([])
   const [copiedText, setCopiedText] = useState<string>()
@@ -91,11 +93,11 @@ export default function index() {
     return async () => {
       try {
         const res = await content.window.navigator.clipboard.readText()
-        message.success('复制成功')
+        message.success(t('复制成功'))
         setCopiedText(res)
       } catch (error) {
         console.error(error instanceof Error ? error.message : error)
-        message.error('粘贴失败')
+        message.error(t('粘贴失败'))
       }
     }
   }
@@ -240,8 +242,8 @@ export default function index() {
         >
           <Result
             status="error"
-            title="加载图书失败"
-            subTitle="发生异常，请联系开发者"
+            title={t("加载图书失败")}
+            subTitle={t("发生异常，请联系开发者")}
             extra={[
               <Button
                 type="link"
@@ -250,7 +252,7 @@ export default function index() {
                   navigate('/')
                 }}
               >
-                回到书架
+                {t('回到书架')}
               </Button>
             ]}
           ></Result>
@@ -273,7 +275,7 @@ export default function index() {
                       onClick: () => navigate('/')
                     },
                     {
-                      title: '该书籍',
+                      title: t('该书籍'),
                       // onClick: () => reload()
                     }
                   ]}
@@ -282,8 +284,8 @@ export default function index() {
               type="vertical"
               ></Divider>
               <Switch 
-              checkedChildren="目录（开）" 
-              unCheckedChildren="目录（关）" 
+              checkedChildren={t("目录（开）")} 
+              unCheckedChildren={t("目录（关）")} 
               defaultChecked 
               checked={switchOpen}
               onChange={setSwitchOpen}

@@ -2,6 +2,7 @@ import { Button, Divider, Form, Input, Modal, ModalProps, Select } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useBookState } from '../../store'
 import { AI_MODELS } from '../../utils/openaiModels'
+import { useTranslation } from 'react-i18next'
 
 export interface GPTSettingProps extends ModalProps {
 
@@ -9,6 +10,7 @@ export interface GPTSettingProps extends ModalProps {
 
 export default function GPTSetting(p: GPTSettingProps) {
     const { ...modals } = p
+    const {t} = useTranslation()
     const formValue = useBookState(state => ({
         openai_base_url: state.openai_base_url,
         openai_api_key: state.openai_api_key,
@@ -22,7 +24,7 @@ export default function GPTSetting(p: GPTSettingProps) {
 
     return (
         <Modal
-            title="gpt 配置"
+            title={t("gpt 配置")}
             {...modals}
             footer={null}
             width={'60vw'}
@@ -40,11 +42,11 @@ export default function GPTSetting(p: GPTSettingProps) {
             >
                 <Form.Item
                     name="openai_base_url"
-                    label="openai代理地址（可选）"
+                    label={t("openai代理地址（可选）")}
                     rules={[
                         {
                             pattern: /^https?:\/\/.+$/,
-                            message: '输入的url不正确'
+                            message: t('输入的url不正确')
                         },
                     ]}
                 >
@@ -52,17 +54,17 @@ export default function GPTSetting(p: GPTSettingProps) {
                         style={{
                             maxWidth: '300px'
                         }}
-                        placeholder='请输入基础url'
+                        placeholder={t('请输入基础url')}
                     ></Input>
                 </Form.Item>
                 <Form.Item
-                    label="API密钥"
+                    label={t("API密钥")}
                     name="openai_api_key"
                     required
                     rules={[
                         {
                             required: true,
-                            message: '请输入 API 密钥'
+                            message: t('请输入 API 密钥')
                         }
                     ]}
                 >
@@ -71,11 +73,11 @@ export default function GPTSetting(p: GPTSettingProps) {
                             maxWidth: '300px'
                         }}
                         type="password"
-                        placeholder='请输入api密钥，该密钥存储在本地。'
+                        placeholder={t('请输入api密钥，该密钥存储在本地。')}
                     ></Input>
                 </Form.Item>
                 <Form.Item
-                label="模型"
+                label={t("模型")}
                 name="openai_api_model"
                 >
                     <Select
@@ -94,7 +96,7 @@ export default function GPTSetting(p: GPTSettingProps) {
                     <Button
                         type='primary'
                         htmlType='submit'
-                    >保存</Button>
+                    >{t('保存')}</Button>
                 </Form.Item>
             </Form>
         </Modal>

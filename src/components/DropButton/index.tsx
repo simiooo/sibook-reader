@@ -3,6 +3,7 @@ import React from 'react'
 import { useBookState } from '../../store'
 import { useRequest } from 'ahooks'
 import { Popconfirm } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 interface DropButtonProps extends React.RefAttributes<HTMLElement> {
     keys: Set<string | undefined>;
@@ -33,6 +34,7 @@ export function useDropBook() {
 }
 
 export default function DropButton(p: DropButtonProps) {
+    const {t} = useTranslation()
     const db_instance = useBookState(state => state.db_instance)
     const { ...buttonProps } = p
     const { runAsync: drop, loading } = useRequest(async () => {
@@ -48,7 +50,7 @@ export default function DropButton(p: DropButtonProps) {
     })
     return (
         <Popconfirm
-            title="确认删除吗？"
+            title={t("确认删除吗？")}
             onConfirm={() => {
                 drop()
             }}
@@ -61,7 +63,7 @@ export default function DropButton(p: DropButtonProps) {
                 danger
                 loading={loading}
 
-            >删除</Button>
+            >{t('删除')}</Button>
         </Popconfirm>
 
     )

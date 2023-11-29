@@ -4,6 +4,7 @@ import { ChatCompletion, openai_stream_reader, useBookState } from '../../store'
 import { useAntdTable, useRequest } from 'ahooks';
 import style from './index.module.css'
 import { languages } from '../../utils/locale';
+import { useTranslation } from 'react-i18next';
 
 export interface TranslateModalProps extends ModalProps {
     text?: string;
@@ -11,6 +12,7 @@ export interface TranslateModalProps extends ModalProps {
 
 export default function TranslateModal(p: TranslateModalProps) {
     const { text, ...modalProps } = p
+    const {t} = useTranslation()
     const [res, setRes] = useState<string[]>([])
     const [error, setError] = useState<Error>()
     const request = useBookState(state => state.openaiRequest)
@@ -30,13 +32,13 @@ export default function TranslateModal(p: TranslateModalProps) {
             const openai_res = await request({
                 type: 'translator',
                 message: {
-                    source: params?.source ?? '任意',
-                    target: params?.target ?? '中文',
+                    source: params?.source ?? t('任意'),
+                    target: params?.target ?? t('中文'),
                     message: p?.text
                 }
             })
             if (openai_res.status !== 200) {
-                throw Error(openai_res.statusText?.length > 0 ? openai_res.statusText : '服务端异常, 请检查ai辅助设置是否正确')
+                throw Error(openai_res.statusText?.length > 0 ? openai_res.statusText : t('服务端异常, 请检查ai辅助设置是否正确'))
             }
             const reader = openai_res.body.getReader();
 
@@ -75,7 +77,7 @@ export default function TranslateModal(p: TranslateModalProps) {
             {...modalProps}
             footer={null}
             width={'80vw'}
-            title="翻译"
+            title={t("翻译")}
         >
             <Form
                 form={form}
@@ -89,7 +91,7 @@ export default function TranslateModal(p: TranslateModalProps) {
                     <Col span={12}>
                         <Input.TextArea
                             value={p.text}
-                            placeholder={'请复制内容'}
+                            placeholder={t('请复制内容')}
                             showCount
                             rows={16}
                         ></Input.TextArea>
@@ -101,7 +103,7 @@ export default function TranslateModal(p: TranslateModalProps) {
                             <Select
                                 showSearch
                                 filterOption={true}
-                                placeholder='请选择待翻译语言'
+                                placeholder={t('请选择待翻译语言')}
                                 options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
                             ></Select>
                         </Form.Item>
@@ -125,7 +127,7 @@ export default function TranslateModal(p: TranslateModalProps) {
                                 <Select
                                     showSearch
                                     filterOption={true}
-                                    placeholder='请选择目标语言'
+                                    placeholder={t('请选择目标语言')}
                                     options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
                                 ></Select>
                             </Form.Item>

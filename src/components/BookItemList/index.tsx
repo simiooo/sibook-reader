@@ -12,6 +12,7 @@ import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
 import { useEventListener } from 'ahooks';
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 
 interface BookItemListProps {
@@ -23,6 +24,7 @@ interface BookItemListProps {
     onContextmenuSelect?: (payload?: { type?: string }) => void
 }
 export default function BookItemList(p: BookItemListProps) {
+    const {t} = useTranslation()
     const navigate = useNavigate()
     const container_ref = useRef()
     const { show } = useContextMenu({
@@ -115,7 +117,7 @@ export default function BookItemList(p: BookItemListProps) {
                                 } else if (ele?.fileType === 'application/pdf') {
                                     navigate(`/pdf_reader/${ele.hash}`)
                                 } else {
-                                    message.error('暂不支持')
+                                    message.error(t('暂不支持'))
                                 }
                             }}
                             title={<Tooltip

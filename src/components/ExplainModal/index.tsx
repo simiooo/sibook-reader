@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { ChatCompletion, OPENAI_PATHNAME, openai_stream_reader, useBookState } from '../../store';
 import { useAntdTable, useRequest } from 'ahooks';
 import { languages } from '../../utils/locale';
+import { useTranslation } from 'react-i18next';
 
 export interface ExplainModalProps extends ModalProps {
     text?: string;
@@ -11,7 +12,7 @@ export interface ExplainModalProps extends ModalProps {
 export default function ExplainModal(p: ExplainModalProps) {
     const { text, ...modalProps } = p
     const [res, setRes] = useState<string[]>([])
-
+    const {t} = useTranslation()
     const [error, setError] = useState<Error>()
     const request = useBookState(state => state.openaiRequest)
     const [form] = Form.useForm()
@@ -33,7 +34,7 @@ export default function ExplainModal(p: ExplainModalProps) {
                 }
             })
             if (openai_res.status !== 200) {
-                throw Error(openai_res.statusText?.length > 0 ? openai_res.statusText : '服务端异常, 请检查ai辅助设置是否正确')
+                throw Error(openai_res.statusText?.length > 0 ? openai_res.statusText : t('服务端异常, 请检查ai辅助设置是否正确'))
             }
             const reader = openai_res.body.getReader();
             openai_stream_reader(reader, (line) => {
@@ -74,7 +75,7 @@ export default function ExplainModal(p: ExplainModalProps) {
             {...modalProps}
             footer={null}
             width={'80vw'}
-            title="阐释"
+            title={t("阐释")}
         >
             <Form
                 form={form}
@@ -106,7 +107,7 @@ export default function ExplainModal(p: ExplainModalProps) {
                             <Select
                                 showSearch
                                 filterOption={true}
-                                placeholder={'请选择选择语言'}
+                                placeholder={t('请选择选择语言')}
                                 style={{
                                     width: '210px'
                                 }}
