@@ -257,15 +257,21 @@ export default function PdfReader() {
     }
   }, [scale, pageNumber, numPages])
 
-
-  useEffect(() => {
+  const {run: scrollToView} = useDebounceFn(() => {
     if (isUserChangePageNumber) {
       list_ref.current?.scrollToRow(pageNumber - 1)
     }
-  }, [pageNumber])
-  useEffect(() => {
+  }, {
+    wait: 100,
+  })
+  
+  const {run: scrollToViewByScale} = useDebounceFn(() => {
     list_ref?.current?.scrollToRow?.(pageNumber - 1)
-  }, [scale])
+  }, {
+    wait: 100
+  })
+  useEffect(scrollToView, [pageNumber])
+  useEffect(scrollToViewByScale, [scale])
 
 
   useEventListener('wheel', scrollHandler, {
@@ -448,7 +454,12 @@ export default function PdfReader() {
                   <Document
                     inputRef={pdf_document_ref}
                     className={style.pdf_document}
-                    loading={<Spin spinning={true}></Spin>}
+                    loading={<Spin spinning={true}><div
+                    style={{
+                      height: '100%',
+                      width: '100%',
+                    }}
+                    ></div></Spin>}
                     error={<Result
                       status="error"
                       title={t("书籍加载失败")}
@@ -465,7 +476,7 @@ export default function PdfReader() {
                         setIsUserChangePageNumber(false)
                         setPageNumber(e.startIndex + 1)
                       }}
-                      height={renderPageHeight}
+                      height={size?.height}
                       width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
                       rowHeight={(renderPageHeight + 10) * scale}
                       ref={list_ref}
