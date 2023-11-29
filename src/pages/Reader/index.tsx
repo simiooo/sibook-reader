@@ -1,6 +1,6 @@
 import { Button, Col, Divider, FloatButton, Menu, Result, Space, Switch, message } from 'antd'
 import { Row } from 'antd'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import style from './index.module.css'
 import { useBookState } from '../../store'
 import { useParams } from 'react-router-dom'
@@ -13,12 +13,13 @@ import { useNavigate } from 'react-router-dom'
 import { HomeOutlined } from '@ant-design/icons'
 import { createPortal } from 'react-dom'
 import { Slider } from 'antd'
-import { useThrottleFn } from 'ahooks'
+import { useResponsive, useThrottleFn } from 'ahooks'
 import { Spin } from 'antd'
 import { useKeyPress } from 'ahooks'
 import { MenuItemType } from 'antd/es/menu/hooks/useItems'
 import FloatAiMenu from '../../components/FloatAiMenu'
 import { useTranslation } from 'react-i18next'
+import { usePhone } from '../../utils/usePhone'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -31,7 +32,7 @@ export default function index() {
   const [rendition, setRendition] = useState<Rendition>()
   const [bookLoading, setBookLoading] = useState<boolean>(false)
   const [isUserChangingLocation, setIsUserChangingLocation] = useState(false);
-  const {t} = useTranslation()
+  const { t } = useTranslation()
   const [error, setError] = useState<boolean>(false)
   const [epubHooks, setEpubHooks] = useState<Function[]>([])
   const [copiedText, setCopiedText] = useState<string>()
@@ -108,7 +109,7 @@ export default function index() {
   // }, [switchOpen])
 
   const rendition_rendered_handler = useCallback(() => {
-    
+
     const contents = rendition.getContents() as any as Contents[]
     // const handlerContainer: Function[] = []
     for (const content of contents) {
@@ -217,20 +218,22 @@ export default function index() {
     }
   }, [book_id])
 
+  const { isPhone } = usePhone()
 
   return (
     <Spin spinning={bookLoading}>
       <FloatAiMenu
-      copiedText={copiedText}
-      translator={{
-        value: translatorOpen,
-        onCancel: setTranslatorOpen
-      }}
-      explainer={{
-        value: explainerOpen,
-        onCancel: setExplainerOpen
-      }}
+        copiedText={copiedText}
+        translator={{
+          value: translatorOpen,
+          onCancel: setTranslatorOpen
+        }}
+        explainer={{
+          value: explainerOpen,
+          onCancel: setExplainerOpen
+        }}
       ></FloatAiMenu>
+      {isPhone ? <div style={{height: '1rem', width: '1px'}}></div> : undefined}
 
       {error
         ? <Row
@@ -280,16 +283,16 @@ export default function index() {
                     }
                   ]}
                 ></Breadcrumb>
-                <Divider
-              type="vertical"
-              ></Divider>
-              <Switch 
-              checkedChildren={t("目录（开）")} 
-              unCheckedChildren={t("目录（关）")} 
-              defaultChecked 
-              checked={switchOpen}
-              onChange={setSwitchOpen}
-              />
+                  <Divider
+                    type="vertical"
+                  ></Divider>
+                  <Switch
+                    checkedChildren={t("目录（开）")}
+                    unCheckedChildren={t("目录（关）")}
+                    defaultChecked
+                    checked={switchOpen}
+                    onChange={setSwitchOpen}
+                  />
                 </Space>
 
               </Col>
@@ -306,18 +309,20 @@ export default function index() {
                 xxl={4}
                 xl={4}
                 lg={6}
-                md={8}
+                md={isPhone ? 24 : 8}
                 span={4}
-                sm={8}
-                xs={8}
+                sm={isPhone ? 24 : 8}
+                xs={isPhone ? 24 : 8}
                 style={{
-                  display: switchOpen ? undefined : 'none'
+                  display: switchOpen ? undefined : 'none',
+                  height: isPhone ? '2.5rem' : undefined,
                 }}
               >
                 <div
                   className={style.menu_container}
                 >
                   <Menu
+                    mode={isPhone ? 'horizontal' : undefined}
                     items={menuItems}
                     openKeys={menuOpenKeys}
                     selectedKeys={menuSelectedKeys}
@@ -333,11 +338,11 @@ export default function index() {
                 </div>
 
               </Col>
-            : undefined  
-            }
+                : undefined
+              }
               <Col
                 flex="1 1"
-                >
+              >
                 <div
                   id={'article'}
                   ref={container_ref}

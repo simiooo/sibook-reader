@@ -28,3 +28,7 @@
     align-items: center;
   }
 }
+.empty_content{
+  color: #828282;
+  font-size: 1.5rem;
+}

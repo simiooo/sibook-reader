@@ -12,7 +12,7 @@ import style from './index.module.css'
 const stylecss = style
 import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
-import { useDebounce, useDebounceFn, useEventListener, useKeyPress, useMap, usePrevious, useSize, useThrottle, useThrottleFn } from 'ahooks';
+import { useDebounce, useDebounceFn, useEventListener, useKeyPress, useMap, usePrevious, useResponsive, useSize, useThrottle, useThrottleFn } from 'ahooks';
 import { createPortal } from 'react-dom';
 import { MenuItemType } from 'antd/es/menu/hooks/useItems';
 import List from 'react-virtualized/dist/commonjs/List';
@@ -25,6 +25,7 @@ import "cropperjs/dist/cropper.css";
 import { ImgToText } from '../../utils/imgToText';
 import { readFileAsArrayBuffer } from '../../dbs/createBook';
 import { useTranslation } from 'react-i18next';
+import { usePhone } from '../../utils/usePhone';
 
 
 const SCALE_GAP = 0.1
@@ -49,7 +50,7 @@ export default function PdfReader() {
   const [bookInfo, setBookInfo] = useState<BookItems>()
   const list_ref = useRef(null)
   const pdf_document_ref = useRef<HTMLDivElement>()
-  const {t} = useTranslation()
+  const { t } = useTranslation()
   const [switchOpen, setSwitchOpen] = useState<boolean>(true)
   const navigate = useNavigate()
   const [dragableDisabled, setDragableDisabled] = useState<boolean>(true)
@@ -128,6 +129,8 @@ export default function PdfReader() {
     })
   }, [])
 
+
+
   useKeyPress('uparrow', () => {
     setPageNumber(Math.max(1, pageNumber - 1))
   })
@@ -200,6 +203,8 @@ export default function PdfReader() {
       }
     }
   }, [scale, pageNumber, numPages])
+
+  const {isPhone} = usePhone()
 
   const dragHandler = useCallback((e: KeyboardEvent | MouseEvent) => {
     switch (e.type) {
@@ -337,6 +342,7 @@ export default function PdfReader() {
           onCancel: setExplainerOpen
         }}
       ></FloatAiMenu>
+      {isPhone ? <div style={{height: '1rem', width: '1px'}}></div> : undefined}
       <Col span={24}>
         <Row
           justify={'space-between'}
@@ -385,13 +391,17 @@ export default function PdfReader() {
               xxl={4}
               xl={4}
               lg={6}
-              md={8}
+              md={isPhone ? 24 : 8}
               span={4}
-              sm={8}
-              xs={8}
+              sm={isPhone ? 24 : 8}
+              xs={isPhone ? 24 : 8}
               className={style.menu_container}
+              style={{
+                height: isPhone ? '2.5rem' : undefined,
+              }}
             >
               <Menu
+                mode={isPhone ? 'horizontal' : undefined}
                 items={pdfOutline}
                 openKeys={menuOpenKeys}
                 selectedKeys={menuSelectedKeys}

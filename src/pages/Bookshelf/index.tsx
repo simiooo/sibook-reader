@@ -1,7 +1,7 @@
 import { Button, Col, Result, Space, Divider, Select } from 'antd';
 import { Row } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FileTextTwoTone, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CopyOutlined, DragOutlined, FileTextTwoTone, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
@@ -138,9 +138,10 @@ export default function index() {
                                             bordered={false}
                                             placeholder={
                                                 <TranslationOutlined title={t('选择语言')} />}
-                                            onChange={(e) => {i18n.changeLanguage(e)
+                                            onChange={(e) => {
+                                                i18n.changeLanguage(e)
                                             }}
-                                            
+
                                             value={i18n.language}
                                             options={[
                                                 {
@@ -177,8 +178,28 @@ export default function index() {
                                     ></BookItemList> : <div>
                                         <Divider></Divider>
                                         <Result
-                                            icon={<SmileOutlined />}
-                                            title={t("请上传书籍~")}
+                                            icon={<SmileOutlined 
+                                            style={{color: '#283593'}}
+                                            />}
+                                            title={
+                                                <Space 
+                                                direction='vertical'
+                                                align='start'
+                                                >
+                                                    <h2>{t("请上传书籍")}</h2>
+                                                    <div>
+                                                        <Space
+                                                        direction='vertical'
+                                                        align="start"
+                                                        className={style.empty_content}
+                                                        >
+                                                            <span><DragOutlined /> {t('可拖拽到此处')}</span>
+                                                            <span><CopyOutlined /> {t('可粘贴文件在此处')}</span>
+                                                        </Space>
+                                                    </div>
+                                                </Space>
+
+                                            }
                                         />
                                     </div>}
                                 </Col>
