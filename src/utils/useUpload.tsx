@@ -33,7 +33,7 @@ export function useUpload() {
                 const hash = await sha256(file)
                 let meta
                 if(info.file.type === 'application/pdf') {
-                    meta = await pdfMetaParser(file)
+                    // meta = await pdfMetaParser(file)
                 } else if(info.file.type === 'application/epub+zip') {
                     meta = await epubMetaParser(file)
                 }
