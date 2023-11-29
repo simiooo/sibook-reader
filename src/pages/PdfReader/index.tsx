@@ -249,11 +249,11 @@ export default function PdfReader() {
 
   useEffect(() => {
     if (isUserChangePageNumber) {
-      list_ref.current?.scrollToRow(pageNumber)
+      list_ref.current?.scrollToRow(pageNumber - 1)
     }
   }, [pageNumber])
   useEffect(() => {
-    list_ref?.current?.scrollToRow?.(pageNumber)
+    list_ref?.current?.scrollToRow?.(pageNumber - 1)
   }, [scale])
 
 

@@ -336,12 +336,6 @@ export default function index() {
             : undefined  
             }
               <Col
-                // sm={16}
-                // xs={16}
-                // xl={20}
-                // md={16}
-                // lg={18}
-                // span={20}
                 flex="1 1"
                 >
                 <div
