@@ -14,6 +14,16 @@ import { useEventListener } from 'ahooks';
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
+const tagMap = {
+    'application/pdf': {
+        type: 'PDF',
+        color: '#222',
+    },
+    'application/epub+zip': {
+        type: 'Epub',
+        color: '#3498DB',
+    }
+}
 
 interface BookItemListProps {
     data?: BookItems[]
@@ -24,7 +34,7 @@ interface BookItemListProps {
     onContextmenuSelect?: (payload?: { type?: string }) => void
 }
 export default function BookItemList(p: BookItemListProps) {
-    const {t} = useTranslation()
+    const { t } = useTranslation()
     const navigate = useNavigate()
     const container_ref = useRef()
     const { show } = useContextMenu({
@@ -89,6 +99,18 @@ export default function BookItemList(p: BookItemListProps) {
             />
             {
                 (p.data.sort((pre, val) => val?.sort - pre.sort) ?? []).map((ele, index) => {
+                    let title
+                    let des
+                    if (ele?.meta) {
+                        if ('title' in ele?.meta) {
+                            title = ele.meta.title
+                            des = ele.meta.creator
+                        } else {
+                            title = ele.meta.Title
+                            des = ele.meta.Author
+                        }
+                    }
+
                     return <Col
                         // flex={'1 1'}
                         span={6}
@@ -108,25 +130,30 @@ export default function BookItemList(p: BookItemListProps) {
                             }}
                         >
                             <Card
-                            data-hash={ele?.hash}
-                            extra={<Tag color="#212121">{ele?.fileType}</Tag>}
-                            className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
-                            onDoubleClick={() => {
-                                if (ele?.fileType === 'application/epub+zip') {
-                                    navigate(`/reader/${ele.hash}`)
-                                } else if (ele?.fileType === 'application/pdf') {
-                                    navigate(`/pdf_reader/${ele.hash}`)
-                                } else {
-                                    message.error(t('暂不支持'))
-                                }
-                            }}
-                            title={<Tooltip
-                            >
-                                {ele?.name}
-                            </Tooltip>}
-                        >{ele?.des}</Card>
+                                data-hash={ele?.hash}
+                                extra={<Tag color={tagMap[ele?.fileType]?.color}>{tagMap[ele?.fileType]?.type }</Tag>}
+                                className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
+                                onDoubleClick={() => {
+                                    if (ele?.fileType === 'application/epub+zip') {
+                                        navigate(`/reader/${ele.hash}`)
+                                    } else if (ele?.fileType === 'application/pdf') {
+                                        navigate(`/pdf_reader/${ele.hash}`)
+                                    } else {
+                                        message.error(t('暂不支持'))
+                                    }
+                                }}
+                                title={<Tooltip
+                                >
+                                    <Tooltip
+                                        title={title ?? ele?.name}
+                                    >
+                                        {title ?? ele?.name}
+                                    </Tooltip>
+
+                                </Tooltip>}
+                            >{des ?? ele?.name}</Card>
                         </motion.div>
-                        
+
                     </Col>
                 })
             }

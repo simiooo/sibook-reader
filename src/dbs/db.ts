@@ -1,12 +1,22 @@
 // db.ts
 import Dexie, { Table } from "dexie";
+import { PackagingMetadataObject } from "epubjs/types/packaging";
 
-export interface BookItems {
+interface PDFMetaType{
+  Author?: string;
+  Title?: string;
+  Producer?: string;
+  CreationDate?: string;
+  [key: string]: string;
+}
+
+export interface BookItems <T extends Object = (PDFMetaType | PackagingMetadataObject)>{
   name?: string;
   des: string;
   hash: string;
   fileType: string;
   sort: number;
+  meta?: T
 }
 export interface BookBlob {
   id?: string;

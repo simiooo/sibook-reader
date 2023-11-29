@@ -6,6 +6,7 @@ import { message } from "antd";
 import { sha256 } from "./sha256";
 import Dexie from "dexie";
 import { useTranslation } from "react-i18next";
+import { epubMetaParser, pdfMetaParser } from "./getBookMeta";
 
 
 
@@ -22,7 +23,7 @@ export function useUpload() {
                     throw Error(t('请传入文件'))
                 }
                 if (!['application/epub+zip', 'application/pdf'].includes(info.file.type)) {
-                    throw Error(t('仅支持 pdf 与 epub 书籍~'))
+                    throw Error(t('仅支持 pdf 与 epub 书籍'))
                 }
                 const MAX_LIMIT = ((window?.performance as any)?.memory?.jsHeapSizeLimit as number) * 0.75
                 if (info.file.size > MAX_LIMIT) {
@@ -30,6 +31,12 @@ export function useUpload() {
                 }
                 const file = await readFileAsArrayBuffer(info.file)
                 const hash = await sha256(file)
+                let meta
+                if(info.file.type === 'application/pdf') {
+                    meta = await pdfMetaParser(file)
+                } else if(info.file.type === 'application/epub+zip') {
+                    meta = await epubMetaParser(file)
+                }
                 const res = db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
                     if (!info?.file) {
                         throw Error(t('请传入文件'))
@@ -47,6 +54,7 @@ export function useUpload() {
                         sort: dayjs().unix(),
                         fileType: info.file.type,
                         hash,
+                        meta,
                     })
                     db_instance?.book_blob?.add({
                         id: hash,

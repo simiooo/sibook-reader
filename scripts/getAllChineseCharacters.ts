@@ -16,10 +16,8 @@ const result: Word[] = []
 function main(): void {
     findChineseCharacter()
         .then(() => {
-            console.log('done')
         })
         .finally(() => {
-            console.log(result)
             promises.writeFile(fileURLToPath(new URL('../chineseContent.txt', import.meta.url)), JSON.stringify(result))
         })
 }
