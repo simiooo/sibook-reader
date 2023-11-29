@@ -29,6 +29,12 @@ import { usePhone } from '../../utils/usePhone';
 
 
 const SCALE_GAP = 0.1
+export const ANIMATION_STATIC = {
+  whileTap: { scale: 0.75 },
+  whileHover: { scale: 1.35 },
+  transition: { type: "spring", stiffness: 400, damping: 17 },
+}
+
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.js',
@@ -204,7 +210,7 @@ export default function PdfReader() {
     }
   }, [scale, pageNumber, numPages])
 
-  const {isPhone} = usePhone()
+  const { isPhone } = usePhone()
 
   const dragHandler = useCallback((e: KeyboardEvent | MouseEvent) => {
     switch (e.type) {
@@ -342,7 +348,7 @@ export default function PdfReader() {
           onCancel: setExplainerOpen
         }}
       ></FloatAiMenu>
-      {isPhone ? <div style={{height: '1rem', width: '1px'}}></div> : undefined}
+      {isPhone ? <div style={{ height: '1rem', width: '1px' }}></div> : undefined}
       <Col span={24}>
         <Row
           justify={'space-between'}
@@ -397,7 +403,7 @@ export default function PdfReader() {
               xs={isPhone ? 24 : 8}
               className={style.menu_container}
               style={{
-                height: isPhone ? '2.5rem' : undefined,
+                height: isPhone ? '2.9rem' : undefined,
               }}
             >
               <Menu
@@ -526,25 +532,21 @@ export default function PdfReader() {
                 >
                   <motion.div
                     title={t("放大")}
-                    whileTap={{ scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    {...ANIMATION_STATIC}
                     onClick={scaleUp}
                   ><PlusCircleOutlined /></motion.div>
                   <motion.div
                     title={t("缩小")}
-                    whileTap={{ scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    {...ANIMATION_STATIC}
                     onClick={scaleDown}
                   ><MinusCircleOutlined /></motion.div>
                   {
                     ocrPending ? <motion.div
-                      whileTap={{ scale: 0.9 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      {...ANIMATION_STATIC}
                     >
                       <LoadingOutlined />
                     </motion.div> : <motion.div
-                      whileTap={{ scale: 0.9 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      {...ANIMATION_STATIC}
                       title={t("文字转图片")}
                       onClick={() => {
                         message.success(t('请单机选择书籍的某一页'))
@@ -591,6 +593,7 @@ export default function PdfReader() {
         </Row>
       </Col>
       <Modal
+        style={{ top: 10 }}
         open={cropOpen}
         footer={null}
         title={t('裁切图片')}
@@ -621,7 +624,7 @@ export default function PdfReader() {
           <Col span={24}>
             <Cropper
               src={screenShot}
-              style={{ height: 600, width: "100%" }}
+              style={{ height: 850, width: "100%" }}
               // Cropper.js options
               initialAspectRatio={16 / 9}
               guides={false}

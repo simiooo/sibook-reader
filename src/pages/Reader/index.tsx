@@ -315,7 +315,7 @@ export default function index() {
                 xs={isPhone ? 24 : 8}
                 style={{
                   display: switchOpen ? undefined : 'none',
-                  height: isPhone ? '2.5rem' : undefined,
+                  height: isPhone ? '2.9rem' : undefined,
                 }}
               >
                 <div
