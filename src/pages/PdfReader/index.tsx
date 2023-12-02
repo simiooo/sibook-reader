@@ -26,6 +26,8 @@ import { ImgToText } from '../../utils/imgToText';
 import { readFileAsArrayBuffer } from '../../dbs/createBook';
 import { useTranslation } from 'react-i18next';
 import { usePhone } from '../../utils/usePhone';
+import { usePagination } from './usePagination';
+import { PDFDocumentProxy } from 'pdfjs-dist';
 
 
 const SCALE_GAP = 0.1
@@ -41,38 +43,33 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-const pdfToMenuItemHandler = (pdfItems?: any[]) => {
-  return pdfItems?.map(ele => ({
-    ...ele,
+const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?:PDFDocumentProxy) => {
+  return Promise.all(pdfItems?.map(async ele => ({
     label: ele.title,
-    key: ele.title,
-    value: ele.title,
-    children: ele.items?.length > 0 ? pdfToMenuItemHandler(ele.items) : undefined
-  }))
+    key: await pdfDocument?.getPageIndex?.(ele.dest?.[0]),
+    children: ele.items?.length > 0 ? await pdfToMenuItemHandler(ele.items, pdfDocument) : undefined
+  }))) 
 }
+
+
 
 export default function PdfReader() {
   const db_instance = useBookState(state => state.db_instance)
   const [bookInfo, setBookInfo] = useState<BookItems>()
   const list_ref = useRef(null)
   const pdf_document_ref = useRef<HTMLDivElement>()
+  const PDFDocument = useRef<PDFDocumentProxy>(null)
   const { t } = useTranslation()
   const [switchOpen, setSwitchOpen] = useState<boolean>(true)
   const navigate = useNavigate()
   const [dragableDisabled, setDragableDisabled] = useState<boolean>(true)
   const container_ref = useRef(null)
   const [pdfOutline, setPdfOutline] = useState<MenuItemType[]>([])
-  const [scale, setScale] = useState<number>(1)
-  const ThrottleScale = useThrottle(scale, { wait: 40 })
+  const [counter, setCounter] = useState<number>(0)
   const [translatorOpen, setTranslatorOpen] = useState<boolean>(false)
   const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
   const [copiedText, setCopiedText] = useState<string>()
-  const page_ref = useRef<null>()
-  const pageSize = useSize(page_ref)
-  const [pageProxy, { set, get }] = useMap<number, PDFPageProxy>()
   const [maxWidthPage, setMaxWidthPage] = useState<PDFPageProxy>()
-
-
 
   const [cropOpen, setCropOpen] = useState<boolean>(false)
   const [screenShot, setScreenShot] = useState<string>()
@@ -92,38 +89,35 @@ export default function PdfReader() {
     if ((e as any)?.originalWidth > (maxWidthPage as any)?.originalWidth) {
       setMaxWidthPage(e)
     }
-    set(e._pageIndex, e)
   }, [maxWidthPage])
-  const pdfoutlineRef = useRef<HTMLDivElement>(null)
 
   const [ocrPending, setOcrPending] = useState<boolean>(false)
 
   const [blob, setBlob] = useState<{ data: Uint8Array }>()
   const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState<number>(1);
-  const [isUserChangePageNumber, setIsUserChangePageNumber] = useState<boolean>(false)
-  const previewPageNumber = usePrevious(pageNumber)
-  function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number }): void {
+  
+  async function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number,_transport: any}) {
+    PDFDocument.current = await others._transport.loadingTask.promise
     setNumPages(numPages);
-    const cachePageNumber = Number(localStorage.getItem(`book_id:${book_id}`))
-    const init_scale = localStorage.getItem(`scale:${book_id}`) ?? 1
-    setScale(Number.isNaN(Number(init_scale)) ? 1 : Number(init_scale))
-    setIsUserChangePageNumber(true)
-    setPageNumber(Number.isNaN(cachePageNumber) ? 1 : Math.max(1, cachePageNumber))
-    setTimeout(() => {
-      setIsUserChangePageNumber(false)
-    }, 0);
   }
 
+  const {
+    scaleDown,
+    scaleUp,
+    scale,
+    pageNumber,
+    setPageNumber,
+  } = usePagination({
+    numPages,
+    book_id,
+  })
+  const ThrottleScale = useThrottle(scale, { wait: 40 })
+  useEffect(() => {
+    setCounter(pageNumber)
+  }, [pageNumber])
   const renderPageHeight = useMemo(() => {
     return scale * ((size?.height ?? 20) - 20)
   }, [size, scale])
-
-  useEffect(() => {
-    if (previewPageNumber && previewPageNumber !== pageNumber) {
-      localStorage.setItem(`book_id:${book_id}`, String(pageNumber || 1))
-    }
-  }, [pageNumber, previewPageNumber])
 
   const init = useCallback(async () => {
     return await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
@@ -131,18 +125,8 @@ export default function PdfReader() {
       const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
       setBlob({ data: book_blob.blob })
       setBookInfo(book_info)
-
     })
   }, [])
-
-
-
-  useKeyPress('uparrow', () => {
-    setPageNumber(Math.max(1, pageNumber - 1))
-  })
-  useKeyPress(40, () => {
-    setPageNumber(Math.min(numPages, pageNumber + 1))
-  })
 
   const copyHandler = useCallback(async () => {
     try {
@@ -156,23 +140,6 @@ export default function PdfReader() {
   }, [])
 
   useEventListener('copy', copyHandler)
-
-  const [pagination, setPagination] = useState<number>(0)
-  const { run: changePageNumberByInput } = useThrottleFn((e: number) => {
-    setIsUserChangePageNumber(true)
-    setPageNumber(e)
-  }, {
-    wait: 50
-  })
-
-  // 同步页码组件用
-  useEffect(() => {
-    if (pageNumber !== pagination) {
-      setPagination(pageNumber)
-    }
-  }, [pageNumber])
-
-
 
   const shotCompleteHandler = useCallback(async () => {
     try {
@@ -233,17 +200,6 @@ export default function PdfReader() {
     }
   }
 
-  const scaleUp = useCallback(() => {
-    const result_scale = Math.min(scale + SCALE_GAP, 100)
-    setScale(result_scale)
-    localStorage.setItem(`scale:${book_id}`, String(result_scale))
-  }, [scale, pageNumber, numPages])
-  const scaleDown = useCallback(() => {
-    const result_scale = Math.max(scale - SCALE_GAP, 0)
-    setScale(result_scale)
-    localStorage.setItem(`scale:${book_id}`, String(result_scale))
-  }, [scale, pageNumber, numPages])
-
   const scrollHandler = useCallback((event) => {
     if (event.ctrlKey) {
       event.preventDefault();
@@ -252,26 +208,24 @@ export default function PdfReader() {
       } else {
         scaleDown()
       }
-    } else {
-
     }
-  }, [scale, pageNumber, numPages])
+  }, [scale, pageNumber])
 
-  const {run: scrollToView} = useDebounceFn(() => {
-    if (isUserChangePageNumber) {
-      list_ref.current?.scrollToRow(pageNumber - 1)
-    }
+  const {run: scrollToView} = useDebounceFn((number?: number) => {
+      list_ref.current?.scrollToRow(number ?? pageNumber)
   }, {
     wait: 100,
   })
-  
-  const {run: scrollToViewByScale} = useDebounceFn(() => {
-    list_ref?.current?.scrollToRow?.(pageNumber - 1)
-  }, {
-    wait: 100
-  })
   useEffect(scrollToView, [pageNumber])
-  useEffect(scrollToViewByScale, [scale])
+  useEffect(() =>{
+    scrollToView(counter)
+  }, [scale])
+  useEffect(() => {
+    if(!book_id) {
+      return
+    }
+    localStorage.setItem(`book_id:${book_id}`, String(counter || 1))
+  }, [counter])
 
 
   useEventListener('wheel', scrollHandler, {
@@ -335,8 +289,6 @@ export default function PdfReader() {
       return
     }
     init()
-    return () => {
-    }
   }, [book_id])
 
   return (
@@ -421,11 +373,8 @@ export default function PdfReader() {
                   setMenuOpenKeys(e)
                 }}
                 onSelect={(e) => {
-                  setIsUserChangePageNumber(true)
-                  const tag = pdfoutlineRef.current?.querySelectorAll(e.keyPath.slice(0, -1).map(ele => 'ul').join(' ') + ' a') as NodeListOf<HTMLAnchorElement>
-                  const el = [...tag].find(ele => ele.innerText === e.key)
-                  el?.click?.()
                   setMenuSelectedKeys(e.selectedKeys)
+                  setPageNumber(Number(e.selectedKeys))
                 }}
               ></Menu>
             </Col>
@@ -465,18 +414,14 @@ export default function PdfReader() {
                       title={t("书籍加载失败")}
                     ></Result>}
                     file={blob}
-                    onItemClick={(e) => {
-                      setPageNumber(e.pageNumber)
-                    }}
                     onLoadSuccess={onDocumentLoadSuccess}
                   >
                     <List
                       rowCount={numPages ?? 0}
-                      onRowsRendered={e => {
-                        setIsUserChangePageNumber(false)
-                        setPageNumber(e.startIndex + 1)
-                      }}
                       height={size?.height}
+                      onRowsRendered={(e) => {
+                        setCounter(e.stopIndex)
+                      }}
                       width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
                       rowHeight={(renderPageHeight + 10) * scale}
                       ref={list_ref}
@@ -525,13 +470,9 @@ export default function PdfReader() {
                     </List>
 
                     <Outline
-                      inputRef={pdfoutlineRef}
                       className={style.outline}
-                      onItemClick={(e) => {
-                        setPageNumber(e.pageNumber)
-                      }}
-                      onLoadSuccess={e => {
-                        setPdfOutline(pdfToMenuItemHandler(e ?? []))
+                      onLoadSuccess={async e => {
+                        setPdfOutline(await pdfToMenuItemHandler(e ?? [], PDFDocument.current))
                       }}
                     ></Outline>
                   </Document>
@@ -579,14 +520,14 @@ export default function PdfReader() {
                   <Space>
                     <InputNumber
                       bordered={false}
-                      value={pagination}
-                      onChange={(e) => setPagination(e)}
+                      value={counter}
+                      onChange={(e) => setCounter(e)}
                       onBlur={(e) => {
                         const target = Number(e.target?.value)
                         if (Number.isNaN(target)) {
                           return
                         }
-                        changePageNumberByInput(target)
+                        setPageNumber(target)
                       }}
                       style={{
                         width: '50px'

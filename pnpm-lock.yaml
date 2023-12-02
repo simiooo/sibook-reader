@@ -11,6 +11,9 @@ dependencies:
   '@types/node':
     specifier: ^20.9.3
     version: 20.9.3
+  '@types/react-i18next':
+    specifier: ^8.1.0
+    version: 8.1.0(i18next@23.7.7)(react-dom@18.2.0)(react@18.2.0)
   '@vercel/analytics':
     specifier: ^1.1.1
     version: 1.1.1
@@ -2213,6 +2216,18 @@ packages:
     dependencies:
       '@types/react': 18.2.31
     dev: true
+
+  /@types/react-i18next@8.1.0(i18next@23.7.7)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-d4xhcjX5b3roNMObRNMfb1HinHQlQLPo8xlDj60dnHeeAw2bBymR2cy/l1giJpHzo/ZFgSvgVUvIWr4kCrenCg==}
+    deprecated: This is a stub types definition. react-i18next provides its own type definitions, so you do not need this installed.
+    dependencies:
+      react-i18next: 13.5.0(i18next@23.7.7)(react-dom@18.2.0)(react@18.2.0)
+    transitivePeerDependencies:
+      - i18next
+      - react
+      - react-dom
+      - react-native
+    dev: false
 
   /@types/react@18.2.31:
     resolution: {integrity: sha512-c2UnPv548q+5DFh03y8lEDeMfDwBn9G3dRwfkrxQMo/dOtRHUUO57k6pHvBIfH/VF4Nh+98mZ5aaSe+2echD5g==}
