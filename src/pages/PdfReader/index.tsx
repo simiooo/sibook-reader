@@ -43,12 +43,26 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?:PDFDocumentProxy) => {
-  return Promise.all(pdfItems?.map(async ele => ({
-    label: ele.title,
-    key: await pdfDocument?.getPageIndex?.(ele.dest?.[0]),
-    children: ele.items?.length > 0 ? await pdfToMenuItemHandler(ele.items, pdfDocument) : undefined
-  }))) 
+const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?:PDFDocumentProxy, parent?: any) => {
+  return Promise.all(pdfItems?.map(async ele => {
+    let key
+    try {
+      if(ele.dest instanceof Array) {
+        key = await pdfDocument?.getPageIndex?.( ele.dest?.find?.(ele2 => typeof ele2 === 'object' && Object.keys(ele2).some(ele3 => ['gen', 'num'].includes(ele3)) )  )
+      } else {
+        const detail = (await pdfDocument?.getDestination(ele.dest))
+        key = await pdfDocument?.getPageIndex?.(detail?.[0])
+      }
+    } catch (error) {
+      console.log(ele)
+      console.log(error)
+    }
+    return {
+      label: ele.title,
+      key: `${key},${ele.title},${ parent?.key}`,
+      children: ele.items?.length > 0 ? await pdfToMenuItemHandler(ele.items, pdfDocument, ele) : undefined
+    }
+  })) 
 }
 
 
@@ -98,6 +112,7 @@ export default function PdfReader() {
   
   async function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number,_transport: any}) {
     PDFDocument.current = await others._transport.loadingTask.promise
+    setPdfOutline(await pdfToMenuItemHandler(await PDFDocument.current.getOutline() ?? [], PDFDocument.current))
     setNumPages(numPages);
   }
 
@@ -374,7 +389,7 @@ export default function PdfReader() {
                 }}
                 onSelect={(e) => {
                   setMenuSelectedKeys(e.selectedKeys)
-                  setPageNumber(Number(e.selectedKeys))
+                  setPageNumber(Number(e.selectedKeys?.[0]?.split?.(',')?.[0]))
                 }}
               ></Menu>
             </Col>
@@ -469,12 +484,12 @@ export default function PdfReader() {
                     >
                     </List>
 
-                    <Outline
+                    {/* <Outline
                       className={style.outline}
                       onLoadSuccess={async e => {
                         setPdfOutline(await pdfToMenuItemHandler(e ?? [], PDFDocument.current))
                       }}
-                    ></Outline>
+                    ></Outline> */}
                   </Document>
                 </div>
               </Draggable>
