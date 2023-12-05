@@ -9,15 +9,17 @@ interface PaginationParams{
 const SCALE_LIMIT = 0.05
 
 export function usePagination(p: PaginationParams) {
-    useEffect(() => {
+    const paginationInit = useCallback(() =>{
         const cachePageNumber = Number(localStorage.getItem(`book_id:${p.book_id}`))
         setPageNumber(Number.isNaN(cachePageNumber) ? 1 : Math.max(1, cachePageNumber))
         const init_scale = localStorage.getItem(`scale:${p.book_id}`) ?? 1
         setScale(Number.isNaN(Number(init_scale)) ? 1 : Number(init_scale))
-    }, [p.book_id])
+        setIsInited(true)
+    }, [])
     const [pageNumber, setPageNumber] = useState<number>(1)
     const previewPageNumber = usePrevious(pageNumber)
     const [scale, setScale] = useState<number>()
+    const [isInited, setIsInited] = useState<boolean>(false)
 
     useEffect(() => {
         if (previewPageNumber && previewPageNumber !== pageNumber) {
@@ -52,5 +54,8 @@ export function usePagination(p: PaginationParams) {
         goPrePage,
         setPageNumber,
         scale,
+        isInited,
+        setIsInited,
+        paginationInit,
     }
 }

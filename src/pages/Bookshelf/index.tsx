@@ -21,6 +21,7 @@ import { ItemType } from "antd/es/breadcrumb/Breadcrumb";
 import { Alert } from "antd";
 import GPTSetting from "../../components/GPTSetting";
 import { useTranslation } from 'react-i18next';
+import BookTabs from '../../components/BookTabs';
 
 export default function index() {
     const db_instance = useBookState(state => state.db_instance)
@@ -110,6 +111,9 @@ export default function index() {
         <Layout
             ref={containerRef}
         >
+            <Col span={24}>
+                <BookTabs></BookTabs>
+            </Col>
             <GPTSetting
                 open={aiOpen}
                 onCancel={() => setAiOpen(false)}
@@ -123,16 +127,16 @@ export default function index() {
                             <Row justify={'end'}>
                                 <Col >
                                     <Space
-                                    wrap={true}
+                                        wrap={true}
                                     >
                                         <BookNewButton
                                             onChange={async () => {
                                                 runAsync()
                                             }}
-                                            
+
                                         ></BookNewButton>
                                         <Button
-                                        size='small'
+                                            size='small'
                                             type="link"
                                             onClick={() => { setAiOpen(true) }}
                                         >
@@ -183,20 +187,20 @@ export default function index() {
                                     ></BookItemList> : <div>
                                         <Divider></Divider>
                                         <Result
-                                            icon={<SmileOutlined 
-                                            style={{color: '#283593'}}
+                                            icon={<SmileOutlined
+                                                style={{ color: '#283593' }}
                                             />}
                                             title={
-                                                <Space 
-                                                direction='vertical'
-                                                align='start'
+                                                <Space
+                                                    direction='vertical'
+                                                    align='start'
                                                 >
                                                     <h2>{t("请上传书籍")}</h2>
                                                     <div>
                                                         <Space
-                                                        direction='vertical'
-                                                        align="start"
-                                                        className={style.empty_content}
+                                                            direction='vertical'
+                                                            align="start"
+                                                            className={style.empty_content}
                                                         >
                                                             <span><DragOutlined /> {t('可拖拽到此处')}</span>
                                                             <span><CopyOutlined /> {t('可粘贴文件在此处')}</span>

@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { usePhone } from '../../utils/usePhone';
 import { usePagination } from './usePagination';
 import { PDFDocumentProxy } from 'pdfjs-dist';
+import BookTabs from '../../components/BookTabs';
 
 
 const SCALE_GAP = 0.1
@@ -69,7 +70,7 @@ const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?:PDFDocumentPr
 
 export default function PdfReader() {
   const db_instance = useBookState(state => state.db_instance)
-  const [bookInfo, setBookInfo] = useState<BookItems>()
+  const [bookInfo, setBookInfo] = useState<BookItems | undefined>()
   const list_ref = useRef(null)
   const pdf_document_ref = useRef<HTMLDivElement>()
   const PDFDocument = useRef<PDFDocumentProxy>(null)
@@ -122,6 +123,9 @@ export default function PdfReader() {
     scale,
     pageNumber,
     setPageNumber,
+    setIsInited,
+    isInited,
+    paginationInit,
   } = usePagination({
     numPages,
     book_id,
@@ -134,14 +138,44 @@ export default function PdfReader() {
     return scale * ((size?.height ?? 20) - 20)
   }, [size, scale])
 
+  const destroy = useCallback(() => {
+    setBookInfo(undefined)
+    // list_ref.current = null
+    // pdf_document_ref.current = null
+    if(PDFDocument.current) {
+      PDFDocument.current.destroy()
+    }
+    // PDFDocument.current = null
+    setSwitchOpen(true)
+    setDragableDisabled(true)
+    // container_ref.current = null
+    setPdfOutline([])
+    setCounter(0)
+    setTranslatorOpen(false)
+    setExplainerOpen(false)
+    setCopiedText(undefined)
+    setMaxWidthPage(undefined)
+    setCropOpen(false)
+    setScreenShot(undefined)
+    // cropRef.current = null
+    setIsRecognizing(false)
+    setMenuSelectedKeys([])
+    setMenuOpenKeys([])
+    setBlob(undefined)
+    setNumPages(0)
+  }, [])
+
   const init = useCallback(async () => {
+    setIsInited(false)
+    destroy()
     return await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
       const book_info = await db_instance.book_items.where('hash').equals(book_id).first()
       const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
       setBlob({ data: book_blob.blob })
       setBookInfo(book_info)
+      paginationInit()
     })
-  }, [])
+  }, [book_id])
 
   const copyHandler = useCallback(async () => {
     try {
@@ -170,6 +204,8 @@ export default function PdfReader() {
       setCropOpen(false)
       setIsPageSelecting(false)
       setScreenShot(null)
+      setIsPageSelecting(false)
+      setResultImg(null)
     }
 
   }, [resultImg])
@@ -322,6 +358,9 @@ export default function PdfReader() {
         }}
       ></FloatAiMenu>
       {isPhone ? <div style={{ height: '1rem', width: '1px' }}></div> : undefined}
+      <Col span={24}>
+        <BookTabs></BookTabs>
+      </Col>
       <Col span={24}>
         <Row
           justify={'space-between'}
