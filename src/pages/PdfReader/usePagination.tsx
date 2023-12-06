@@ -11,20 +11,20 @@ const SCALE_LIMIT = 0.05
 export function usePagination(p: PaginationParams) {
     const paginationInit = useCallback(() =>{
         const cachePageNumber = Number(localStorage.getItem(`book_id:${p.book_id}`))
+        console.log(cachePageNumber)
         setPageNumber(Number.isNaN(cachePageNumber) ? 1 : Math.max(1, cachePageNumber))
         const init_scale = localStorage.getItem(`scale:${p.book_id}`) ?? 1
         setScale(Number.isNaN(Number(init_scale)) ? 1 : Number(init_scale))
-        setIsInited(true)
     }, [p.book_id])
     const [pageNumber, setPageNumber] = useState<number>(1)
     const previewPageNumber = usePrevious(pageNumber)
     const [scale, setScale] = useState<number>()
-    const [isInited, setIsInited] = useState<boolean>(false)
 
-    // useEffect(() => {
-    //     pageNumber
-    //     debugger
-    //   }, [pageNumber, previewPageNumber])
+    useEffect(() => {
+        pageNumber
+        console.log(pageNumber)
+        // debugger
+      }, [pageNumber, previewPageNumber])
 
     const scaleUp = useCallback(() => {
         const result_scale = Math.min(100, scale + SCALE_LIMIT)
@@ -53,8 +53,6 @@ export function usePagination(p: PaginationParams) {
         goPrePage,
         setPageNumber,
         scale,
-        isInited,
-        setIsInited,
         paginationInit,
     }
 }

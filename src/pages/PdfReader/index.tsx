@@ -120,7 +120,7 @@ export default function PdfReader() {
   const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
   const [copiedText, setCopiedText] = useState<string>()
   const [maxWidthPage, setMaxWidthPage] = useState<PDFPageProxy>()
-
+  const [loading, setLoading] = useState<boolean>(false)
   const [cropOpen, setCropOpen] = useState<boolean>(false)
   const [screenShot, setScreenShot] = useState<string>()
   const cropRef = useRef()
@@ -158,8 +158,6 @@ export default function PdfReader() {
     scale,
     pageNumber,
     setPageNumber,
-    setIsInited,
-    isInited,
     paginationInit,
   } = usePagination({
     numPages,
@@ -185,7 +183,7 @@ export default function PdfReader() {
     setDragableDisabled(true)
     // container_ref.current = null
     setPdfOutline([])
-    setCounter(0)
+    setCounter(undefined)
     setTranslatorOpen(false)
     setExplainerOpen(false)
     setCopiedText(undefined)
@@ -201,15 +199,22 @@ export default function PdfReader() {
   }, [])
 
   const init = useCallback(async () => {
-    setIsInited(false)
-    destroy()
-    return await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
-      const book_info = await db_instance.book_items.where('hash').equals(book_id).first()
-      const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
-      setBlob({ data: book_blob.blob })
-      setBookInfo(book_info)
+    try {
+      setLoading(true)
+      destroy()
+      await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
+        const book_info = await db_instance.book_items.where('hash').equals(book_id).first()
+        const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
+        setBlob({ data: book_blob.blob })
+        setBookInfo(book_info)
+      })
       paginationInit()
-    })
+    } catch (error) {
+
+    } finally {
+      setLoading(false)
+    }
+
   }, [book_id])
 
   const copyHandler = useCallback(async () => {
@@ -310,14 +315,15 @@ export default function PdfReader() {
     }
     setMenuSelectedKeys(getBookSeletedMenuKey(pdfOutline, counter))
 
-    
+
   }, [counter])
 
   useEffect(() => {
-    if(!preCounter) {
+    if (!preCounter || !counter) {
       return
     }
     const pageNum = String(counter || 1)
+    debugger
     localStorage.setItem(`book_id:${book_id}`, pageNum)
   }, [counter])
 
@@ -386,305 +392,310 @@ export default function PdfReader() {
   }, [book_id])
 
   return (
-    <Row
-      className={style.container}
+    <Spin
+    spinning={loading}
     >
-      <FloatAiMenu
-        copiedText={copiedText}
-        translator={{
-          value: translatorOpen,
-          onCancel: setTranslatorOpen
-        }}
-        explainer={{
-          value: explainerOpen,
-          onCancel: setExplainerOpen
-        }}
-      ></FloatAiMenu>
-      <Col span={24}>
-        <BookTabs></BookTabs>
-      </Col>
-      <Col span={24}>
-        <Row
-          justify={'space-between'}
-          align={'middle'}
-        >
-          <Col>
-            <Space>
-
-              <Breadcrumb
-                items={[
-                  {
-                    title: <a type="link"><HomeOutlined /></a>,
-                    onClick: () => navigate('/')
-                  },
-                  {
-                    title: t('该书籍'),
-                  }
-                ]}
-              ></Breadcrumb>
-              <Divider
-                type="vertical"
-              ></Divider>
-              <Switch
-                checkedChildren={t("目录（开）")}
-                unCheckedChildren={t("目录（关）")}
-                defaultChecked
-                checked={switchOpen}
-                onChange={setSwitchOpen}
-              />
-            </Space>
-
-          </Col>
-          <Col>
-            <h3>{bookInfo?.name}</h3>
-          </Col>
-        </Row>
-      </Col>
-      <Col span={24}>
-        <Row
-          style={{
-            width: '100%'
+      <Row
+        className={style.container}
+      >
+        <FloatAiMenu
+          copiedText={copiedText}
+          translator={{
+            value: translatorOpen,
+            onCancel: setTranslatorOpen
           }}
-        >
-          {
-            switchOpen ? <Col
-              xxl={4}
-              xl={4}
-              lg={6}
-              md={8}
-              span={4}
-              sm={isPhone ? 24 : 8}
-              xs={isPhone ? 24 : 8}
-              className={style.menu_container}
-              style={{
-                height: isPhone ? '2.9rem' : undefined,
-              }}
-            >
-              <Menu
-                mode={isPhone ? 'horizontal' : undefined}
-                items={pdfOutline}
-                openKeys={menuOpenKeys}
-                selectedKeys={menuSelectedKeys}
-                onOpenChange={(e) => {
-                  setMenuOpenKeys(e)
-                }}
-                onSelect={(e) => {
-                  setMenuSelectedKeys(e.selectedKeys)
-                  setPageNumber(Number(e.selectedKeys?.[0]?.split?.(',')?.[0]))
-                }}
-              ></Menu>
-            </Col>
-              : undefined
-          }
-
-          <Col
-            flex={'1 1'}
+          explainer={{
+            value: explainerOpen,
+            onCancel: setExplainerOpen
+          }}
+        ></FloatAiMenu>
+        <Col span={24}>
+          <BookTabs></BookTabs>
+        </Col>
+        <Col span={24}>
+          <Row
+            justify={'space-between'}
+            align={'middle'}
           >
-            <div
-              ref={container_ref}
-              className={[
-                style.pdf_container,
-                isPageSelecting ? style.pdf_container_selecting : undefined
-              ].filter(val => val).join(' ')}
-              id="pdf_container">
+            <Col>
+              <Space>
 
-              <Draggable
-                disabled={dragableDisabled}
+                <Breadcrumb
+                  items={[
+                    {
+                      title: <a type="link"><HomeOutlined /></a>,
+                      onClick: () => navigate('/')
+                    },
+                    {
+                      title: t('该书籍'),
+                    }
+                  ]}
+                ></Breadcrumb>
+                <Divider
+                  type="vertical"
+                ></Divider>
+                <Switch
+                  checkedChildren={t("目录（开）")}
+                  unCheckedChildren={t("目录（关）")}
+                  defaultChecked
+                  checked={switchOpen}
+                  onChange={setSwitchOpen}
+                />
+              </Space>
+
+            </Col>
+            <Col>
+              <h3>{bookInfo?.name}</h3>
+            </Col>
+          </Row>
+        </Col>
+        <Col span={24}>
+          <Row
+            style={{
+              width: '100%'
+            }}
+          >
+            {
+              switchOpen ? <Col
+                xxl={4}
+                xl={4}
+                lg={6}
+                md={8}
+                span={4}
+                sm={isPhone ? 24 : 8}
+                xs={isPhone ? 24 : 8}
+                className={style.menu_container}
+                style={{
+                  height: isPhone ? '2.9rem' : undefined,
+                }}
               >
-                <div
-                  style={{
-                    background: 'transparent',
+                <Menu
+                  mode={isPhone ? 'horizontal' : undefined}
+                  items={pdfOutline}
+                  openKeys={menuOpenKeys}
+                  selectedKeys={menuSelectedKeys}
+                  onOpenChange={(e) => {
+                    setMenuOpenKeys(e)
                   }}
+                  onSelect={(e) => {
+                    setMenuSelectedKeys(e.selectedKeys)
+                    setPageNumber(Number(e.selectedKeys?.[0]?.split?.(',')?.[0]))
+                  }}
+                ></Menu>
+              </Col>
+                : undefined
+            }
+
+            <Col
+              flex={'1 1'}
+            >
+              <div
+                ref={container_ref}
+                className={[
+                  style.pdf_container,
+                  isPageSelecting ? style.pdf_container_selecting : undefined
+                ].filter(val => val).join(' ')}
+                id="pdf_container">
+
+                <Draggable
+                  disabled={dragableDisabled}
                 >
-                  <Document
-                    inputRef={pdf_document_ref}
-                    className={style.pdf_document}
-                    loading={<Spin spinning={true}><div
-                      style={{
-                        height: '100%',
-                        width: '100%',
-                      }}
-                    ></div></Spin>}
-                    error={<Result
-                      status="error"
-                      title={t("书籍加载失败")}
-                    ></Result>}
-                    file={blob}
-                    onLoadSuccess={onDocumentLoadSuccess}
+                  <div
+                    style={{
+                      background: 'transparent',
+                    }}
                   >
-                    <List
-                      rowCount={numPages ?? 0}
-                      height={size?.height}
-                      onRowsRendered={(e) => {
-                        setCounter(e.stopIndex + 1)
-                      }}
-                      
-                      width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
-                      rowHeight={(renderPageHeight + 10) * scale}
-                      ref={list_ref}
-                      className={style.list_container}
-                      rowRenderer={({ key, style, index }) => {
-                        return (
-                          <div
-                            key={key}
-                            style={style}
-                            onClick={(e) => {
-                              if (!isPageSelecting) {
-                                return
-                              }
-                              let parent = (e.target as HTMLDivElement | null)?.parentElement
-                              let canvas = parent.querySelector('canvas');
-                              while (!canvas) {
-                                if (!parent) {
-                                  break
-                                }
-                                parent = parent.parentElement
-                                canvas = parent.querySelector('canvas')
-                              }
-                              try {
-                                setScreenShot(canvas.toDataURL('image/png', 1))
-                              } catch (error) {
-                                message.error(t('选择文档失败'))
-                                setScreenShot(null)
-                              }
-                            }}
-                          >
-                            <Page
-                              className={[
-                                style.pddf_pages_si,
-                                stylecss.pdf_page_selecting
-                              ].join(' ')}
-                              height={(renderPageHeight)}
-                              scale={ThrottleScale}
-                              pageNumber={index + 1}
-                              onLoadSuccess={onPageLoadSuccess}
-                            ></Page>
-                          </div>
-
-                        )
-                      }}
+                    <Document
+                      inputRef={pdf_document_ref}
+                      className={style.pdf_document}
+                      loading={<Spin spinning={true}><div
+                        style={{
+                          height: '100%',
+                          width: '100%',
+                        }}
+                      ></div></Spin>}
+                      error={<Result
+                        status="error"
+                        title={t("书籍加载失败")}
+                      ></Result>}
+                      file={blob}
+                      onLoadSuccess={onDocumentLoadSuccess}
                     >
-                    </List>
+                      <List
+                        rowCount={numPages ?? 0}
+                        height={size?.height}
+                        onRowsRendered={(e) => {
+                          setCounter(e.stopIndex)
+                        }}
 
-                    {/* <Outline
+                        width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
+                        rowHeight={(renderPageHeight + 10) * scale}
+                        ref={list_ref}
+                        className={style.list_container}
+                        rowRenderer={({ key, style, index }) => {
+                          return (
+                            <div
+                              key={key}
+                              style={style}
+                              onClick={(e) => {
+                                if (!isPageSelecting) {
+                                  return
+                                }
+                                let parent = (e.target as HTMLDivElement | null)?.parentElement
+                                let canvas = parent.querySelector('canvas');
+                                while (!canvas) {
+                                  if (!parent) {
+                                    break
+                                  }
+                                  parent = parent.parentElement
+                                  canvas = parent.querySelector('canvas')
+                                }
+                                try {
+                                  setScreenShot(canvas.toDataURL('image/png', 1))
+                                } catch (error) {
+                                  message.error(t('选择文档失败'))
+                                  setScreenShot(null)
+                                }
+                              }}
+                            >
+                              <Page
+                                className={[
+                                  style.pddf_pages_si,
+                                  stylecss.pdf_page_selecting
+                                ].join(' ')}
+                                height={(renderPageHeight)}
+                                scale={ThrottleScale}
+                                pageNumber={index + 1}
+                                onLoadSuccess={onPageLoadSuccess}
+                              ></Page>
+                            </div>
+
+                          )
+                        }}
+                      >
+                      </List>
+
+                      {/* <Outline
                       className={style.outline}
                       onLoadSuccess={async e => {
                         setPdfOutline(await pdfToMenuItemHandler(e ?? [], PDFDocument.current))
                       }}
                     ></Outline> */}
-                  </Document>
-                </div>
-              </Draggable>
-              <div className={style.scale_controller}>
-                <Space
-                  size={'middle'}
-                >
-                  <motion.div
-                    title={t("放大")}
-                    {...ANIMATION_STATIC}
-                    onClick={scaleUp}
-                  ><PlusCircleOutlined /></motion.div>
-                  <motion.div
-                    title={t("缩小")}
-                    {...ANIMATION_STATIC}
-                    onClick={scaleDown}
-                  ><MinusCircleOutlined /></motion.div>
-                  {
-                    ocrPending ? <motion.div
+                    </Document>
+                  </div>
+                </Draggable>
+                <div className={style.scale_controller}>
+                  <Space
+                    size={'middle'}
+                  >
+                    <motion.div
+                      title={t("放大")}
                       {...ANIMATION_STATIC}
-                    >
-                      <LoadingOutlined />
-                    </motion.div> : <motion.div
+                      onClick={scaleUp}
+                    ><PlusCircleOutlined /></motion.div>
+                    <motion.div
+                      title={t("缩小")}
                       {...ANIMATION_STATIC}
-                      title={t("文字转图片")}
-                      onClick={() => {
-                        message.success(t('请单机选择书籍的某一页'))
-                        setScreenShot(null)
-                        setIsPageSelecting(true)
-                      }}
-                    >
-                      <CameraOutlined />
-                    </motion.div>
-                  }
+                      onClick={scaleDown}
+                    ><MinusCircleOutlined /></motion.div>
+                    {
+                      ocrPending ? <motion.div
+                        {...ANIMATION_STATIC}
+                      >
+                        <LoadingOutlined />
+                      </motion.div> : <motion.div
+                        {...ANIMATION_STATIC}
+                        title={t("文字转图片")}
+                        onClick={() => {
+                          message.success(t('请单机选择书籍的某一页'))
+                          setScreenShot(null)
+                          setIsPageSelecting(true)
+                        }}
+                      >
+                        <CameraOutlined />
+                      </motion.div>
+                    }
 
-                </Space>
+                  </Space>
+                </div>
+                <Row
+                  className={style.float_tooltip}
+                  align={'middle'}
+                >
+                  <Col>
+                    <Space>
+                      <InputNumber
+                        bordered={false}
+                        value={counter}
+                        onChange={(e) => setCounter(e)}
+                        onBlur={(e) => {
+                          const target = Number(e.target?.value)
+                          if (Number.isNaN(target)) {
+                            return
+                          }
+                          setPageNumber(target)
+                        }}
+                        style={{
+                          width: '50px'
+                        }}
+                      ></InputNumber>
+                      <span>{`/ ${numPages ?? '0'}`}</span>
+                    </Space>
+                  </Col>
+
+                </Row>
               </div>
-              <Row
-                className={style.float_tooltip}
-                align={'middle'}
-              >
+
+
+            </Col>
+          </Row>
+        </Col>
+        <Modal
+          style={{ top: 10 }}
+          open={cropOpen}
+          footer={null}
+          title={t('裁切图片')}
+          onCancel={() => {
+            setIsPageSelecting(false)
+            setScreenShot(null)
+            setCropOpen(false)
+          }}
+          width={'90vw'}
+        >
+          {/* <Divider></Divider> */}
+          <Row gutter={[12, 12]}>
+            <Col span={24}>
+              <Row justify={'end'}>
                 <Col>
                   <Space>
-                    <InputNumber
-                      bordered={false}
-                      value={counter}
-                      onChange={(e) => setCounter(e)}
-                      onBlur={(e) => {
-                        const target = Number(e.target?.value)
-                        if (Number.isNaN(target)) {
-                          return
-                        }
-                        setPageNumber(target)
+                    <Button
+                      loading={isRecognizing}
+                      onClick={() => {
+                        shotCompleteHandler()
                       }}
-                      style={{
-                        width: '50px'
-                      }}
-                    ></InputNumber>
-                    <span>{`/ ${numPages ?? '0'}`}</span>
+                    >{t('完成')}</Button>
                   </Space>
                 </Col>
-
               </Row>
-            </div>
+
+            </Col>
+            <Col span={24}>
+              <Cropper
+                src={screenShot}
+                style={{ height: 850, width: "100%" }}
+                // Cropper.js options
+                initialAspectRatio={16 / 9}
+                guides={false}
+                crop={cropHandler}
+                ref={cropRef}
+              />
+            </Col>
+          </Row>
 
 
-          </Col>
-        </Row>
-      </Col>
-      <Modal
-        style={{ top: 10 }}
-        open={cropOpen}
-        footer={null}
-        title={t('裁切图片')}
-        onCancel={() => {
-          setIsPageSelecting(false)
-          setScreenShot(null)
-          setCropOpen(false)
-        }}
-        width={'90vw'}
-      >
-        {/* <Divider></Divider> */}
-        <Row gutter={[12, 12]}>
-          <Col span={24}>
-            <Row justify={'end'}>
-              <Col>
-                <Space>
-                  <Button
-                    loading={isRecognizing}
-                    onClick={() => {
-                      shotCompleteHandler()
-                    }}
-                  >{t('完成')}</Button>
-                </Space>
-              </Col>
-            </Row>
+        </Modal>
+      </Row>
+    </Spin>
 
-          </Col>
-          <Col span={24}>
-            <Cropper
-              src={screenShot}
-              style={{ height: 850, width: "100%" }}
-              // Cropper.js options
-              initialAspectRatio={16 / 9}
-              guides={false}
-              crop={cropHandler}
-              ref={cropRef}
-            />
-          </Col>
-        </Row>
-
-
-      </Modal>
-    </Row>
   )
 }
