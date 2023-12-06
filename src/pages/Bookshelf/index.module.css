@@ -1,7 +1,10 @@
+.main{
+  padding: 0rem 1.5rem;
+}
 .content {
   width: 100vw;
-  height: 100vh;
-  padding: 40px 60px;
+  height: calc(100vh - 54px);
+  padding: 4px 0px;
 }
 .upload_modal_container {
   overflow: hidden;

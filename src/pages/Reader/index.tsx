@@ -104,18 +104,11 @@ export default function index() {
     }
   }
 
-
-  // useEffect(() => {
-  //   rendition?.resize?.()
-  // }, [switchOpen])
-
   const rendition_rendered_handler = useCallback(() => {
 
     const contents = rendition.getContents() as any as Contents[]
-    // const handlerContainer: Function[] = []
     for (const content of contents) {
       let copyHandler = copyHandlerFactory(content)
-      // handlerContainer.push(copyHandler)
       content.document.onwheel = wheelHandler
       content.document.oncopy = copyHandler
       copyHandler = null
@@ -234,7 +227,6 @@ export default function index() {
           onCancel: setExplainerOpen
         }}
       ></FloatAiMenu>
-      {isPhone ? <div style={{ height: '1rem', width: '1px' }}></div> : undefined}
 
       {error
         ? <Row

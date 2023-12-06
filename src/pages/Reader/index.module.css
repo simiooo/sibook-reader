@@ -3,7 +3,7 @@
 
     .toolbar {}
     .menu_container{
-        height: calc(90vh - 20px);
+        height: calc(90vh - 20px - 54px);
         overflow: auto;
         overflow-x: hidden;
         &::-webkit-scrollbar{
@@ -11,7 +11,7 @@
         }
     }
     .article {
-        height: 90vh;
+        height: calc(90vh - 54px);
         width: 100%;
 
     }

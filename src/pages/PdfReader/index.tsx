@@ -14,7 +14,7 @@ import { pdfjs } from 'react-pdf';
 import worker from 'react-pdf/'
 import { useDebounce, useDebounceFn, useEventListener, useKeyPress, useMap, usePrevious, useResponsive, useSize, useThrottle, useThrottleFn } from 'ahooks';
 import { createPortal } from 'react-dom';
-import { MenuItemType } from 'antd/es/menu/hooks/useItems';
+import { ItemType, MenuItemType } from 'antd/es/menu/hooks/useItems';
 import List from 'react-virtualized/dist/commonjs/List';
 
 import FloatAiMenu from '../../components/FloatAiMenu';
@@ -44,12 +44,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
-const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?:PDFDocumentProxy, parent?: any) => {
+const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?: PDFDocumentProxy, parent?: any) => {
   return Promise.all(pdfItems?.map(async ele => {
     let key
     try {
-      if(ele.dest instanceof Array) {
-        key = await pdfDocument?.getPageIndex?.( ele.dest?.find?.(ele2 => typeof ele2 === 'object' && Object.keys(ele2).some(ele3 => ['gen', 'num'].includes(ele3)) )  )
+      if (ele.dest instanceof Array) {
+        key = await pdfDocument?.getPageIndex?.(ele.dest?.find?.(ele2 => typeof ele2 === 'object' && Object.keys(ele2).some(ele3 => ['gen', 'num'].includes(ele3))))
       } else {
         const detail = (await pdfDocument?.getDestination(ele.dest))
         key = await pdfDocument?.getPageIndex?.(detail?.[0])
@@ -60,12 +60,45 @@ const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?:PDFDocumentPr
     }
     return {
       label: ele.title,
-      key: `${key},${ele.title},${ parent?.key}`,
+      key: `${key},${ele.title},${parent?.key}`,
       children: ele.items?.length > 0 ? await pdfToMenuItemHandler(ele.items, pdfDocument, ele) : undefined
     }
-  })) 
+  }))
 }
 
+export function mennuTarvesal(items: ItemType<MenuItemType>[], cb: (item: ItemType<MenuItemType>) => void) {
+  for (const item of items) {
+    cb(item)
+    if ((item as MenuItemType & { children?: ItemType<MenuItemType>[] }).children?.length > 0) {
+      mennuTarvesal((item as MenuItemType & { children?: ItemType<MenuItemType>[] }).children, cb)
+    }
+  }
+}
+
+export function getBookSeletedMenuKey(menu: ItemType<MenuItemType>[], target) {
+  let start: number = -1
+  let start_ref: ItemType<MenuItemType> = null
+  let tail: number = -1
+  let tail_ref: ItemType<MenuItemType> = null
+  mennuTarvesal(menu, (item) => {
+    if (typeof item.key === 'string') {
+      const temp = item.key.split(',').shift()
+      const thisPage = Number(temp)
+      if (target > thisPage) {
+        start = thisPage
+        start_ref = item
+        tail = -1
+      } else if (tail === -1 && target < thisPage && target > start) {
+        tail = thisPage
+        tail_ref = item
+      }
+    }
+  })
+  if (tail >= start && start != -1 && typeof start_ref.key === 'string') {
+    return [start_ref.key]
+  }
+  return []
+}
 
 
 export default function PdfReader() {
@@ -81,6 +114,8 @@ export default function PdfReader() {
   const container_ref = useRef(null)
   const [pdfOutline, setPdfOutline] = useState<MenuItemType[]>([])
   const [counter, setCounter] = useState<number>(0)
+  const preCounter = usePrevious(counter)
+  const [isScaling, setIsScaling] = useState<boolean>()
   const [translatorOpen, setTranslatorOpen] = useState<boolean>(false)
   const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
   const [copiedText, setCopiedText] = useState<string>()
@@ -110,8 +145,8 @@ export default function PdfReader() {
 
   const [blob, setBlob] = useState<{ data: Uint8Array }>()
   const [numPages, setNumPages] = useState<number>(0);
-  
-  async function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number,_transport: any}) {
+
+  async function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number, _transport: any }) {
     PDFDocument.current = await others._transport.loadingTask.promise
     setPdfOutline(await pdfToMenuItemHandler(await PDFDocument.current.getOutline() ?? [], PDFDocument.current))
     setNumPages(numPages);
@@ -142,7 +177,7 @@ export default function PdfReader() {
     setBookInfo(undefined)
     // list_ref.current = null
     // pdf_document_ref.current = null
-    if(PDFDocument.current) {
+    if (PDFDocument.current) {
       PDFDocument.current.destroy()
     }
     // PDFDocument.current = null
@@ -262,20 +297,28 @@ export default function PdfReader() {
     }
   }, [scale, pageNumber])
 
-  const {run: scrollToView} = useDebounceFn((number?: number) => {
-      list_ref.current?.scrollToRow(number ?? pageNumber)
+  const { run: scrollToView } = useDebounceFn((number?: number) => {
+    list_ref.current?.scrollToRow(number ?? pageNumber)
   }, {
     wait: 100,
   })
-  useEffect(scrollToView, [pageNumber])
-  useEffect(() =>{
-    scrollToView(counter)
-  }, [scale])
+  useEffect(scrollToView, [pageNumber, numPages])
+
   useEffect(() => {
-    if(!book_id) {
+    if (!book_id) {
       return
     }
-    localStorage.setItem(`book_id:${book_id}`, String(counter || 1))
+    setMenuSelectedKeys(getBookSeletedMenuKey(pdfOutline, counter))
+
+    
+  }, [counter])
+
+  useEffect(() => {
+    if(!preCounter) {
+      return
+    }
+    const pageNum = String(counter || 1)
+    localStorage.setItem(`book_id:${book_id}`, pageNum)
   }, [counter])
 
 
@@ -357,7 +400,6 @@ export default function PdfReader() {
           onCancel: setExplainerOpen
         }}
       ></FloatAiMenu>
-      {isPhone ? <div style={{ height: '1rem', width: '1px' }}></div> : undefined}
       <Col span={24}>
         <BookTabs></BookTabs>
       </Col>
@@ -409,7 +451,7 @@ export default function PdfReader() {
               xxl={4}
               xl={4}
               lg={6}
-              md={isPhone ? 24 : 8}
+              md={8}
               span={4}
               sm={isPhone ? 24 : 8}
               xs={isPhone ? 24 : 8}
@@ -458,10 +500,10 @@ export default function PdfReader() {
                     inputRef={pdf_document_ref}
                     className={style.pdf_document}
                     loading={<Spin spinning={true}><div
-                    style={{
-                      height: '100%',
-                      width: '100%',
-                    }}
+                      style={{
+                        height: '100%',
+                        width: '100%',
+                      }}
                     ></div></Spin>}
                     error={<Result
                       status="error"
@@ -474,8 +516,9 @@ export default function PdfReader() {
                       rowCount={numPages ?? 0}
                       height={size?.height}
                       onRowsRendered={(e) => {
-                        setCounter(e.stopIndex)
+                        setCounter(e.stopIndex + 1)
                       }}
+                      
                       width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
                       rowHeight={(renderPageHeight + 10) * scale}
                       ref={list_ref}

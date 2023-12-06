@@ -110,10 +110,14 @@ export default function index() {
     return (
         <Layout
             ref={containerRef}
+            className={style.main}
         >
-            <Col span={24}>
-                <BookTabs></BookTabs>
-            </Col>
+            <Row>
+                <Col span={24}>
+                    <BookTabs></BookTabs>
+                </Col>
+            </Row>
+
             <GPTSetting
                 open={aiOpen}
                 onCancel={() => setAiOpen(false)}
