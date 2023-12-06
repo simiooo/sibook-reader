@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { usePhone } from '../../utils/usePhone';
 import { usePagination } from './usePagination';
 import { PDFDocumentProxy } from 'pdfjs-dist';
+import html2canvas from 'html2canvas'
 import BookTabs from '../../components/BookTabs';
 
 
@@ -366,23 +367,6 @@ export default function PdfReader() {
     isPageSelecting
   ])
 
-  useEffect(() => {
-    if (!pdf_document_ref.current) {
-      return
-    }
-    const textContainer = Array.from(pdf_document_ref.current?.querySelectorAll<HTMLDivElement>('.react-pdf__Page__textContent, .react-pdf__Page__annotations')) ?? []
-    if (isPageSelecting) {
-      for (const ele of textContainer) {
-        ele.style.pointerEvents = 'none'
-      }
-    } else {
-      for (const ele of textContainer) {
-        ele.style.pointerEvents = undefined
-      }
-    }
-
-  }, [isPageSelecting])
-
   //初始化书籍
   useEffect(() => {
     if (!book_id) {
@@ -393,7 +377,7 @@ export default function PdfReader() {
 
   return (
     <Spin
-    spinning={loading}
+      spinning={loading}
     >
       <Row
         className={style.container}
@@ -492,8 +476,7 @@ export default function PdfReader() {
               <div
                 ref={container_ref}
                 className={[
-                  style.pdf_container,
-                  isPageSelecting ? style.pdf_container_selecting : undefined
+                  style.pdf_container
                 ].filter(val => val).join(' ')}
                 id="pdf_container">
 
@@ -537,26 +520,6 @@ export default function PdfReader() {
                             <div
                               key={key}
                               style={style}
-                              onClick={(e) => {
-                                if (!isPageSelecting) {
-                                  return
-                                }
-                                let parent = (e.target as HTMLDivElement | null)?.parentElement
-                                let canvas = parent.querySelector('canvas');
-                                while (!canvas) {
-                                  if (!parent) {
-                                    break
-                                  }
-                                  parent = parent.parentElement
-                                  canvas = parent.querySelector('canvas')
-                                }
-                                try {
-                                  setScreenShot(canvas.toDataURL('image/png', 1))
-                                } catch (error) {
-                                  message.error(t('选择文档失败'))
-                                  setScreenShot(null)
-                                }
-                              }}
                             >
                               <Page
                                 className={[
@@ -574,13 +537,6 @@ export default function PdfReader() {
                         }}
                       >
                       </List>
-
-                      {/* <Outline
-                      className={style.outline}
-                      onLoadSuccess={async e => {
-                        setPdfOutline(await pdfToMenuItemHandler(e ?? [], PDFDocument.current))
-                      }}
-                    ></Outline> */}
                     </Document>
                   </div>
                 </Draggable>
@@ -606,9 +562,10 @@ export default function PdfReader() {
                       </motion.div> : <motion.div
                         {...ANIMATION_STATIC}
                         title={t("文字转图片")}
-                        onClick={() => {
-                          message.success(t('请单机选择书籍的某一页'))
+                        onClick={async () => {
                           setScreenShot(null)
+                          const c = await html2canvas(container_ref.current)
+                          setScreenShot(c.toDataURL('image/png', 1))
                           setIsPageSelecting(true)
                         }}
                       >

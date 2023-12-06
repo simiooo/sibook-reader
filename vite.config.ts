@@ -12,6 +12,8 @@ const cMapsDir = path.join(
   "cmaps"
 );
 
+// const tesseractDir = require.resolve('tesseract.js/package.json')
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -44,10 +46,10 @@ export default defineConfig({
     }),
     viteStaticCopy({
       targets: [
-        {
-          src: "node_modules/jsstore/dist/jsstore.worker.js",
-          dest: "jsstore.worker.js",
-        },
+        // {
+        //   src: '',
+        //   dest: '',
+        // },
         {
           src: cMapsDir,
           dest: "",
