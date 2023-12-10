@@ -28,7 +28,7 @@ export default function index(p: IndexProp) {
             type={renderType}
             loading={loading}
             size='large'
-            >{t('上传')}</Button>
+            >{t('加入书架')}</Button>
         </Upload>
     )
 }

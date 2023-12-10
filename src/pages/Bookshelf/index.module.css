@@ -2,7 +2,8 @@
   padding: 0rem 1.5rem;
 }
 .content {
-  width: 100vw;
+  width: cacl(100vw - 48px);
+
   height: calc(100vh - 54px);
   padding: 4px 0px;
 }

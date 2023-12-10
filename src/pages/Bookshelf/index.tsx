@@ -1,7 +1,7 @@
 import { Button, Col, Result, Space, Divider, Select } from 'antd';
 import { Row } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { CopyOutlined, DragOutlined, FileTextTwoTone, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CopyOutlined, DragOutlined, FileTextTwoTone, ShopOutlined, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
@@ -22,6 +22,7 @@ import { Alert } from "antd";
 import GPTSetting from "../../components/GPTSetting";
 import { useTranslation } from 'react-i18next';
 import BookTabs from '../../components/BookTabs';
+import SyncModal from '../../components/SyncModal';
 
 export default function index() {
     const db_instance = useBookState(state => state.db_instance)
@@ -105,7 +106,7 @@ export default function index() {
         return result
     }, [selected])
 
-
+    const [islandOpen, setIslandOpen] = useState<boolean>(false)
 
     return (
         <Layout
@@ -117,7 +118,14 @@ export default function index() {
                     <BookTabs></BookTabs>
                 </Col>
             </Row>
-
+            <SyncModal
+            open={islandOpen}
+            onOk={() => {
+                runAsync()
+                setIslandOpen(false)
+            }}
+            onCancel={() => setIslandOpen(false)}
+            ></SyncModal>
             <GPTSetting
                 open={aiOpen}
                 onCancel={() => setAiOpen(false)}
@@ -146,6 +154,12 @@ export default function index() {
                                         >
                                             {t('ai 辅助设置')}
                                         </Button>
+                                        <Button
+                                        icon={<ShopOutlined />}
+                                        type="link"
+                                        size='small'
+                                        onClick={() => setIslandOpen(true)}
+                                        >{t('岛屿')}</Button>
                                         <Select
                                             size='small'
                                             bordered={false}
@@ -171,6 +185,7 @@ export default function index() {
                                                 },
                                             ]}
                                         ></Select>
+                                        
                                     </Space>
 
                                 </Col>

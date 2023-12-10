@@ -93,7 +93,12 @@ export default function BookTabs() {
                     type="editable-card"
                     onEdit={(e) => {
                         if(typeof e === 'string' ) {
-                            list.splice(list.findIndex(ele => ele.id === e), 1)
+                            const targetIndex = list.findIndex(ele => ele.id === e)
+                            if(targetIndex === -1) {
+                                return
+                            }
+                            list.splice(targetIndex, 1)
+                            setList([...list])
                         }
                     }}
                     hideAdd={true}

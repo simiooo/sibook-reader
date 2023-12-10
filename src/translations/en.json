@@ -1,8 +1,12 @@
 {
+    "同步": "synchronizing",
+    "岛屿名": "Island Name",
     "可拖拽到此处": "Drag and drop here",
     "可粘贴文件在此处": "Paste files here",
     "暂不支持": "Not supported yet",
     "上传": "Upload",
+    "岛屿": "islands",
+    "加入书架": "Add to Bookshelf",
     "确认删除吗？": "Are you sure you want to delete?",
     "删除": "Delete",
     "服务端异常": "Server exception",
