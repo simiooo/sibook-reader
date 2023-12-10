@@ -1,4 +1,4 @@
-import { Button, Col, Result, Space, Divider, Select } from 'antd';
+import { Button, Col, Result, Space, Divider, Select, Input } from 'antd';
 import { Row } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { CopyOutlined, DragOutlined, FileTextTwoTone, ShopOutlined, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
@@ -108,6 +108,11 @@ export default function index() {
 
     const [islandOpen, setIslandOpen] = useState<boolean>(false)
 
+    const [filterValue, setFilterValue] = useState<string>()
+    const renderList = useMemo(() =>{
+        return (list ?? []).filter(val => filterValue ? Object.values(val ?? {})?.join('')?.includes?.(filterValue) : true)
+    }, [list, filterValue])
+
     return (
         <Layout
             ref={containerRef}
@@ -136,7 +141,16 @@ export default function index() {
                 <Content className={style.content}>
                     <Row gutter={[20, 32]}>
                         <Col span={24}>
-                            <Row justify={'end'}>
+                            <Row justify={'space-between'}>
+                            <Col>
+                            <Input
+                            bordered={false}
+                            size='large'
+                            placeholder={t('搜索书籍')}
+                            value={filterValue}
+                            onChange={(e) => setFilterValue(e.target.value)}
+                            ></Input>
+                            </Col>
                                 <Col >
                                     <Space
                                         wrap={true}
@@ -189,13 +203,14 @@ export default function index() {
                                     </Space>
 
                                 </Col>
+                                
                             </Row>
                         </Col>
                         <Col span={24}>
                             <Row justify={'center'} gutter={[20, 20]}>
                                 <Col span={24}>
-                                    {list?.length > 0 ? <BookItemList
-                                        data={list}
+                                    {renderList?.length > 0 ? <BookItemList
+                                        data={renderList}
                                         selected={selected}
                                         onAdd={add}
                                         onRemove={remove}
