@@ -529,7 +529,7 @@ export default function PdfReader() {
                         height={renderListHeight}
                         onScroll={(e) => {
                           setRatio(e.scrollTop / e.scrollHeight)
-                          setCounter(Math.round(e.scrollTop / (renderPageHeight + 10) * ThrottleScale))
+                          setCounter(Math.round(e.scrollTop / renderListRowHeight))
                         }}
                         width={renderListWidth}
                         rowHeight={renderListRowHeight}
