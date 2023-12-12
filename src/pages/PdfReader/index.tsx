@@ -129,6 +129,9 @@ export default function PdfReader() {
   const [resultImg, setResultImg] = useState<Uint8Array | null>()
   const [isRecognizing, setIsRecognizing] = useState<boolean>(false)
 
+
+  const [ratio, setRatio] = useState<number>()
+
   const size = useSize(container_ref);
   const { book_id } = useParams()
   const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([])
@@ -164,13 +167,21 @@ export default function PdfReader() {
     numPages,
     book_id,
   })
-  const ThrottleScale = useThrottle(scale, { wait: 40 })
+  const ThrottleScale = useThrottle(scale, { wait: 80 })
+
+  useEffect(() => {
+    if(list_ref.current) { 
+      const top = ratio * renderListRowHeight * numPages
+      list_ref.current.scrollToPosition(top)
+    }
+  }, [ThrottleScale])
+
   useEffect(() => {
     setCounter(pageNumber)
   }, [pageNumber])
   const renderPageHeight = useMemo(() => {
-    return scale * ((size?.height ?? 20) - 20)
-  }, [size, scale])
+    return ThrottleScale * ((size?.height ?? 20) - 20)
+  }, [size, ThrottleScale])
 
   const destroy = useCallback(() => {
     setBookInfo(undefined)
@@ -267,7 +278,7 @@ export default function PdfReader() {
         scaleDown()
       }
     }
-  }, [scale, pageNumber, numPages])
+  }, [ThrottleScale, pageNumber, numPages])
 
   const { isPhone } = usePhone()
 
@@ -280,7 +291,7 @@ export default function PdfReader() {
         setDragableDisabled(true)
         break
     }
-  }, [scale, pageNumber, numPages])
+  }, [ThrottleScale, pageNumber, numPages])
 
   useKeyPress('ctrl', dragHandler, {
     events: ['keydown', 'keyup']
@@ -301,7 +312,7 @@ export default function PdfReader() {
         scaleDown()
       }
     }
-  }, [scale, pageNumber])
+  }, [ThrottleScale, pageNumber])
 
   const { run: scrollToView } = useDebounceFn((number?: number) => {
     list_ref.current?.scrollToRow(number ?? pageNumber)
@@ -324,7 +335,6 @@ export default function PdfReader() {
       return
     }
     const pageNum = String(counter || 1)
-    debugger
     localStorage.setItem(`book_id:${book_id}`, pageNum)
   }, [counter])
 
@@ -340,7 +350,7 @@ export default function PdfReader() {
       document.removeEventListener('wheel', scrollHandlerForDocument)
 
     }
-  }, [scale, pageNumber, numPages])
+  }, [ThrottleScale, pageNumber, numPages])
 
   const { run: cropHandler } = useDebounceFn(async (e: Cropper.CropEvent<HTMLImageElement>) => {
     if (!cropRef.current) {
@@ -374,6 +384,16 @@ export default function PdfReader() {
     }
     init()
   }, [book_id])
+
+  const renderListWidth = useMemo(() => {
+    return ((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale
+  }, [maxWidthPage, renderPageHeight, scale])
+  const renderListHeight = useMemo(() => {
+    return size?.height
+  }, [size])
+  const renderListRowHeight = useMemo(() => {
+    return (renderPageHeight + 10) * ThrottleScale
+  }, [renderPageHeight, ThrottleScale])
 
   return (
     <Spin
@@ -506,13 +526,13 @@ export default function PdfReader() {
                     >
                       <List
                         rowCount={numPages ?? 0}
-                        height={size?.height}
-                        onRowsRendered={(e) => {
-                          setCounter(e.stopIndex)
+                        height={renderListHeight}
+                        onScroll={(e) => {
+                          setRatio(e.scrollTop / e.scrollHeight)
+                          setCounter(Math.round(e.scrollTop / (renderPageHeight + 10) * ThrottleScale))
                         }}
-
-                        width={((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale}
-                        rowHeight={(renderPageHeight + 10) * scale}
+                        width={renderListWidth}
+                        rowHeight={renderListRowHeight}
                         ref={list_ref}
                         className={style.list_container}
                         rowRenderer={({ key, style, index }) => {
@@ -526,8 +546,17 @@ export default function PdfReader() {
                                   style.pddf_pages_si,
                                   stylecss.pdf_page_selecting
                                 ].join(' ')}
-                                height={(renderPageHeight)}
+                                height={renderPageHeight}
                                 scale={ThrottleScale}
+                                loading={<Spin spinning={true}><div
+                                  style={{
+                                    height: size.height
+                                  }}
+                                ></div></Spin>}
+                                error={<Result
+                                  status="error"
+                                  title={t("书籍加载失败")}
+                                ></Result>}
                                 pageNumber={index + 1}
                                 onLoadSuccess={onPageLoadSuccess}
                               ></Page>
