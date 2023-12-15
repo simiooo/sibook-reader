@@ -12,7 +12,7 @@
 .container {
   overflow: auto;
   overflow-x: hidden;
-  max-height: 82vh;
+  height: 82vh;
   &::-webkit-scrollbar {
     width: 0.5rem;
     height: 0.5rem;
@@ -21,4 +21,8 @@
     background-color: #d2d2d2;
     border-radius: 0.25rem;
   }
+}
+.dragging{
+  position: relative;
+  z-index: 100;
 }

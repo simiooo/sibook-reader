@@ -7,12 +7,13 @@ import { Tooltip } from 'antd';
 import { Tag } from 'antd';
 import { BookItems } from '../../dbs/db';
 import { useNavigate } from 'react-router-dom';
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
-import { useEventListener } from 'ahooks';
+import { useEventListener, useMap, useThrottle, useThrottleFn } from 'ahooks';
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
+import Draggable, { DraggableEventHandler } from 'react-draggable';
 
 const tagMap = {
     'application/pdf': {
@@ -37,6 +38,10 @@ export default function BookItemList(p: BookItemListProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const container_ref = useRef()
+    const [intersectionContainer, {
+        set: setInter,
+        reset: resetInter
+    }] = useMap<string, HTMLElement>()
     const { show } = useContextMenu({
         id: 'you',
     });
@@ -55,6 +60,30 @@ export default function BookItemList(p: BookItemListProps) {
             message.error(t('暂不支持'))
         }
     }
+
+    const { run: sortHandler } = useThrottleFn<DraggableEventHandler>((e, data) => {
+        const ele = data.node as (HTMLDivElement | undefined)
+        if (!ele) {
+            return
+        }
+        const bounding = ele.getBoundingClientRect()
+        const els = [...document.getElementsByClassName('book_item')] as HTMLDivElement[]
+        for (const el of els) {
+            if(el?.dataset.hash === ele?.dataset.hash) {
+                continue
+            }
+            const otherBounding = el.getBoundingClientRect()
+            const isXIntersecting = Math.abs(bounding.x - otherBounding.x) < Math.min(bounding.width, otherBounding.width)
+            const isYIntersecting = Math.abs(bounding.y - otherBounding.y) < Math.min(bounding.height, otherBounding.height)
+            const isIntersecting = isXIntersecting && isYIntersecting
+            if (isIntersecting) {
+                console.log({ isIntersecting, isXIntersecting, isYIntersecting, el })
+            }
+
+        }
+    }, {
+        wait: 200
+    })
 
     return (
         <Row
@@ -90,8 +119,9 @@ export default function BookItemList(p: BookItemListProps) {
                 dragContainer={window}
                 selectableTargets={[".book_item"]}
                 selectByClick={true}
-                selectFromInside={true}
+                selectFromInside={false}
                 continueSelect={false}
+
                 toggleContinueSelect={"shift"}
                 keyContainer={window}
                 onSelect={(e: any | { added: HTMLElement[], removed: HTMLElement[] }) => {
@@ -126,9 +156,10 @@ export default function BookItemList(p: BookItemListProps) {
                         sm={12}
                         xl={8}
                         xs={24}
-                        key={ele?.hash ?? ele?.name ?? index}
                         xxl={6}
+                        key={ele?.hash ?? ele?.name ?? index}
                     >
+
                         <motion.div
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -138,9 +169,13 @@ export default function BookItemList(p: BookItemListProps) {
                                 ease: [0, 0.71, 0.2, 1.01]
                             }}
                         >
-                            <Card
+                            <Draggable
+                                onDrag={sortHandler}
+                                key={ele?.hash ?? ele?.name ?? index}
+                                defaultClassNameDragging={style.dragging}
+                            ><Card
                                 data-hash={ele?.hash}
-                                extra={<Tag color={tagMap[ele?.fileType]?.color}>{tagMap[ele?.fileType]?.type }</Tag>}
+                                extra={<Tag color={tagMap[ele?.fileType]?.color}>{tagMap[ele?.fileType]?.type}</Tag>}
                                 className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
                                 onDoubleClick={() => openHandler(ele)}
                                 onTouchEnd={() => openHandler(ele)}
@@ -154,6 +189,7 @@ export default function BookItemList(p: BookItemListProps) {
 
                                 </Tooltip>}
                             >{des ?? ele?.name}</Card>
+                            </Draggable>
                         </motion.div>
 
                     </Col>

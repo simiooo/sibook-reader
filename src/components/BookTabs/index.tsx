@@ -99,6 +99,7 @@ export default function BookTabs() {
                             }
                             list.splice(targetIndex, 1)
                             setList([...list])
+                            navigate('/')
                         }
                     }}
                     hideAdd={true}
