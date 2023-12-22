@@ -4,6 +4,9 @@ import { ChatCompletion, OPENAI_PATHNAME, openai_stream_reader, useBookState } f
 import { useAntdTable, useRequest } from 'ahooks';
 import { languages } from '../../utils/locale';
 import { useTranslation } from 'react-i18next';
+import style from './index.module.css'
+import DOMPurify from 'dompurify'
+import * as marked from 'marked'
 
 export interface ExplainModalProps extends ModalProps {
     text?: string;
@@ -67,7 +70,7 @@ export default function ExplainModal(p: ExplainModalProps) {
     })
 
     const renderRes = useMemo(() => {
-        return `${res.join('')}${loading ? '_' : ''}`
+        return DOMPurify.sanitize(marked.parse(`${res.join('')}${loading ? '_' : ''}`))
     }, [res, loading])
 
     return (
@@ -91,11 +94,14 @@ export default function ExplainModal(p: ExplainModalProps) {
                     </Col>
                     <Col span="12">
                         <Spin spinning={loading}>
-                            <Input.TextArea
+                            {/* <Input.TextArea
                                 rows={10}
                                 showCount
                                 value={renderRes}
-                            ></Input.TextArea>
+                            ></Input.TextArea> */}
+                            <div className={style.answer_container} dangerouslySetInnerHTML={{__html: renderRes}}>
+
+                            </div>
                         </Spin>
                         <div
                             style={{ height: '1rem' }}

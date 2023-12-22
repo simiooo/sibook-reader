@@ -169,11 +169,15 @@ export default function PdfReader() {
   })
   const ThrottleScale = useThrottle(scale, { wait: 80 })
 
-  useEffect(() => {
+  // 修复缩放时定位
+  const scaleFixer = useCallback(() => {
     if(list_ref.current) { 
       const top = ratio * renderListRowHeight * numPages
       list_ref.current.scrollToPosition(top)
     }
+  }, [ThrottleScale])
+  useEffect(() => {
+    scaleFixer()
   }, [ThrottleScale])
 
   useEffect(() => {
@@ -455,6 +459,7 @@ export default function PdfReader() {
         </Col>
         <Col span={24}>
           <Row
+          wrap={false}
             style={{
               width: '100%'
             }}
@@ -466,15 +471,17 @@ export default function PdfReader() {
                 lg={6}
                 md={8}
                 span={4}
-                sm={isPhone ? 24 : 8}
-                xs={isPhone ? 24 : 8}
+                sm={4}
+                xs={4}
+                // sm={isPhone ? 24 : 8}
+                // xs={isPhone ? 24 : 8}
                 className={style.menu_container}
-                style={{
-                  height: isPhone ? '2.9rem' : undefined,
-                }}
+                // style={{
+                //   height: isPhone ? '2.9rem' : undefined,
+                // }}
               >
                 <Menu
-                  mode={isPhone ? 'horizontal' : undefined}
+                  // mode={isPhone ? 'horizontal' : undefined}
                   items={pdfOutline}
                   openKeys={menuOpenKeys}
                   selectedKeys={menuSelectedKeys}
