@@ -7,15 +7,16 @@ import { Tooltip } from 'antd';
 import { Tag } from 'antd';
 import { BookItems } from '../../dbs/db';
 import { useNavigate } from 'react-router-dom';
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
 import { useEventListener, useMap, useThrottle, useThrottleFn } from 'ahooks';
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import Draggable, { DraggableEventHandler } from 'react-draggable';
+import BookPlaceholder from './BookPlaceholder';
 
-const tagMap = {
+export const tagMap = {
     'application/pdf': {
         type: 'PDF',
         color: '#222',
@@ -41,7 +42,7 @@ export default function BookItemList(p: BookItemListProps) {
     const [intersectionContainer, {
         set: setInter,
         reset: resetInter
-    }] = useMap<string, HTMLElement>()
+    }] = useMap<string, number>()
     const { show } = useContextMenu({
         id: 'you',
     });
@@ -63,27 +64,45 @@ export default function BookItemList(p: BookItemListProps) {
 
     const { run: sortHandler } = useThrottleFn<DraggableEventHandler>((e, data) => {
         const ele = data.node as (HTMLDivElement | undefined)
+        resetInter()
         if (!ele) {
             return
         }
         const bounding = ele.getBoundingClientRect()
         const els = [...document.getElementsByClassName('book_item')] as HTMLDivElement[]
         for (const el of els) {
-            if(el?.dataset.hash === ele?.dataset.hash) {
+            if (el?.dataset.hash === ele?.dataset.hash) {
                 continue
             }
             const otherBounding = el.getBoundingClientRect()
             const isXIntersecting = Math.abs(bounding.x - otherBounding.x) < Math.min(bounding.width, otherBounding.width)
             const isYIntersecting = Math.abs(bounding.y - otherBounding.y) < Math.min(bounding.height, otherBounding.height)
+            const square = Math.abs(bounding.x - otherBounding.x) * Math.abs(bounding.y - otherBounding.y)
             const isIntersecting = isXIntersecting && isYIntersecting
             if (isIntersecting) {
-                console.log({ isIntersecting, isXIntersecting, isYIntersecting, el })
+                setInter(el?.dataset?.hash, square)
             }
 
         }
     }, {
         wait: 200
     })
+
+    const renderList = useMemo(() => {
+        return p.data ?? []
+        // const target = [...intersectionContainer].reduce((pre, val) => pre[1] > val[1] ? pre : val, ['head', Number.MIN_SAFE_INTEGER])
+        // const addIndex = (p?.data ?? []).findIndex(ele => ele.hash === target?.[0])
+        // if (addIndex > -1) {
+        //     return p.data.slice(0, addIndex).concat({
+        //         hash: 'placeholder',
+        //         fileType: 'placeholder',
+        //         sort: p.data[addIndex].sort,
+        //     }).concat(p.data.slice(addIndex + 1))
+        // } else {
+        //     return p.data
+        // }
+
+    }, [p.data, intersectionContainer])
 
     return (
         <Row
@@ -137,62 +156,76 @@ export default function BookItemList(p: BookItemListProps) {
                 }}
             />
             {
-                (p.data.sort((pre, val) => val?.sort - pre.sort) ?? []).map((ele, index) => {
-                    let title
-                    let des
-                    if (ele?.meta) {
-                        if ('title' in ele?.meta) {
-                            title = ele.meta.title
-                            des = ele.meta.creator
-                        } else {
-                            title = ele.meta.Title
-                            des = ele.meta.Author
+                (renderList.sort((pre, val) => val?.sort - pre.sort) ?? []).map((ele, index) => {
+                    if (ele.hash === 'placeholder') {
+                        <Col
+                            span={6}
+                            sm={12}
+                            xl={8}
+                            xs={24}
+                            xxl={6}
+                            key={ele?.hash ?? ele?.name ?? index}
+                        >
+                            <BookPlaceholder></BookPlaceholder>
+                        </Col>
+                    } else {
+                        let title
+                        let des
+                        if (ele?.meta) {
+                            if ('title' in ele?.meta) {
+                                title = ele.meta.title
+                                des = ele.meta.creator
+                            } else {
+                                title = ele.meta.Title
+                                des = ele.meta.Author
+                            }
                         }
+
+                        return <Col
+                            span={6}
+                            sm={12}
+                            xl={8}
+                            xs={24}
+                            xxl={6}
+                            key={ele?.hash ?? ele?.name ?? index}
+                        >
+
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{
+                                    duration: 0.34,
+                                    delay: 0.5 + Math.min(index, 4) * 0.25,
+                                    ease: [0, 0.71, 0.2, 1.01]
+                                }}
+                            >
+                                {/* <Draggable
+                                    onDrag={sortHandler}
+                                    key={ele?.hash ?? ele?.name ?? index}
+                                    defaultClassNameDragging={style.dragging}
+                                > */}
+                                    <Card
+                                    data-hash={ele?.hash}
+                                    extra={<Tag color={tagMap[ele?.fileType]?.color}>{tagMap[ele?.fileType]?.type}</Tag>}
+                                    className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
+                                    onDoubleClick={() => openHandler(ele)}
+                                    onTouchEnd={() => openHandler(ele)}
+                                    title={<Tooltip
+                                    >
+                                        <Tooltip
+                                            title={title ?? ele?.name}
+                                        >
+                                            {title ?? ele?.name}
+                                        </Tooltip>
+
+                                    </Tooltip>}
+                                >{des ?? ele?.name}</Card>
+                                {/* </Draggable> */}
+                            </motion.div>
+
+                        </Col>
                     }
 
-                    return <Col
-                        // flex={'1 1'}
-                        span={6}
-                        sm={12}
-                        xl={8}
-                        xs={24}
-                        xxl={6}
-                        key={ele?.hash ?? ele?.name ?? index}
-                    >
-
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{
-                                duration: 0.34,
-                                delay: 0.5 + Math.min(index, 4) * 0.25,
-                                ease: [0, 0.71, 0.2, 1.01]
-                            }}
-                        >
-                            <Draggable
-                                onDrag={sortHandler}
-                                key={ele?.hash ?? ele?.name ?? index}
-                                defaultClassNameDragging={style.dragging}
-                            ><Card
-                                data-hash={ele?.hash}
-                                extra={<Tag color={tagMap[ele?.fileType]?.color}>{tagMap[ele?.fileType]?.type}</Tag>}
-                                className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
-                                onDoubleClick={() => openHandler(ele)}
-                                onTouchEnd={() => openHandler(ele)}
-                                title={<Tooltip
-                                >
-                                    <Tooltip
-                                        title={title ?? ele?.name}
-                                    >
-                                        {title ?? ele?.name}
-                                    </Tooltip>
-
-                                </Tooltip>}
-                            >{des ?? ele?.name}</Card>
-                            </Draggable>
-                        </motion.div>
-
-                    </Col>
                 })
             }
         </Row>

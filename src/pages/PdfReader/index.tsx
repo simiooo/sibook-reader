@@ -176,6 +176,22 @@ export default function PdfReader() {
     }
   }, [ThrottleScale])
 
+  const {run: resizeHandler} = useThrottleFn((e: UIEvent) => {
+    console.log(e)
+    if(list_ref.current && ratio) {
+      const top = ratio * renderListRowHeight * numPages
+      list_ref.current.scrollToPosition(top)
+    }
+  }, {
+    wait: 50
+  })
+  useEventListener('resize', resizeHandler, {
+    target: window
+  })
+  // useEventListener('visibilitychange', resizeHandler, {
+  //   target: window
+  // })
+
   useEffect(() => {
     setCounter(pageNumber)
   }, [pageNumber])
