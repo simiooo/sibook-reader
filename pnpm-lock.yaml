@@ -38,6 +38,9 @@ dependencies:
   dexie-react-hooks:
     specifier: ^1.1.7
     version: 1.1.7(@types/react@18.2.31)(dexie@3.2.4)(react@18.2.0)
+  dompurify:
+    specifier: ^3.0.6
+    version: 3.0.6
   epubjs:
     specifier: ^0.3.93
     version: 0.3.93
@@ -53,6 +56,9 @@ dependencies:
   localforage:
     specifier: ^1.10.0
     version: 1.10.0
+  marked:
+    specifier: ^11.1.0
+    version: 11.1.0
   match-sorter:
     specifier: ^6.3.1
     version: 6.3.1
@@ -3100,6 +3106,10 @@ packages:
       csstype: 3.1.2
     dev: false
 
+  /dompurify@3.0.6:
+    resolution: {integrity: sha512-ilkD8YEnnGh1zJ240uJsW7AzE+2qpbOUYjacomn3AvJ6J4JhKGSZ2nh4wUIXPZrEPppaCLx5jFe8T89Rk8tQ7w==}
+    dev: false
+
   /ejs@3.1.9:
     resolution: {integrity: sha512-rC+QVNMJWv+MtPgkt0y+0rVEIdbtxVADApW9JXrUVlzHetgcyczP/E7DJmWJ4fJCZF2cPcBk0laWO9ZHMG3DmQ==}
     engines: {node: '>=0.10.0'}
@@ -4226,6 +4236,12 @@ packages:
 
   /make-event-props@1.6.2:
     resolution: {integrity: sha512-iDwf7mA03WPiR8QxvcVHmVWEPfMY1RZXerDVNCRYW7dUr2ppH3J58Rwb39/WG39yTZdRSxr3x+2v22tvI0VEvA==}
+    dev: false
+
+  /marked@11.1.0:
+    resolution: {integrity: sha512-fvKJWAPEafVj1dwGwcPI5mBB/0pvViL6NlCbNDG1HOIRwwAU/jeMoFxfbRLuirO1wRH7m4yPvBqD/O1wyWvayw==}
+    engines: {node: '>= 18'}
+    hasBin: true
     dev: false
 
   /marks-pane@1.0.9:

@@ -1,0 +1,7 @@
+.answer_container{
+    padding: 0px 11px;
+    border-radius: 6px;
+    border: 1px solid #9bb876;
+    max-height: 70vh;
+    overflow: auto;
+}

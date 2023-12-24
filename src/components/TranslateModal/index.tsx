@@ -5,6 +5,8 @@ import { useAntdTable, useRequest } from 'ahooks';
 import style from './index.module.css'
 import { languages } from '../../utils/locale';
 import { useTranslation } from 'react-i18next';
+import DOMPurify from 'dompurify'
+import * as marked from 'marked'
 
 export interface TranslateModalProps extends ModalProps {
     text?: string;
@@ -12,7 +14,7 @@ export interface TranslateModalProps extends ModalProps {
 
 export default function TranslateModal(p: TranslateModalProps) {
     const { text, ...modalProps } = p
-    const {t} = useTranslation()
+    const { t } = useTranslation()
     const [res, setRes] = useState<string[]>([])
     const [error, setError] = useState<Error>()
     const request = useBookState(state => state.openaiRequest)
@@ -70,7 +72,7 @@ export default function TranslateModal(p: TranslateModalProps) {
     })
 
     const renderRes = useMemo(() => {
-        return `${res.join('')}${loading ? '_' : ''}`
+        return DOMPurify.sanitize(marked.parse(`${res.join('')}${loading ? '_' : ''}`))
     }, [res, loading])
     return (
         <Modal
@@ -113,11 +115,14 @@ export default function TranslateModal(p: TranslateModalProps) {
                         <Spin
                             spinning={loading}
                         >
-                            <Input.TextArea
+                            {/* <Input.TextArea
                                 value={renderRes}
                                 showCount
                                 rows={16}
-                            ></Input.TextArea>
+                            ></Input.TextArea> */}
+                            <div className={style.answer_container} dangerouslySetInnerHTML={{ __html: renderRes }}>
+
+                            </div>
                             <div style={{ height: '1rem' }}></div>
 
                             <Form.Item
