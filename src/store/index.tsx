@@ -3,6 +3,7 @@ import { BookClassedDexie, db } from "../dbs/db";
 import { message } from "antd";
 import { explainer, translator } from "../utils/openai_params_generator";
 import { subscribeWithSelector } from 'zustand/middleware'
+import { ClipboardType } from "../components/ClipboardList";
 const OPENAI_BASE_URL = 'https://api.openai.com'
 export const OPENAI_PATHNAME = '/v1/chat/completions'
 const OPENAI_HEADERS = new Headers()
@@ -13,6 +14,8 @@ export interface BookStateType {
     openai_base_url?: string;
     openai_api_key?: string;
     openai_api_model?: string;
+    clipboardList?: ClipboardType[];
+    clipboardList_update?: (payload: ClipboardType[]) => void;
     openai_update?: (params: {
         openai_base_url?: string, 
         openai_api_key?: string,
@@ -47,6 +50,10 @@ export type ChatCompletion = {
 
 export const useBookState = create<BookStateType>((set, get) => {
     return {
+        clipboardList: [],
+        clipboardList_update: (clipboardList: ClipboardType[]) => set({
+            clipboardList: [...clipboardList].slice(0,300)
+        }),
         db_instance: db,
         openai_base_url: localStorage.getItem('openai_base_url') ?? OPENAI_BASE_URL,
         openai_api_key: localStorage.getItem('openai_api_key') ?? undefined,

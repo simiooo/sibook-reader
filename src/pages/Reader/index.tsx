@@ -20,6 +20,7 @@ import { MenuItemType } from 'antd/es/menu/hooks/useItems'
 import FloatAiMenu from '../../components/FloatAiMenu'
 import { useTranslation } from 'react-i18next'
 import { usePhone } from '../../utils/usePhone'
+import dayjs from 'dayjs'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -90,10 +91,19 @@ export default function index() {
     wait: 200
   })
 
+  const {clipboardList, clipboardList_update} = useBookState(state => state)
+
   const copyHandlerFactory = (content: any) => {
     return async () => {
       try {
         const res = await content.window.navigator.clipboard.readText()
+        if(!clipboardList.find(ele => ele.content === res)) {
+          clipboardList_update([{
+            create_date: +dayjs(),
+            content: res,
+            read: false,
+          },...clipboardList])
+        }
         message.success(t('复制成功'))
         setCopiedText(res)
       } catch (error) {
@@ -112,7 +122,7 @@ export default function index() {
       content.document.oncopy = copyHandler
       copyHandler = null
     }
-  }, [rendition])
+  }, [rendition, clipboardList])
 
   // 设置事件监听
   useEffect(() => {

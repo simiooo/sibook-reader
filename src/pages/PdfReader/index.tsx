@@ -7,7 +7,7 @@ import { useBookState } from '../../store';
 import { BookItems } from '../../dbs/db';
 import { useNavigate, useParams } from 'react-router-dom';
 import Draggable from 'react-draggable';
-import { CameraOutlined, HomeOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { CameraOutlined, HomeOutlined, LeftOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined, RightOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 const stylecss = style
 import { pdfjs } from 'react-pdf';
@@ -29,6 +29,8 @@ import { usePhone } from '../../utils/usePhone';
 import { usePagination } from './usePagination';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 import html2canvas from 'html2canvas'
+import dayjs from 'dayjs';
+import ClipboardList from '../../components/ClipboardList';
 
 
 const SCALE_GAP = 0.1
@@ -128,7 +130,7 @@ export default function PdfReader() {
   const [resultImg, setResultImg] = useState<Uint8Array | null>()
   const [isRecognizing, setIsRecognizing] = useState<boolean>(false)
 
-
+  const [clipboardListOpen, setClipboardListOpen] = useState<boolean>(false)
   const [ratio, setRatio] = useState<number>()
 
   const size = useSize(container_ref);
@@ -248,16 +250,25 @@ export default function PdfReader() {
 
   }, [book_id])
 
+  const {clipboardList, clipboardList_update} = useBookState(state => state)
+
   const copyHandler = useCallback(async () => {
     try {
       const res = await window.navigator.clipboard.readText()
+      if(!clipboardList.find(ele => ele.content === res)) {
+        clipboardList_update([{
+          create_date: +dayjs(),
+          content: res,
+          read: false,
+        }, ...clipboardList])
+      }
       message.success(t('复制成功'))
       setCopiedText(res)
     } catch (error) {
       console.error(error instanceof Error ? error.message : error)
       message.error(t('粘贴失败'))
     }
-  }, [])
+  }, [clipboardList])
 
   useEventListener('copy', copyHandler)
 
@@ -471,6 +482,7 @@ export default function PdfReader() {
         </Col>
         <Col span={24}>
           <Row
+          gutter={20}
           wrap={false}
             style={{
               width: '100%'
@@ -653,6 +665,40 @@ export default function PdfReader() {
 
 
             </Col>
+            {
+              clipboardListOpen 
+              ? <Col
+              span={4}
+              >
+              <div
+              style={{
+                height: size?.height,
+                // width: 400,
+              }}
+              >
+                <Button
+                type="link"
+                icon={<RightOutlined />}
+                danger
+                onClick={() => setClipboardListOpen(false)}
+                >Close</Button>
+              <ClipboardList
+              height={size?.height - 32}
+              ></ClipboardList>
+              </div>
+              
+              </Col>
+              : <Col flex="0 1">
+              <Button
+              onClick={() => setClipboardListOpen(true)}
+              icon={<LeftOutlined />}
+              type="link"
+              size='small'
+              ></Button>
+            </Col>
+            }
+            
+            
           </Row>
         </Col>
         <Modal
