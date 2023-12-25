@@ -20,7 +20,6 @@ import { MenuItemType } from 'antd/es/menu/hooks/useItems'
 import FloatAiMenu from '../../components/FloatAiMenu'
 import { useTranslation } from 'react-i18next'
 import { usePhone } from '../../utils/usePhone'
-import BookTabs from '../../components/BookTabs'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -255,9 +254,7 @@ export default function index() {
         </Row>
         : <Row
           className={style.container}>
-          <Col span={24}>
-            <BookTabs></BookTabs>
-          </Col>
+          
           <Col
             className={style.toolbar}
             span={24}

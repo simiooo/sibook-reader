@@ -29,7 +29,6 @@ import { usePhone } from '../../utils/usePhone';
 import { usePagination } from './usePagination';
 import { PDFDocumentProxy } from 'pdfjs-dist';
 import html2canvas from 'html2canvas'
-import BookTabs from '../../components/BookTabs';
 
 
 const SCALE_GAP = 0.1
@@ -417,9 +416,6 @@ export default function PdfReader() {
             onCancel: setExplainerOpen
           }}
         ></FloatAiMenu>
-        <Col span={24}>
-          <BookTabs></BookTabs>
-        </Col>
         <Col span={24}>
           <Row
             justify={'space-between'}

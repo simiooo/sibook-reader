@@ -11,17 +11,14 @@ import { useRequest } from "ahooks";
 import style from './index.module.css'
 import { Spin } from "antd";
 import { useDrop } from "ahooks";
-import { Dropdown } from "antd";
 import { useUpload } from "../../utils/useUpload";
 import { message } from "antd";
 import { useSet } from "ahooks";
 import DropButton, { useDropBook } from "../../components/DropButton";
-import ExportButton, { useExport } from "../../components/ExportButton";
+import { useExport } from "../../components/ExportButton";
 import { ItemType } from "antd/es/breadcrumb/Breadcrumb";
-import { Alert } from "antd";
 import GPTSetting from "../../components/GPTSetting";
 import { useTranslation } from 'react-i18next';
-import BookTabs from '../../components/BookTabs';
 import SyncModal from '../../components/SyncModal';
 
 export default function index() {
@@ -119,9 +116,6 @@ export default function index() {
             className={style.main}
         >
             <Row>
-                <Col span={24}>
-                    <BookTabs></BookTabs>
-                </Col>
             </Row>
             <SyncModal
             open={islandOpen}
