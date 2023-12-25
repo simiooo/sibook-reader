@@ -1,17 +1,23 @@
 import { useLocalStorageState } from 'ahooks';
 import { Col, Row, Tabs, message } from 'antd';
-import React, { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import React, { ComponentProps, useEffect, useState } from 'react'
+import { useLocation, useNavigate, useNavigation, useParams } from 'react-router-dom';
 import { useBookState } from '../../store';
+import classNames from 'classnames' 
 
 export interface PageType {
     type: 'shell' | 'reader';
     id: string;
     readerType?: 'epub' | 'pdf';
     name: string | JSX.Element;
+    
 }
 
-export default function BookTabs() {
+interface BookTabsProp{
+    className?: string;
+}
+
+export default function BookTabs(p: BookTabsProp) {
     const [active, setActive] = useState<string>()
     const navigate = useNavigate()
     const { book_id } = useParams()
@@ -72,8 +78,23 @@ export default function BookTabs() {
         db_instance,
         book_id,
     ])
+
+    const [lastLocation, setLastLocation] = useLocalStorageState<any>('last_location')
+
+    useEffect(() => {
+        if(lastLocation && lastLocation?.pathname !== window?.location?.pathname && window?.location?.pathname === '/') {
+            console.log(lastLocation)
+            navigate(location)
+        }
+    }, [])
+
+    useEffect(() => {
+        setLastLocation(location)
+    }, [location])
     return (
-        <Row>
+        <Row
+        className={classNames({[p?.className]: true})}
+        >
             <Col>
                 <Tabs
                     size='small'
