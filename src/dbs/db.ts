@@ -12,7 +12,7 @@ interface PDFMetaType{
 
 export interface BookItems <T extends Object = (PDFMetaType | PackagingMetadataObject)>{
   name?: string;
-  des: string;
+  des?: string;
   hash: string;
   fileType: string;
   sort: number;
