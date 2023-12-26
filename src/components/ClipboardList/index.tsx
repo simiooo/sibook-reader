@@ -1,11 +1,11 @@
-import { Button, Card, Col, Divider, Input, List, Popover, Row, Select, Space, Spin, message } from 'antd';
+import { Button, Card, Col, Divider, Input, List, Popconfirm, Popover, Row, Select, Space, Spin, message } from 'antd';
 import React, { useEffect, useState } from 'react'
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 // import {AutoSizer} from 'react-virtualized'
 import { openai_stream_reader, useBookState } from '../../store';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { RedoOutlined } from '@ant-design/icons';
+import { DeleteOutlined, RedoOutlined } from '@ant-design/icons';
 import { languages } from '../../utils/locale';
 import { AI_MODELS } from '../../utils/openaiModels';
 import { useRequest } from 'ahooks';
@@ -40,6 +40,7 @@ export default function ClipboardList(p: ClipboardListProps) {
 
     const { runAsync, loading } = useRequest(async () => {
         try {
+            setOutput([])
             if (!model) {
                 throw Error(t('请选择模型'))
             }
@@ -91,73 +92,105 @@ export default function ClipboardList(p: ClipboardListProps) {
                         overflow: 'auto'
                     }}
                     dataSource={clipboardList}
-                    renderItem={(ele) => (
-                        <div>
-                            <Popover
-                                onOpenChange={(open) => {
-                                    setOutput([])
-                                    if (open) {
+                    renderItem={(ele, index) => (
+                        <Row>
+                            <Col flex={'1 1'}>
+                                <Popover
+                                    trigger={'click'}
+                                    onOpenChange={(open) => {
+                                        setOutput([])
+                                        if (open) {
 
-                                        setContent(ele.content)
-                                    } else {
-                                        setContent(undefined)
-                                    }
-                                }}
-                                placement="left"
-                                title={<Row
-                                    gutter={[8, 8]}
+                                            setContent(ele.content)
+                                        } else {
+                                            setContent(undefined)
+                                        }
+                                    }}
+                                    placement="left"
+                                    title={<Row
+                                        gutter={[8, 8]}
+                                    >
+                                        <Col
+
+                                            span={24}>
+                                            <Row
+
+                                                justify={'space-between'}>
+                                                <Col>{t('翻译')}</Col>
+                                                <Col>
+                                                    <Space>
+                                                        <Select
+                                                            style={{
+                                                                width: '10rem'
+                                                            }}
+                                                            defaultValue={openai_api_model}
+                                                            value={model}
+                                                            onChange={(e) => setModel(e)}
+                                                            placeholder={t('请选择模型')}
+                                                            options={AI_MODELS.map(ele => ({
+                                                                label: ele.model,
+                                                                value: ele.model,
+                                                            }))}
+                                                        ></Select>
+                                                        <Select
+                                                            style={{
+                                                                width: '10rem'
+                                                            }}
+                                                            value={target}
+                                                            showSearch
+                                                            onChange={(e) => setTarget(e)}
+                                                            options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
+                                                            placeholder={t('请选择待翻译语言')}
+                                                        ></Select>
+                                                        <Button
+                                                            onClick={() => runAsync()}
+                                                            type="link"
+                                                            icon={<RedoOutlined />}></Button>
+                                                    </Space>
+                                                </Col>
+                                            </Row>
+                                        </Col>
+                                        <Col span={24}>
+                                            <Spin
+                                                spinning={loading}
+                                            >
+                                                <Input.TextArea
+                                                    rows={6}
+                                                    value={output?.join?.('')}
+                                                ></Input.TextArea>
+                                            </Spin>
+                                        </Col>
+                                    </Row>}
                                 >
-                                    <Col span={24}>
-                                        <Row
+                                    <div
+                                        style={{
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {ele.content}
+                                    </div>
 
-                                            justify={'space-between'}>
-                                            <Col>{t('翻译')}</Col>
-                                            <Col>
-                                                <Space>
-                                                    <Select
-                                                        style={{
-                                                            width: '10rem'
-                                                        }}
-                                                        defaultValue={openai_api_model}
-                                                        value={model}
-                                                        onChange={(e) => setModel(e)}
-                                                        placeholder={t('请选择模型')}
-                                                        options={AI_MODELS.map(ele => ({
-                                                            label: ele.model,
-                                                            value: ele.model,
-                                                        }))}
-                                                    ></Select>
-                                                    <Select
-                                                        style={{
-                                                            width: '10rem'
-                                                        }}
-                                                        value={target}
-                                                        showSearch
-                                                        onChange={(e) => setTarget(e)}
-                                                        options={languages.map(ele => ({ label: ele.language, value: ele.code }))}
-                                                        placeholder={t('请选择待翻译语言')}
-                                                    ></Select>
-                                                    <Button
-                                                        onClick={() => runAsync()}
-                                                        type="link"
-                                                        icon={<RedoOutlined />}></Button>
-                                                </Space>
-                                            </Col>
-                                        </Row>
-                                    </Col>
-                                    <Col span={24}>
-                                        <Spin
-                                            spinning={loading}
-                                        >
-                                            <Input.TextArea
-                                                value={output?.join?.('')}
-                                            ></Input.TextArea>
-                                        </Spin>
-                                    </Col>
-                                </Row>}
-                            >{ele.content}</Popover>
+                                </Popover>
+                            </Col>
+                            <Col>
+                                <Popconfirm
+                                    title="Sure to delete?"
+                                    placement='left'
+                                    onConfirm={() => {
+                                        clipboardList_update(clipboardList.filter((_, index2) => index2 !== index))
+                                    }}
+                                >
+                                    <Button
+                                        type="link"
+                                        danger
+                                        size='small'
+                                        icon={<DeleteOutlined />}
+                                    ></Button>
+                                </Popconfirm>
+
+                            </Col>
                             <Divider></Divider>
-                        </div>
+                        </Row>
                     )}
                 ></List>
             )}

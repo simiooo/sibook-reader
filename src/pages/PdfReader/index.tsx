@@ -1,4 +1,4 @@
-import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber, Modal } from 'antd'
+import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber, Modal, Badge } from 'antd'
 import { Document, Outline, Page } from 'react-pdf';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -172,7 +172,7 @@ export default function PdfReader() {
 
   // 修复缩放时定位
   const scaleFixer = useCallback(() => {
-    if(list_ref.current) { 
+    if (list_ref.current) {
       const top = ratio * renderListRowHeight * numPages
       list_ref.current.scrollToPosition(top)
     }
@@ -181,9 +181,9 @@ export default function PdfReader() {
     scaleFixer()
   }, [ThrottleScale])
 
-  const {run: resizeHandler} = useThrottleFn((e: UIEvent) => {
+  const { run: resizeHandler } = useThrottleFn((e: UIEvent) => {
     console.log(e)
-    if(list_ref.current && ratio) {
+    if (list_ref.current && ratio) {
       const top = ratio * renderListRowHeight * numPages
       list_ref.current.scrollToPosition(top)
     }
@@ -250,12 +250,12 @@ export default function PdfReader() {
 
   }, [book_id])
 
-  const {clipboardList, clipboardList_update} = useBookState(state => state)
+  const { clipboardList, clipboardList_update } = useBookState(state => state)
 
   const copyHandler = useCallback(async () => {
     try {
       const res = await window.navigator.clipboard.readText()
-      if(!clipboardList.find(ele => ele.content === res)) {
+      if (!clipboardList.find(ele => ele.content === res)) {
         clipboardList_update([{
           create_date: +dayjs(),
           content: res,
@@ -482,8 +482,8 @@ export default function PdfReader() {
         </Col>
         <Col span={24}>
           <Row
-          gutter={20}
-          wrap={false}
+            gutter={20}
+            wrap={false}
             style={{
               width: '100%'
             }}
@@ -500,9 +500,9 @@ export default function PdfReader() {
                 // sm={isPhone ? 24 : 8}
                 // xs={isPhone ? 24 : 8}
                 className={style.menu_container}
-                // style={{
-                //   height: isPhone ? '2.9rem' : undefined,
-                // }}
+              // style={{
+              //   height: isPhone ? '2.9rem' : undefined,
+              // }}
               >
                 <Menu
                   // mode={isPhone ? 'horizontal' : undefined}
@@ -666,39 +666,47 @@ export default function PdfReader() {
 
             </Col>
             {
-              clipboardListOpen 
-              ? <Col
-              span={4}
-              >
-              <div
-              style={{
-                height: size?.height,
-                // width: 400,
-              }}
-              >
-                <Button
-                type="link"
-                icon={<RightOutlined />}
-                danger
-                onClick={() => setClipboardListOpen(false)}
-                >Close</Button>
-              <ClipboardList
-              height={size?.height - 32}
-              ></ClipboardList>
-              </div>
-              
-              </Col>
-              : <Col flex="0 1">
-              <Button
-              onClick={() => setClipboardListOpen(true)}
-              icon={<LeftOutlined />}
-              type="link"
-              size='small'
-              ></Button>
-            </Col>
+              clipboardListOpen
+                ? <Col
+                  span={4}
+                >
+                  <div
+                    style={{
+                      height: size?.height,
+                      // width: 400,
+                    }}
+                  >
+                    <Button
+                      type="link"
+                      icon={<RightOutlined />}
+                      danger
+                      onClick={() => setClipboardListOpen(false)}
+                    >Close</Button>
+                    <ClipboardList
+                      height={size?.height - 32}
+                    ></ClipboardList>
+                  </div>
+
+                </Col>
+                : <Col flex="0 1">
+                  <Badge
+                  count={clipboardList.filter(val => !val.read).length}
+                  >
+                    <Button
+                      onClick={() => {
+                        setClipboardListOpen(true)
+                        clipboardList_update(clipboardList.map(ele => ({...ele, read: true})))
+                      }}
+                      icon={<LeftOutlined />}
+                      type="link"
+                      size='small'
+                    ></Button>
+                  </Badge>
+
+                </Col>
             }
-            
-            
+
+
           </Row>
         </Col>
         <Modal
