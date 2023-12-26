@@ -10,10 +10,10 @@ import tailwindcss from './default.css?url'
 import { BookItems } from '../../dbs/db'
 import { Breadcrumb } from 'antd'
 import { useNavigate } from 'react-router-dom'
-import { HomeOutlined } from '@ant-design/icons'
+import { CloseOutlined, HomeOutlined } from '@ant-design/icons'
 import { createPortal } from 'react-dom'
 import { Slider } from 'antd'
-import { useResponsive, useThrottleFn } from 'ahooks'
+import { useEventListener, useResponsive, useThrottleFn } from 'ahooks'
 import { Spin } from 'antd'
 import { useKeyPress } from 'ahooks'
 import { MenuItemType } from 'antd/es/menu/hooks/useItems'
@@ -21,6 +21,8 @@ import FloatAiMenu from '../../components/FloatAiMenu'
 import { useTranslation } from 'react-i18next'
 import { usePhone } from '../../utils/usePhone'
 import dayjs from 'dayjs'
+import { motion } from 'framer-motion'
+import Draggable from 'react-draggable'
 
 export default function index() {
   const db_instance = useBookState(state => state.db_instance)
@@ -42,6 +44,24 @@ export default function index() {
 
   const [translatorOpen, setTranslatorOpen] = useState<boolean>(false)
   const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
+  const [imgSrc, setImgSrc] = useState<string>()
+  const [imgContainerOpen, setImgContainerOpen] = useState<boolean>(false)
+  const [imgScale, setImgScale] = useState<number>(1)
+
+  const {run: imgScaleHandler} = useThrottleFn((e: WheelEvent) => {
+    if(!imgContainerOpen) {
+      return
+    }
+    if(e.deltaY < 0) {
+      setImgScale(imgScale + 0.1)
+    } else if(e.deltaY > 0) {
+      setImgScale(Math.max(0.2, imgScale - 0.1))
+    }
+    
+  }, {
+    wait: 25
+  })
+  useEventListener('wheel',imgScaleHandler)
 
 
   const [menuItems, setMenuItems] = useState<MenuItemType[]>()
@@ -91,18 +111,18 @@ export default function index() {
     wait: 200
   })
 
-  const {clipboardList, clipboardList_update} = useBookState(state => state)
+  const { clipboardList, clipboardList_update } = useBookState(state => state)
 
   const copyHandlerFactory = (content: any) => {
     return async () => {
       try {
         const res = await content.window.navigator.clipboard.readText()
-        if(!clipboardList.find(ele => ele.content === res)) {
+        if (!clipboardList.find(ele => ele.content === res)) {
           clipboardList_update([{
             create_date: +dayjs(),
             content: res,
             read: false,
-          },...clipboardList])
+          }, ...clipboardList])
         }
         message.success(t('复制成功'))
         setCopiedText(res)
@@ -124,15 +144,27 @@ export default function index() {
     }
   }, [rendition, clipboardList])
 
+  const img_click_handler = useCallback((e) => {
+    if (e.target?.tagName?.toUpperCase?.() !== 'IMG') {
+      return
+    }
+    setImgSrc(e.target.src)
+    setImgContainerOpen(true)
+    setImgScale(1)
+  }, [])
+
   // 设置事件监听
   useEffect(() => {
     rendition?.on('relocated', locationChangeByPercentage)
     rendition?.on('rendered', rendition_rendered_handler)
     rendition?.on('keyup', keyUpHandler)
+    rendition?.on('click', img_click_handler)
     return () => {
       rendition?.off('relocated', locationChangeByPercentage)
       rendition?.off('keyup', keyUpHandler)
-      rendition?.on('rendered', rendition_rendered_handler)
+      rendition?.off('rendered', rendition_rendered_handler)
+      rendition?.off('click', img_click_handler)
+
     }
   }, [rendition, currentLocation])
 
@@ -264,7 +296,7 @@ export default function index() {
         </Row>
         : <Row
           className={style.container}>
-          
+
           <Col
             className={style.toolbar}
             span={24}
@@ -377,6 +409,90 @@ export default function index() {
             , document.body
           )}
         </Row>}
+      {imgContainerOpen &&
+        createPortal(<motion.div
+          initial={{
+            backgroundColor: 'rgba(255,255,255,0)',
+          }}
+          animate={{
+            backgroundColor: 'rgba(0,0,0,0.42)',
+          }}
+          transition={{
+            duration: .1,
+            type: 'spring'
+          }}
+          className={style.img_container}
+          onClick={() => {
+            setImgSrc(undefined)
+            setImgContainerOpen(false)
+          }}
+        >
+          <Row>
+            <Col
+              span={24}
+            >
+              <Row
+                justify={'space-between'}
+                gutter={[20, 20]}
+              >
+                <Col></Col>
+                <Col>
+                  <Button
+                    type="link"
+                    onClick={() => {
+                      setImgSrc(undefined)
+                      setImgContainerOpen(false)
+                    }}
+                    icon={<CloseOutlined style={{
+                      color: '#fff'
+                    }} />}
+                  ></Button>
+                </Col>
+              </Row>
+
+            </Col>
+            <Col
+
+              span={24}>
+              <Row
+                justify={'center'}
+              >
+                <Col>{imgSrc && <Draggable><div
+                ><motion.img
+                  draggable={false}
+                  style={{
+                    maxHeight: '90vh',
+                    maxWidth: '90vw',
+                    scale: imgScale,
+                  }}
+                  initial={{
+                    // transform: 'scale(0.8)',
+                    // scale: 0.8,
+                    translateX: '10%',
+                    opacity: 0,
+                  }}
+                  animate={{
+                    // transform: 'scale(1)',
+                    translateX: 0,
+                    opacity: 1,
+                  }}
+                  transition={{
+                    duration: .25,
+                    delay: .1,
+                    type: "spring",
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  src={imgSrc} alt="Scale Image" /></div>
+
+                </Draggable>}</Col>
+              </Row>
+            </Col>
+          </Row>
+        </motion.div>, document.body)
+      }
     </Spin>
 
   )

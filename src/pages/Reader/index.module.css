@@ -24,3 +24,14 @@
     right: 10vw;
     left: 10vw;
 }
+.img_container{
+    overflow: hidden;
+    background-color: rgba(0,0,0,0.42);
+    box-sizing: border-box;
+    width: 100vw;
+    padding: 1rem 1.5rem;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    position: absolute;
+}
