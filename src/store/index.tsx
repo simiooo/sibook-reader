@@ -50,7 +50,7 @@ export type ChatCompletion = {
 
 export const useBookState = create<BookStateType>((set, get) => {
     return {
-        clipboardList: [],
+        clipboardList: JSON.parse(localStorage.getItem('clipboardList') ?? '[]'),
         clipboardList_update: (clipboardList: ClipboardType[]) => set({
             clipboardList: [...clipboardList].slice(0,300)
         }),
@@ -84,6 +84,9 @@ useBookState.subscribe((state) => {
     }
     if(state.openai_api_model && state.openai_api_model !== localStorage.getItem('openai_api_model')) {
         localStorage.setItem('openai_api_model', state.openai_api_model)
+    }
+    if(state.clipboardList) {
+        localStorage.setItem('clipboardList', JSON.stringify(state.clipboardList))
     }
 })
 
