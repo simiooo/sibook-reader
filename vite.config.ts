@@ -16,6 +16,11 @@ const cMapsDir = path.join(
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      "/api/": "http://localhost:3000/"
+    }
+  },
   plugins: [
     react(),
     VitePWA({
@@ -29,7 +34,7 @@ export default defineConfig({
         icons: [
           {
             src: '/icon/favicon.png',
-            type: 'image/png', 
+            type: 'image/png',
           },
           {
             src: '/icon/android-chrome-192x192.png',

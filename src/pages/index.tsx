@@ -1,19 +1,34 @@
 import { Flex, Layout } from 'antd'
 import { Content, Footer, Header } from 'antd/es/layout/layout'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import BookTabs from '../components/BookTabs'
 import style from './index.module.css'
 import classNames from 'classnames'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useBookState } from '../store'
+import { useAsyncEffect } from 'ahooks'
 
 export default function index() {
     const location = useLocation()
+    const navigate = useNavigate()
     const renderClassName = useMemo(() => {
         return window.location.pathname === '/'
     },[location])
+    const [userOnline, setUserOnline] = useState<boolean>()
+    const isUserOnline = useBookState(state => state.isUserOnline)
+
+    useAsyncEffect(async () => {
+        setUserOnline(await isUserOnline())
+    }, [location])
+
+    useEffect(() => {
+        if(!userOnline) {
+            navigate('/login')
+        }
+    }, [userOnline])
     return (
         <div>
-            <Flex 
+            {userOnline && <Flex 
             className={classNames({
                 [style.tabs_container]: renderClassName
             })}
@@ -21,9 +36,8 @@ export default function index() {
                 <BookTabs
                 className={style.tabs}
                 ></BookTabs>
-            </Flex>
+            </Flex>}
             <Outlet></Outlet>
-
         </div>
 
     )

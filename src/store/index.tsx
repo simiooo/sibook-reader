@@ -4,6 +4,7 @@ import { message } from "antd";
 import { explainer, translator } from "../utils/openai_params_generator";
 import { subscribeWithSelector } from 'zustand/middleware'
 import { ClipboardType } from "../components/ClipboardList";
+import { requestor } from "../utils/requestor";
 const OPENAI_BASE_URL = 'https://api.openai.com'
 export const OPENAI_PATHNAME = '/v1/chat/completions'
 const OPENAI_HEADERS = new Headers()
@@ -15,6 +16,7 @@ export interface BookStateType {
     openai_api_key?: string;
     openai_api_model?: string;
     clipboardList?: ClipboardType[];
+    isUserOnline?: () => Promise<boolean>;
     clipboardList_update?: (payload: ClipboardType[]) => void;
     openai_update?: (params: {
         openai_base_url?: string, 
@@ -33,6 +35,7 @@ export type ChatCompletion = {
     created: number;
     model: string;
     system_fingerprint: string;
+    
     choices: Array<{
       index: number;
       message: {
@@ -71,6 +74,17 @@ export const useBookState = create<BookStateType>((set, get) => {
                 headers: OPENAI_HEADERS,
                 body: JSON.stringify(body.type == 'translator' ? translator(body.message, {model: get().openai_api_model}) : explainer(body.message, {model: get().openai_api_model}))
             })
+        },
+        isUserOnline: async () => {
+            try {
+                const res = await requestor({
+                    url: '/profile/isUserOnline'
+                })
+                return res.status === 200
+            } catch (error) {
+                return false
+            }
+            
         }
     }
 })
