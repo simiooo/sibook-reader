@@ -26,6 +26,8 @@
     "dexie": "^3.2.4",
     "dexie-react-hooks": "^1.1.7",
     "dompurify": "^3.0.6",
+    "echarts": "^5.4.3",
+    "echarts-stat": "^1.2.0",
     "epubjs": "^0.3.93",
     "framer-motion": "^10.16.5",
     "html2canvas": "^1.4.1",

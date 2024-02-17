@@ -1,0 +1,7 @@
+.container{
+    padding: 1rem 2rem;
+    .chart_container{
+        width: 100vw;
+        height: calc(100vh - 4rem);
+    }
+}

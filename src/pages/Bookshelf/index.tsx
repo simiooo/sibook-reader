@@ -19,9 +19,11 @@ import { useExport } from "../../components/ExportButton";
 import { ItemType } from "antd/es/breadcrumb/Breadcrumb";
 import GPTSetting from "../../components/GPTSetting";
 import { useTranslation } from 'react-i18next';
-import SyncModal from '../../components/SyncModal';
+// import SyncModal from '../../components/SyncModal';
+import { useNavigate } from 'react-router-dom';
 
-export default function index() {
+
+export default function Bookshelf() {
     const db_instance = useBookState(state => state.db_instance)
     const { upload, loading: uploadLoading } = useUpload()
     const [list, setList] = useState<any[]>([])
@@ -103,8 +105,8 @@ export default function index() {
         return result
     }, [selected])
 
-    const [islandOpen, setIslandOpen] = useState<boolean>(false)
-
+    // const [islandOpen, setIslandOpen] = useState<boolean>(false)
+    const navigate = useNavigate()
     const [filterValue, setFilterValue] = useState<string>()
     const renderList = useMemo(() =>{
         return (list ?? []).filter(val => filterValue ? Object.values(val ?? {})?.join('')?.includes?.(filterValue) : true)
@@ -117,14 +119,14 @@ export default function index() {
         >
             <Row>
             </Row>
-            <SyncModal
+            {/* <SyncModal
             open={islandOpen}
             onOk={() => {
                 runAsync()
                 setIslandOpen(false)
             }}
             onCancel={() => setIslandOpen(false)}
-            ></SyncModal>
+            ></SyncModal> */}
             <GPTSetting
                 open={aiOpen}
                 onCancel={() => setAiOpen(false)}
@@ -134,6 +136,8 @@ export default function index() {
 
                 <Content className={style.content}>
                     <Row gutter={[20, 32]}>
+                        <Col>
+                        </Col>
                         <Col span={24}>
                             <Row justify={'space-between'}>
                             <Col>
@@ -166,7 +170,7 @@ export default function index() {
                                         icon={<ShopOutlined />}
                                         type="link"
                                         size='small'
-                                        onClick={() => setIslandOpen(true)}
+                                        onClick={() => navigate('/island')}
                                         >{t('岛屿')}</Button>
                                         <Select
                                             size='small'

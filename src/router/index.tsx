@@ -7,6 +7,7 @@ import Index from '../pages'
 import PdfReader from "../pages/PdfReader";
 import { Result } from "antd";
 import Login from "../pages/Login";
+import Island from "../pages/Island";
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
         path: "/pdf_reader/:book_id",
         element: <PdfReader></PdfReader>,
       },
+      {
+        path: '/island',
+        element: <Island></Island>,
+      }
     ]
   },
 

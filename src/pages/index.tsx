@@ -7,14 +7,15 @@ import classNames from 'classnames'
 import { useEffect, useMemo, useState } from 'react'
 import { useBookState } from '../store'
 import { useAsyncEffect } from 'ahooks'
+import UploadContainer from '../components/UploadContainer'
 
-export default function index() {
+export default function App() {
     const location = useLocation()
     const navigate = useNavigate()
     const renderClassName = useMemo(() => {
         return window.location.pathname === '/'
     },[location])
-    const [userOnline, setUserOnline] = useState<boolean>()
+    const [userOnline, setUserOnline] = useState<boolean>(true)
     const isUserOnline = useBookState(state => state.isUserOnline)
 
     useAsyncEffect(async () => {
@@ -28,7 +29,8 @@ export default function index() {
     }, [userOnline])
     return (
         <div>
-            {userOnline && <Flex 
+            <UploadContainer></UploadContainer>
+            {/* {userOnline && <Flex 
             className={classNames({
                 [style.tabs_container]: renderClassName
             })}
@@ -36,7 +38,7 @@ export default function index() {
                 <BookTabs
                 className={style.tabs}
                 ></BookTabs>
-            </Flex>}
+            </Flex>} */}
             <Outlet></Outlet>
         </div>
 

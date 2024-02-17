@@ -4,16 +4,23 @@ import dayjs from 'dayjs'
 import { readFileAsArrayBuffer } from "../dbs/createBook";
 import { message } from "antd";
 import { sha256 } from "./sha256";
-import Dexie from "dexie";
 import { useTranslation } from "react-i18next";
 import { epubMetaParser, pdfMetaParser } from "./getBookMeta";
+import { SiWs } from "./jsClient";
+import { LoginType } from "../pages/Login";
 
 
 
 export function useUpload() {
-    const db_instance = useBookState((state) => state.db_instance)
+    const {db_instance, uploadingTaskList_update, uploadingTaskList} = useBookState((state) => ({
+        db_instance: state.db_instance,
+        uploadingTaskList_update: state.uploadingTaskList_update,
+        uploadingTaskList: state.uploadingTaskList
+    }))
+    
     const {t} = useTranslation()
     const [loading, setLoading] = useState<boolean>(false)
+    // const [fileWs] = useState()
 
     const upload =
         async (info?: { file?: File; onSuccess?: (v: any) => void; onError?: (error: Error) => void }) => {
@@ -37,39 +44,47 @@ export function useUpload() {
                 } else if(info.file.type === 'application/epub+zip') {
                     meta = await epubMetaParser(file)
                 }
-                const res = db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
-                    if (!info?.file) {
-                        throw Error(t('请传入文件'))
-                    }
+                const token = JSON.parse(localStorage.getItem('authorization') ?? "{}") as LoginType
+                const ws = new SiWs(`ws://${'localhost:8080'}/addBookToIsland?token=${token.token}`)
+                ws.init(info.file, {meta, id: hash})
+                uploadingTaskList_update([...(uploadingTaskList ?? []), {
+                    ws,
+                    name: info.file.name,
+                    des: meta?.creator ?? meta?.Author ?? info.file.name,
+                }])
+                // const res = db_instance?.transaction('rw', db_instance.book_items, db_instance.book_blob, async () => {
+                //     if (!info?.file) {
+                //         throw Error(t('请传入文件'))
+                //     }
                     
 
-                    const hasSame = await db_instance?.book_items.where('hash').equals(hash).toArray()
-                    if ((hasSame ?? [])?.length > 0) {
-                        throw (Error(t('请勿重复上传文件')))
-                    }
+                //     const hasSame = await db_instance?.book_items.where('hash').equals(hash).toArray()
+                //     if ((hasSame ?? [])?.length > 0) {
+                //         throw (Error(t('请勿重复上传文件')))
+                //     }
 
-                    db_instance?.book_items?.add({
-                        name: info.file.name,
-                        des: info.file.name,
-                        sort: dayjs().unix(),
-                        fileType: info.file.type,
-                        hash,
-                        meta,
-                    })
-                    db_instance?.book_blob?.add({
-                        id: hash,
-                        blob: file,
-                    })
-                    return true
-                }).then(() => {
-                    info?.onSuccess?.(info?.file)
-                }).catch(err => {
-                    console.error(err instanceof Error ? err : err)
-                    info?.onError?.(err instanceof Error ? err : Error(t('未知错误')))
-                }).finally(() => {
-                    setLoading(false)
-                })
-                await res
+                //     db_instance?.book_items?.add({
+                //         name: info.file.name,
+                //         des: info.file.name,
+                //         sort: dayjs().unix(),
+                //         fileType: info.file.type,
+                //         hash,
+                //         meta,
+                //     })
+                //     db_instance?.book_blob?.add({
+                //         id: hash,
+                //         blob: file,
+                //     })
+                //     return true
+                // }).then(() => {
+                //     info?.onSuccess?.(info?.file)
+                // }).catch(err => {
+                //     console.error(err instanceof Error ? err : err)
+                //     info?.onError?.(err instanceof Error ? err : Error(t('未知错误')))
+                // }).finally(() => {
+                //     setLoading(false)
+                // })
+                // await res
             } catch (error) {
                 message.error(error instanceof Error ? error.message : error)
             } finally {

@@ -3,6 +3,7 @@ import React from 'react'
 import style from './index.module.css'
 import { useRequest } from 'ahooks'
 import { requestor } from '../../utils/requestor'
+import { useNavigate } from 'react-router-dom'
 
 export interface LoginType{
     code?: number;
@@ -11,21 +12,27 @@ export interface LoginType{
 }
 
 export default function Login() {
+    const navigate = useNavigate()
 
     const {loading, runAsync} = useRequest(async (params: any) => {
-        const res = await requestor<LoginType>({
-            url: '/login',
-            data: {
-                username: params?.username,
-                password: params?.password,
+        try {
+            const res = await requestor<LoginType>({
+                url: '/login',
+                data: {
+                    username: params?.username,
+                    password: params?.password,
+                }
+            })
+            if (res.status !== 200) {
+                message.error('登陆失败')
+                return
             }
-        })
-        if (res.status !== 200) {
+            localStorage.setItem('authorization', JSON.stringify(res.data))
+            navigate('/')
+        } catch (error) {
             message.error('登陆失败')
-            return
         }
-        localStorage.setItem('authorization', JSON.stringify(res.data))
-
+        
     },{
         manual: true,
     })

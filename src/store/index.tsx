@@ -5,6 +5,8 @@ import { explainer, translator } from "../utils/openai_params_generator";
 import { subscribeWithSelector } from 'zustand/middleware'
 import { ClipboardType } from "../components/ClipboardList";
 import { requestor } from "../utils/requestor";
+import { UploadTask } from "../components/UploadContainer";
+import { User } from "./user.type";
 const OPENAI_BASE_URL = 'https://api.openai.com'
 export const OPENAI_PATHNAME = '/v1/chat/completions'
 const OPENAI_HEADERS = new Headers()
@@ -26,7 +28,11 @@ export interface BookStateType {
     openaiRequest?: <T extends Object>(body: {
         type: 'translator' | 'explainer';
         message: T;
-    }) => Promise<Response>
+    }) => Promise<Response>;
+    uploadingTaskList: UploadTask[];
+    uploadingTaskList_update: (uploadingTaskList:  UploadTask[]) => void;
+    profile?: User;
+    profile_update?: (profile: User) => void;
 }
 
 export type ChatCompletion = {
@@ -85,7 +91,11 @@ export const useBookState = create<BookStateType>((set, get) => {
                 return false
             }
             
-        }
+        },
+        uploadingTaskList: [],
+        uploadingTaskList_update: (uploadingTaskList: UploadTask[]) => set({uploadingTaskList: [...uploadingTaskList]}),
+        profile: [],
+        profile_update: (profile: User) => set({profile}),
     }
 })
 
