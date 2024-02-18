@@ -1,9 +1,10 @@
 .container{
     /* width: 24rem; */
     /* height: 26rem; */
+    background-color: #fff;
     overflow: hidden;
-    right: 1rem;
-    bottom: 1rem;
+    right: 2rem;
+    bottom: 0.9rem;
     position: fixed;
     padding: .5rem .7rem;
     border-radius: 8px;

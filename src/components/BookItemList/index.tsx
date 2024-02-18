@@ -15,6 +15,8 @@ import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import Draggable, { DraggableEventHandler } from 'react-draggable';
 import BookPlaceholder from './BookPlaceholder';
+import { Book } from '../../store/book.type';
+import dayjs from 'dayjs';
 
 export const tagMap = {
     'application/pdf': {
@@ -28,7 +30,7 @@ export const tagMap = {
 }
 
 interface BookItemListProps {
-    data?: BookItems[]
+    data?: Book[]
     selected?: Set<string | undefined>;
     onAdd?: (key?: string) => void;
     onRemove?: (key?: string) => void;
@@ -110,6 +112,7 @@ export default function BookItemList(p: BookItemListProps) {
             className={style.container}
             justify={'start'}
             align={'top'}
+            wrap={true}
             ref={container_ref}
         >
             <CMenu
@@ -156,38 +159,19 @@ export default function BookItemList(p: BookItemListProps) {
                 }}
             />
             {
-                (renderList.sort((pre, val) => val?.sort - pre.sort) ?? []).map((ele, index) => {
-                    if (ele.hash === 'placeholder') {
+                (renderList.sort((pre, val) => dayjs(pre.uploadDate).isBefore(val.uploadDate) ? -1 : 1) ?? []).map((ele, index) => {
+                    if (ele.objectId === 'placeholder') {
                         <Col
-                            span={6}
-                            sm={12}
-                            xl={8}
-                            xs={24}
-                            xxl={6}
-                            key={ele?.hash ?? ele?.name ?? index}
+                            key={ele?.objectId ?? ele?.objectName ?? index}
                         >
                             <BookPlaceholder></BookPlaceholder>
                         </Col>
                     } else {
                         let title
                         let des
-                        if (ele?.meta) {
-                            if ('title' in ele?.meta) {
-                                title = ele.meta.title
-                                des = ele.meta.creator
-                            } else {
-                                title = ele.meta.Title
-                                des = ele.meta.Author
-                            }
-                        }
 
                         return <Col
-                            span={6}
-                            sm={12}
-                            xl={8}
-                            xs={24}
-                            xxl={6}
-                            key={ele?.hash ?? ele?.name ?? index}
+                            key={ele?.objectId}
                         >
 
                             <motion.div
@@ -199,28 +183,22 @@ export default function BookItemList(p: BookItemListProps) {
                                     ease: [0, 0.71, 0.2, 1.01]
                                 }}
                             >
-                                {/* <Draggable
-                                    onDrag={sortHandler}
-                                    key={ele?.hash ?? ele?.name ?? index}
-                                    defaultClassNameDragging={style.dragging}
-                                > */}
                                     <Card
-                                    data-hash={ele?.hash}
-                                    extra={<Tag color={tagMap[ele?.fileType]?.color}>{tagMap[ele?.fileType]?.type}</Tag>}
-                                    className={`book_item ${p.selected?.has?.(ele?.hash) && style.book_item_active}`}
+                                    data-hash={ele?.objectId}
+                                    extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
+                                    className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
                                     onDoubleClick={() => openHandler(ele)}
                                     onTouchEnd={() => openHandler(ele)}
                                     title={<Tooltip
                                     >
                                         <Tooltip
-                                            title={title ?? ele?.name}
+                                            title={title ?? ele?.objectName}
                                         >
-                                            {title ?? ele?.name}
+                                            {title ?? ele?.objectName}
                                         </Tooltip>
 
                                     </Tooltip>}
-                                >{des ?? ele?.name}</Card>
-                                {/* </Draggable> */}
+                                >{des ?? ele?.objectName}</Card>
                             </motion.div>
 
                         </Col>

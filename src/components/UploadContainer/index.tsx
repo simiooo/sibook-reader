@@ -81,7 +81,7 @@ export default function UploadContainer() {
                     >
                         <List
                             dataSource={renderList}
-
+                            rowKey={(el) => el.name}
                             renderItem={(item: UploadTask) => (
                                 <List.Item>
                                     <List.Item.Meta
@@ -90,8 +90,11 @@ export default function UploadContainer() {
                                         avatar={<Progress
                                             type="circle"
                                             size="small"
-                                            status={item.ws.ws.readyState === WebSocket.CLOSED ? "exception" : undefined}
-                                            percent={item.ws.getProgress() * 100}
+                                            status={(
+                                                item.ws?.status === 'abort' || 
+                                                (item.ws?.ws?.readyState === WebSocket.CLOSED && item.ws.getProgress() < 1)
+                                                ) ? "exception" : undefined}
+                                            percent={Math.round(item.ws?.getProgress() * 10000)/100}
                                         />}
                                     ></List.Item.Meta>
                                 </List.Item>

@@ -1,3 +1,5 @@
+import { message } from "antd";
+
 interface UploadBookMessage {
     type: string;
     data: UploadBookMessageInit | UploadBookMessageProgress | UploadBookMessageEnd
@@ -8,6 +10,7 @@ interface UploadBookMessageInit {
     size: number;
     mimeType: string;
     filename: string;
+    islandId: number;
 }
 
 interface UploadBookMessageProgress {
@@ -32,8 +35,8 @@ interface LoadRes {
     status: 'success' | 'error';
 }
 
-type WsChangeCallback = (data: { value: string, progress: number }) => void;
-
+export type WsChangeCallback = (data: {status: MessageType, value?: string, progress?: number }) => void;
+export type WsChangeEvent = Parameters<WsChangeCallback>[0] 
 export class SiWs {
     readonly CHUNK_SIZE: number = 0x1 * 0x400 * 0x400
     arraybuffer: string | ArrayBuffer | null | undefined
@@ -49,32 +52,40 @@ export class SiWs {
     onchange(fn: WsChangeCallback) {
         this.tasks.push(fn)
     }
-    init(file?: File, meta?: {[key: string]: string}) {
+    init(file?: File, meta?: {[key: string]: string}, islandId?: number) {
+        console.log(islandId)
+        if(typeof islandId !== 'number') {
+            message.error("上传文件前，请选择岛屿")
+            // this.destroy()
+            return
+        }
         if (!file) {
+            // this.destroy()
             return
         }
         if (!this.ws) {
+            // this.destroy()
             return
         }
-        if (this.ws.readyState === WebSocket.CONNECTING) {
-            // console.error('ws is not open')
+        if(this.ws?.readyState === WebSocket.CONNECTING) {
             this.ws.onopen = () => {
-                setTimeout(() => {
-                    this.init(file)
-                }, 500);
+                this.init(file, meta, islandId)
             }
             return
         }
+        
         const data: UploadBookMessage = {
             type: "init",
             data: {
-                id: file.name,
+                id: meta?.id,
                 size: file.size,
                 mimeType: file.type,
                 filename: file.name,
+                islandId,
                 ...(meta ?? {}),
             }
         }
+        console.log(data)
         this.ws.send(JSON.stringify(data));
         this.ws.onmessage = (e) => {
             const datastring = e.data ?? "{}"
@@ -88,6 +99,9 @@ export class SiWs {
             switch (data.type) {
                 case "init":
                     {
+                        for (const fn of this.tasks) {
+                            fn({ status: 'init',value: data.message })
+                        }
                         if (!file) {
                             break
                         }
@@ -156,7 +170,7 @@ export class SiWs {
                             end = this.arraybuffer.byteLength;
                         }
                         for (const fn of this.tasks) {
-                            fn({ value: data.message, progress: this.getProgress() })
+                            fn({ status: 'progress',value: data.message, progress: Number(this.getProgress()) })
                         }
                         const buf = new Uint8Array(this.arraybuffer.slice(start, end));
                         const sendData = {
@@ -173,11 +187,20 @@ export class SiWs {
 
                     break
                 case "abort":
+                    {
+                        this.status = 'abort'
+                        for (const fn of this.tasks) {
+                            fn({ status: 'abort',value: data.message })
+                        }
+                        this.destroy()
+                    }
+                    break
                 case "end":
                     this.status = 'end'
-                    this.sendIndex = 0
                     this.arraybuffer = null
-                    this.times = 0
+                    for (const fn of this.tasks) {
+                        fn({ status: 'end',value: data.message })
+                    }
                     if (!this.ws) {
                         return
                     }
@@ -201,7 +224,7 @@ export class SiWs {
         this.resStr = ''
     }
     getProgress() {
-        return this.sendIndex / this.times
+        return (this.sendIndex / this.times)
     }
     abort() {
         this.ws.send(JSON.stringify({

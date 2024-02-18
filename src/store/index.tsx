@@ -33,6 +33,8 @@ export interface BookStateType {
     uploadingTaskList_update: (uploadingTaskList:  UploadTask[]) => void;
     profile?: User;
     profile_update?: (profile: User) => void;
+    currentIsland: number;
+    currentIsland_update?: (currentIsland: number) => void;
 }
 
 export type ChatCompletion = {
@@ -96,6 +98,8 @@ export const useBookState = create<BookStateType>((set, get) => {
         uploadingTaskList_update: (uploadingTaskList: UploadTask[]) => set({uploadingTaskList: [...uploadingTaskList]}),
         profile: [],
         profile_update: (profile: User) => set({profile}),
+        currentIsland: undefined,
+        currentIsland_update: (currentIsland: string) => set({currentIsland}),
     }
 })
 

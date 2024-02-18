@@ -21,17 +21,36 @@ import GPTSetting from "../../components/GPTSetting";
 import { useTranslation } from 'react-i18next';
 // import SyncModal from '../../components/SyncModal';
 import { useNavigate } from 'react-router-dom';
+import { requestor } from '../../utils/requestor';
+import { Book } from '../../store/book.type';
 
 
 export default function Bookshelf() {
+    const {currentIsland} = useBookState(state => ({currentIsland: state.currentIsland}))
     const db_instance = useBookState(state => state.db_instance)
-    const { upload, loading: uploadLoading } = useUpload()
-    const [list, setList] = useState<any[]>([])
-    const [aiOpen, setAiOpen] = useState<boolean>(false)
-    const { runAsync, loading: listLoading } = useRequest(async () => {
-        const res = await db_instance?.book_items?.toArray()
-        setList(res ?? [])
+    const { runAsync, loading: listLoading, data: list } = useRequest(async () => {
+        // const res = await db_instance?.book_items?.toArray()
+        try {
+            if(!currentIsland) {
+                throw Error('请先登录')
+            }
+            const res = await requestor<{data?: Book[]}>({
+                url: '/island/getBookListFromIsland',
+                data: {
+                    islandId: currentIsland,
+                }
+            })
+            // console.log(res)
+            return res.data?.data ?? []
+        } catch (error) {
+            return []
+        }
+        
+    },{
+        refreshDeps: [currentIsland],
     })
+    const { upload, loading: uploadLoading } = useUpload({onFinish: () => runAsync()})
+    
     const { t, i18n } = useTranslation()
     const [dropModalOpen, setDropModalOpen] = useState<boolean>()
     const containerRef = useRef<HTMLElement>(null)
@@ -127,11 +146,6 @@ export default function Bookshelf() {
             }}
             onCancel={() => setIslandOpen(false)}
             ></SyncModal> */}
-            <GPTSetting
-                open={aiOpen}
-                onCancel={() => setAiOpen(false)}
-                onOk={() => setAiOpen(false)}
-            ></GPTSetting>
             <Spin spinning={loading}>
 
                 <Content className={style.content}>
@@ -159,13 +173,7 @@ export default function Bookshelf() {
                                             }}
 
                                         ></BookNewButton>
-                                        <Button
-                                            size='small'
-                                            type="link"
-                                            onClick={() => { setAiOpen(true) }}
-                                        >
-                                            {t('ai 辅助设置')}
-                                        </Button>
+                                       
                                         <Button
                                         icon={<ShopOutlined />}
                                         type="link"

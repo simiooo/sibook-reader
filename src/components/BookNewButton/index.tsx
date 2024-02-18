@@ -13,7 +13,7 @@ interface IndexProp  extends ButtonProps{
 export default function index(p: IndexProp) {
     // const db_instance = useBookState((state) => state.db_instance)
     const {t} = useTranslation()
-    const {upload, loading} = useUpload()
+    const {upload, loading} = useUpload({onFinish: p?.onChange})
     const renderType = useMemo(() => {
         return p.type ?? 'primary'
     }, [p.type])
