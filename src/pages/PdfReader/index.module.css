@@ -17,7 +17,7 @@
   }
 
   .pdf_container {
-    height: calc(90vh - 54px);
+    height: calc(100vh - 6.7rem);
     width: 100%;
     /* overflow: auto; */
     overflow: hidden;

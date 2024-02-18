@@ -30,7 +30,7 @@ export default function App() {
     return (
         <div>
             <UploadContainer></UploadContainer>
-            {/* {userOnline && <Flex 
+            {userOnline && <Flex 
             className={classNames({
                 [style.tabs_container]: renderClassName
             })}
@@ -38,7 +38,7 @@ export default function App() {
                 <BookTabs
                 className={style.tabs}
                 ></BookTabs>
-            </Flex>} */}
+            </Flex>}
             <Outlet></Outlet>
         </div>
 

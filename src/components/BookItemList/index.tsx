@@ -1,22 +1,25 @@
-import { Alert, Button, Col, Dropdown, message } from 'antd'
+import { Alert, Button, Col, Dropdown, Spin, message } from 'antd'
 import { Card } from 'antd'
 import { Row } from 'antd'
 import Selecto from "react-selecto";
 import style from './index.module.css'
 import { Tooltip } from 'antd';
 import { Tag } from 'antd';
-import { BookItems } from '../../dbs/db';
+import { BookItems, db } from '../../dbs/db';
 import { useNavigate } from 'react-router-dom';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
-import { useEventListener, useMap, useThrottle, useThrottleFn } from 'ahooks';
+import { useEventListener, useMap, useRequest, useThrottle, useThrottleFn } from 'ahooks';
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import Draggable, { DraggableEventHandler } from 'react-draggable';
 import BookPlaceholder from './BookPlaceholder';
 import { Book } from '../../store/book.type';
 import dayjs from 'dayjs';
+import { requestor } from '../../utils/requestor';
+import { useBookState } from '../../store';
+import { useCacheBookTab } from '../../utils/useCacheBookTab';
 
 export const tagMap = {
     'application/pdf': {
@@ -40,6 +43,7 @@ interface BookItemListProps {
 export default function BookItemList(p: BookItemListProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const { toCache} = useCacheBookTab()
     const container_ref = useRef()
     const [intersectionContainer, {
         set: setInter,
@@ -49,20 +53,83 @@ export default function BookItemList(p: BookItemListProps) {
         id: 'you',
     });
 
-
+    // const {
+    //     uploadingTaskList,
+    //     uploadingTaskList_update,
+    // } = useBookState(state => ({uploadingTaskList: state.uploadingTaskList,uploadingTaskList_update: state.uploadingTaskList_update}))
     useEventListener('contextmenu', (e) => {
         e.preventDefault()
         show({ event: e })
     })
-    const openHandler = (ele) => {
-        if (ele?.fileType === 'application/epub+zip') {
-            navigate(`/reader/${ele.hash}`)
-        } else if (ele?.fileType === 'application/pdf') {
-            navigate(`/pdf_reader/${ele.hash}`)
+
+    const [currentLoadingProgress, setCurrentLoadingProgress] = useState(0)
+
+    const { runAsync: openHandler, loading: bookBinaryLoading } = useRequest(async (ele: Book) => {
+        try {
+            setCurrentLoadingProgress(0)
+        const cache = await db.book_blob.get(ele.objectId)
+        if (cache && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
+            if (ele?.objectType === 'application/epub+zip') {
+                const pathname = `/reader/${ele.objectId}`
+                toCache({
+                    url: pathname,
+                    label: ele.objectName,
+                    closable: true
+                })
+                navigate(pathname)
+            } else if (ele?.objectType === 'application/pdf') {
+                const pathname = `/pdf_reader/${ele.objectId}`
+                toCache({
+                    url: pathname,
+                    label: ele.objectName,
+                    closable: true
+                })
+                navigate(pathname)
+            } else {
+                message.error(t('暂不支持'))
+            }
         } else {
-            message.error(t('暂不支持'))
+            const res = await requestor<Uint8Array>({
+                url: "/island/getBookBinaryFromIsland",
+                responseType: 'arraybuffer',
+                data: {
+                    bookId: ele.objectId
+                }
+            })
+            
+            db.book_blob.add({
+                id: ele.objectId,
+                blob: res.data,
+                updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            }).then(() => {
+                if (ele?.objectType === 'application/epub+zip') {
+                    const pathname = `/reader/${ele.objectId}`
+                    toCache({
+                        url: pathname,
+                        label: ele.objectName,
+                        closable: true
+                    })
+                    navigate(pathname)
+                } else if (ele?.objectType === 'application/pdf') {
+                    const pathname = `/pdf_reader/${ele.objectId}`
+                    toCache({
+                        url: pathname,
+                        label: ele.objectName,
+                        closable: true
+                    })
+                    navigate(pathname)
+                } else {
+                    message.error(t('暂不支持'))
+                }
+            })
         }
-    }
+        } catch (error) {
+            message.error(error.message)
+        }
+        
+    }, {
+        manual: true,
+    })
 
     const { run: sortHandler } = useThrottleFn<DraggableEventHandler>((e, data) => {
         const ele = data.node as (HTMLDivElement | undefined)
@@ -92,120 +159,115 @@ export default function BookItemList(p: BookItemListProps) {
 
     const renderList = useMemo(() => {
         return p.data ?? []
-        // const target = [...intersectionContainer].reduce((pre, val) => pre[1] > val[1] ? pre : val, ['head', Number.MIN_SAFE_INTEGER])
-        // const addIndex = (p?.data ?? []).findIndex(ele => ele.hash === target?.[0])
-        // if (addIndex > -1) {
-        //     return p.data.slice(0, addIndex).concat({
-        //         hash: 'placeholder',
-        //         fileType: 'placeholder',
-        //         sort: p.data[addIndex].sort,
-        //     }).concat(p.data.slice(addIndex + 1))
-        // } else {
-        //     return p.data
-        // }
 
     }, [p.data, intersectionContainer])
 
     return (
-        <Row
-            gutter={[32, 20]}
-            className={style.container}
-            justify={'start'}
-            align={'top'}
-            wrap={true}
-            ref={container_ref}
+        <Spin
+            spinning={bookBinaryLoading}
+            
         >
-            <CMenu
-                id="you"
+            <Row
+                gutter={[32, 20]}
+                className={style.container}
+                justify={'start'}
+                align={'top'}
+                wrap={true}
+                ref={container_ref}
             >
-                {
-                    (p.contextmenuList ?? []).map(ele => (
-                        <CItem
-                            key={ele.key}
-                            onClick={(e) => {
-                                e.event.stopPropagation()
-                                e.triggerEvent.stopPropagation()
-                                p.onContextmenuSelect?.({ type: ele?.value ?? ele?.key })
-                            }}
-                            id={ele.key}
-                        >
-                            {ele.label}
-                        </CItem>
-                    ))
-                }
-
-            </CMenu>
-            <Selecto
-                container={document.body}
-                hitRate={5}
-                dragContainer={window}
-                selectableTargets={[".book_item"]}
-                selectByClick={true}
-                selectFromInside={false}
-                continueSelect={false}
-
-                toggleContinueSelect={"shift"}
-                keyContainer={window}
-                onSelect={(e: any | { added: HTMLElement[], removed: HTMLElement[] }) => {
-                    if (e.inputEvent?.srcElement?.className === 'contexify_itemContent') {
-                        return
-                    }
-                    e.added.forEach((el: HTMLElement) => {
-                        p?.onAdd?.(el?.dataset?.hash)
-                    });
-                    e.removed.forEach((el: HTMLElement) => {
-                        p?.onRemove?.(el?.dataset?.hash);
-                    });
-                }}
-            />
-            {
-                (renderList.sort((pre, val) => dayjs(pre.uploadDate).isBefore(val.uploadDate) ? -1 : 1) ?? []).map((ele, index) => {
-                    if (ele.objectId === 'placeholder') {
-                        <Col
-                            key={ele?.objectId ?? ele?.objectName ?? index}
-                        >
-                            <BookPlaceholder></BookPlaceholder>
-                        </Col>
-                    } else {
-                        let title
-                        let des
-
-                        return <Col
-                            key={ele?.objectId}
-                        >
-
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{
-                                    duration: 0.34,
-                                    delay: 0.5 + Math.min(index, 4) * 0.25,
-                                    ease: [0, 0.71, 0.2, 1.01]
+                <CMenu
+                    id="you"
+                >
+                    {
+                        (p.contextmenuList ?? []).map(ele => (
+                            <CItem
+                                key={ele.key}
+                                onClick={(e) => {
+                                    e.event.stopPropagation()
+                                    e.triggerEvent.stopPropagation()
+                                    p.onContextmenuSelect?.({ type: ele?.value ?? ele?.key })
                                 }}
+                                id={ele.key}
                             >
-                                    <Card
-                                    data-hash={ele?.objectId}
-                                    extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
-                                    className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
-                                    onDoubleClick={() => openHandler(ele)}
-                                    onTouchEnd={() => openHandler(ele)}
-                                    title={<Tooltip
-                                    >
-                                        <Tooltip
-                                            title={title ?? ele?.objectName}
-                                        >
-                                            {title ?? ele?.objectName}
-                                        </Tooltip>
-
-                                    </Tooltip>}
-                                >{des ?? ele?.objectName}</Card>
-                            </motion.div>
-
-                        </Col>
+                                {ele.label}
+                            </CItem>
+                        ))
                     }
 
-                })
-            }
-        </Row>
+                </CMenu>
+                <Selecto
+                    container={document.body}
+                    hitRate={5}
+                    dragContainer={window}
+                    selectableTargets={[".book_item"]}
+                    selectByClick={true}
+                    selectFromInside={false}
+                    continueSelect={false}
+
+                    toggleContinueSelect={"shift"}
+                    keyContainer={window}
+                    onSelect={(e: any | { added: HTMLElement[], removed: HTMLElement[] }) => {
+                        if (e.inputEvent?.srcElement?.className === 'contexify_itemContent') {
+                            return
+                        }
+                        e.added.forEach((el: HTMLElement) => {
+                            p?.onAdd?.(el?.dataset?.hash)
+                        });
+                        e.removed.forEach((el: HTMLElement) => {
+                            p?.onRemove?.(el?.dataset?.hash);
+                        });
+                    }}
+                />
+                {
+                    (renderList.sort((pre, val) => dayjs(pre.uploadDate).isBefore(val.uploadDate) ? -1 : 1) ?? []).map((ele, index) => {
+                        if (ele.objectId === 'placeholder') {
+                            <Col
+                                key={ele?.objectId ?? ele?.objectName ?? index}
+                            >
+                                <BookPlaceholder></BookPlaceholder>
+                            </Col>
+                        } else {
+                            let title
+                            let des
+
+                            return <Col
+                                key={ele?.objectId}
+                            >
+
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{
+                                        duration: 0.34,
+                                        delay: 0.5 + Math.min(index, 4) * 0.25,
+                                        ease: [0, 0.71, 0.2, 1.01]
+                                    }}
+                                >
+                                    <Card
+                                        data-hash={ele?.objectId}
+                                        extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
+                                        className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
+                                        onDoubleClick={() => openHandler(ele)}
+                                        onTouchEnd={() => openHandler(ele)}
+                                        title={<Tooltip
+                                        >
+                                            <Tooltip
+                                                title={title ?? ele?.objectName}
+                                            >
+                                                {title ?? ele?.objectName}
+                                            </Tooltip>
+
+                                        </Tooltip>}
+                                    >{des ?? ele?.objectName}</Card>
+                                </motion.div>
+
+                            </Col>
+                        }
+
+                    })
+                }
+            </Row>
+        </Spin>
+
     )
 }

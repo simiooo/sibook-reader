@@ -98,8 +98,8 @@ export const useBookState = create<BookStateType>((set, get) => {
         uploadingTaskList_update: (uploadingTaskList: UploadTask[]) => set({uploadingTaskList: [...uploadingTaskList]}),
         profile: [],
         profile_update: (profile: User) => set({profile}),
-        currentIsland: undefined,
-        currentIsland_update: (currentIsland: string) => set({currentIsland}),
+        currentIsland: Number(localStorage.getItem('currentIsland')),
+        currentIsland_update: (currentIsland: number) => set({currentIsland}),
     }
 })
 
@@ -115,6 +115,9 @@ useBookState.subscribe((state) => {
     }
     if(state.clipboardList) {
         localStorage.setItem('clipboardList', JSON.stringify(state.clipboardList))
+    }
+    if(state.currentIsland && state.currentIsland.toString() !== localStorage.getItem('currentIsland')) {
+        localStorage.setItem('currentIsland', state.currentIsland.toString())
     }
 })
 

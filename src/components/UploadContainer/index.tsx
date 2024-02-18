@@ -1,5 +1,5 @@
 import style from './index.module.css'
-import { Button, Col, List, Progress, Row } from 'antd'
+import { Col, List, Progress, Row } from 'antd'
 import { SiWs } from '../../utils/jsClient';
 import { useBookState } from '../../store';
 import { CloudOutlined, MinusCircleOutlined } from '@ant-design/icons';
@@ -8,12 +8,19 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInterval } from 'ahooks';
 
-export interface UploadTask {
+export type UploadTask = WsTask | HttpTask
+type WsTask = {
     ws: SiWs;
     name: string;
     des: string;
 }
-
+type HttpTask = Omit<WsTask,'ws'> & {
+    httpMeta: {
+        size: number;
+        current: number;
+        error: boolean
+    }
+}
 const container = {
     hidden: {
         height: '1rem',
@@ -82,7 +89,7 @@ export default function UploadContainer() {
                         <List
                             dataSource={renderList}
                             rowKey={(el) => el.name}
-                            renderItem={(item: UploadTask) => (
+                            renderItem={(item: UploadTask) => 'ws' in item ? (
                                 <List.Item>
                                     <List.Item.Meta
                                         title={item.name}
@@ -95,6 +102,19 @@ export default function UploadContainer() {
                                                 (item.ws?.ws?.readyState === WebSocket.CLOSED && item.ws.getProgress() < 1)
                                                 ) ? "exception" : undefined}
                                             percent={Math.round(item.ws?.getProgress() * 10000)/100}
+                                        />}
+                                    ></List.Item.Meta>
+                                </List.Item>
+                            ) : (
+                                <List.Item>
+                                    <List.Item.Meta
+                                        title={item.name}
+                                        description={item.des}
+                                        avatar={<Progress
+                                            type="circle"
+                                            size="small"
+                                            status={item.httpMeta?.error ? 'exception' : undefined}
+                                            percent={Math.round(item.httpMeta?.current/item.httpMeta?.size * 10000)/100}
                                         />}
                                     ></List.Item.Meta>
                                 </List.Item>

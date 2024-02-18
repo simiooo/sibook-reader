@@ -431,6 +431,7 @@ export default function PdfReader() {
     >
       <Row
         className={style.container}
+        gutter={[10, 16]}
       >
         <FloatAiMenu
           copiedText={copiedText}

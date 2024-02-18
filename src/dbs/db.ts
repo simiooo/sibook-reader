@@ -21,6 +21,7 @@ export interface BookItems <T extends Object = (PDFMetaType | PackagingMetadataO
 export interface BookBlob {
   id?: string;
   blob?: Uint8Array;
+  updatedAt?: string;
 }
 
 export class BookClassedDexie extends Dexie {

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { epubMetaParser, pdfMetaParser } from "./getBookMeta";
 import { SiWs, WsChangeEvent } from "./jsClient";
 import { LoginType } from "../pages/Login";
+import { db } from "../dbs/db";
 
 
 
@@ -54,9 +55,14 @@ export function useUpload(
             ws.onchange((e: WsChangeEvent) => {
                 if(e.status === 'end') {
                     options?.onFinish?.(e)
+                    db.book_blob.add({
+                        id: hash,
+                        blob: file,
+                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    })
                 }
             })
-            console.log(currentIsland, hash)
+            
             ws.init(info.file, {...(meta ?? {}), id: hash}, currentIsland)
             uploadingTaskList_update([...(uploadingTaskList ?? []), {
                 ws,
