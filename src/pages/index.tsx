@@ -36,7 +36,7 @@ export default function App() {
             })}
             >
                 <BookTabs
-                className={style.tabs}
+                {...({className:style.tabs} as any)}
                 ></BookTabs>
             </Flex>}
             <Outlet></Outlet>

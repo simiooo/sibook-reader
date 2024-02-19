@@ -51,7 +51,7 @@ export function useUpload(
                 meta = await epubMetaParser(file)
             }
             const token = JSON.parse(localStorage.getItem('authorization') ?? "{}") as LoginType
-            const ws = new SiWs(`ws://${'localhost:8080'}/island/addBookToIsland?token=${token.token}`)
+            const ws = new SiWs(`ws://${import.meta.env.VITE_API_URL}/island/addBookToIsland?token=${token.token}`)
             ws.onchange((e: WsChangeEvent) => {
                 if(e.status === 'end') {
                     options?.onFinish?.(e)
