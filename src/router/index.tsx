@@ -8,6 +8,7 @@ import PdfReader from "../pages/PdfReader";
 import { Result } from "antd";
 import Login from "../pages/Login";
 import Island from "../pages/Island";
+import Register from "../pages/Register";
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: "/login",
         element: <Login></Login>,
+      },
+      {
+        path: "/register",
+        element: <Register></Register>,
       },
       {
         path: "/reader/:book_id",

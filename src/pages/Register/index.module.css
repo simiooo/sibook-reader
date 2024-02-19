@@ -1,0 +1,19 @@
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f2f2f2;
+    .subContainer{
+        background-color: #fff;
+        padding: 1rem 5rem;
+        border-radius: 1rem;
+        box-shadow: 1px 1px 4px #e2e2e2;
+        width: 40rem;
+        height: 70vh;
+        .button_container{
+            display: flex;
+            justify-content: center;
+        }
+    }
+}

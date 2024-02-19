@@ -7,6 +7,7 @@ import { ClipboardType } from "../components/ClipboardList";
 import { requestor } from "../utils/requestor";
 import { UploadTask } from "../components/UploadContainer";
 import { User } from "./user.type";
+import { LoginType } from "../pages/Login";
 const OPENAI_BASE_URL = 'https://api.openai.com'
 export const OPENAI_PATHNAME = '/v1/chat/completions'
 const OPENAI_HEADERS = new Headers()
@@ -85,8 +86,12 @@ export const useBookState = create<BookStateType>((set, get) => {
         },
         isUserOnline: async () => {
             try {
+                const authorization = JSON.parse(localStorage.getItem('authorization') ?? "{}") as Partial<LoginType> 
+                if(!authorization.token) {
+                    throw Error('token 不存在')
+                }
                 const res = await requestor({
-                    url: '/profile/isUserOnline'
+                    url: '/profile/v/isUserOnline'
                 })
                 return res.status === 200
             } catch (error) {

@@ -1,4 +1,4 @@
-import { Button, Col, Result, Space, Divider, Select, Input } from 'antd';
+import { Button, Col, Result, Space, Divider, Select, Input, Avatar, Popover } from 'antd';
 import { Row } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { CopyOutlined, DragOutlined, FileTextTwoTone, ShopOutlined, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
@@ -26,15 +26,15 @@ import { Book } from '../../store/book.type';
 
 
 export default function Bookshelf() {
-    const {currentIsland} = useBookState(state => ({currentIsland: state.currentIsland}))
+    const { currentIsland, profile, isUserOnline } = useBookState(state => ({ currentIsland: state.currentIsland, profile: state.profile, isUserOnline: state.isUserOnline }))
     const db_instance = useBookState(state => state.db_instance)
     const { runAsync, loading: listLoading, data: list } = useRequest(async () => {
         // const res = await db_instance?.book_items?.toArray()
         try {
-            if(!currentIsland) {
+            if (!currentIsland) {
                 throw Error('请先登录')
             }
-            const res = await requestor<{data?: Book[]}>({
+            const res = await requestor<{ data?: Book[] }>({
                 url: '/island/getBookListFromIsland',
                 data: {
                     islandId: currentIsland,
@@ -45,12 +45,12 @@ export default function Bookshelf() {
         } catch (error) {
             return []
         }
-        
-    },{
+
+    }, {
         refreshDeps: [currentIsland],
     })
-    const { upload, loading: uploadLoading } = useUpload({onFinish: () => runAsync()})
-    
+    const { upload, loading: uploadLoading } = useUpload({ onFinish: () => runAsync() })
+
     const { t, i18n } = useTranslation()
     const [dropModalOpen, setDropModalOpen] = useState<boolean>()
     const containerRef = useRef<HTMLElement>(null)
@@ -127,7 +127,7 @@ export default function Bookshelf() {
     // const [islandOpen, setIslandOpen] = useState<boolean>(false)
     const navigate = useNavigate()
     const [filterValue, setFilterValue] = useState<string>()
-    const renderList = useMemo(() =>{
+    const renderList = useMemo(() => {
         return (list ?? []).filter(val => filterValue ? Object.values(val ?? {})?.join('')?.includes?.(filterValue) : true)
     }, [list, filterValue])
 
@@ -154,15 +154,15 @@ export default function Bookshelf() {
                         </Col>
                         <Col span={24}>
                             <Row justify={'space-between'}>
-                            <Col>
-                            <Input
-                            bordered={false}
-                            size='large'
-                            placeholder={t('搜索书籍')}
-                            value={filterValue}
-                            onChange={(e) => setFilterValue(e.target.value)}
-                            ></Input>
-                            </Col>
+                                <Col>
+                                    <Input
+                                        bordered={false}
+                                        size='large'
+                                        placeholder={t('搜索书籍')}
+                                        value={filterValue}
+                                        onChange={(e) => setFilterValue(e.target.value)}
+                                    ></Input>
+                                </Col>
                                 <Col >
                                     <Space
                                         wrap={true}
@@ -173,12 +173,12 @@ export default function Bookshelf() {
                                             }}
 
                                         ></BookNewButton>
-                                       
+
                                         <Button
-                                        icon={<ShopOutlined />}
-                                        type="link"
-                                        size='small'
-                                        onClick={() => navigate('/island')}
+                                            icon={<ShopOutlined />}
+                                            type="link"
+                                            size='small'
+                                            onClick={() => navigate('/island')}
                                         >{t('岛屿')}</Button>
                                         <Select
                                             size='small'
@@ -205,11 +205,41 @@ export default function Bookshelf() {
                                                 },
                                             ]}
                                         ></Select>
-                                        
+                                        <Popover
+                                            placement="bottomLeft"
+                                            content={<Row>
+                                                <Col span={24}>
+                                                    {profile.nickname}
+                                                </Col>
+                                                <Col span={24}>
+                                                    <Space>
+                                                        <Button
+                                                            type="link"
+                                                            danger
+                                                            onClick={() => {
+                                                                localStorage.removeItem('authorization')
+                                                                navigate('/login')
+                                                            }}
+                                                        >
+                                                            {t("退出")}
+                                                        </Button>
+                                                    </Space>
+                                                </Col>
+                                            </Row>}
+                                        >
+                                            <Avatar
+                                                style={{
+                                                    background: '#80aa51'
+                                                }}
+                                            >
+                                                {profile?.nickname?.[0] ?? t('我')}
+                                            </Avatar>
+                                        </Popover>
+
                                     </Space>
 
                                 </Col>
-                                
+
                             </Row>
                         </Col>
                         <Col span={24}>
