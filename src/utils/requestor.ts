@@ -2,7 +2,7 @@ import Axios from 'axios'
 import { LoginType } from '../pages/Login'
 console.log(import.meta.env.VITE_API_URL)
 export const requestor = Axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`,
+    baseURL: `${import.meta.env.VITE_API_URL}`,
     method: 'post',
 })
 
