@@ -1,5 +1,5 @@
 import { Button, Col, Form, Input, Row, Space, message } from 'antd'
-import React from 'react'
+import React, { useState } from 'react'
 import style from './index.module.css'
 import { useRequest } from 'ahooks'
 import { requestor } from '../../utils/requestor'
@@ -13,6 +13,16 @@ export interface LoginType {
 }
 
 export default function Login() {
+    const {loading: imgLoading, data: backgroundImg} = useRequest(async () =>{
+        const res = await requestor<Blob>({
+            baseURL: '/',
+            url: '/login_back.png',
+            method: 'get',
+            responseType: 'blob'
+        })
+        
+        return URL.createObjectURL(res.data)
+    })
     const navigate = useNavigate()
     const { t, i18n } = useTranslation()
     const { loading, runAsync } = useRequest(async (params: any) => {
@@ -39,7 +49,7 @@ export default function Login() {
     })
 
     return (
-        <Row
+        backgroundImg ? <Row
             align={'middle'}
             justify={'center'}
             className={style.container}
@@ -52,7 +62,7 @@ export default function Login() {
                         className={style.login_internal_container}
                     >
                         <Col span={12}>
-                            <img className={style.background} src="/login_back.png" alt="" />
+                            <img className={style.background} src={backgroundImg} alt="" />
                         </Col>
                         <Col
                             className={style.login_form_container}
@@ -130,7 +140,7 @@ export default function Login() {
 
                 </div>
             </Col>
-        </Row>
+        </Row> : undefined
 
     )
 }
