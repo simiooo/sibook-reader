@@ -51,6 +51,9 @@ export class SiWs {
         this.ws.addEventListener('open', (e) => {
             console.log(e)
         })
+        this.ws.addEventListener('error', (e) => {
+            console.error(e)
+        })
     }
     onchange(fn: WsChangeCallback) {
         this.tasks.push(fn)
