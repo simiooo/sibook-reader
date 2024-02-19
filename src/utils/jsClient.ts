@@ -48,11 +48,15 @@ export class SiWs {
     tasks: WsChangeCallback[] = []
     constructor(url: string) {
         this.ws = new WebSocket(url)
+        this.ws.addEventListener('open', (e) => {
+            console.log(e)
+        })
     }
     onchange(fn: WsChangeCallback) {
         this.tasks.push(fn)
     }
     init(file?: File, meta?: {[key: string]: string}, islandId?: number) {
+
         console.log(islandId)
         if(typeof islandId !== 'number') {
             message.error("上传文件前，请选择岛屿")
@@ -68,9 +72,9 @@ export class SiWs {
             return
         }
         if(this.ws?.readyState === WebSocket.CONNECTING) {
-            this.ws.onopen = () => {
+            this.ws.addEventListener('open', () => {
                 this.init(file, meta, islandId)
-            }
+            })
             return
         }
         
