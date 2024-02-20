@@ -358,7 +358,7 @@ export const Component = function Reader() {
 
               </Col>
               <Col>
-                <h3>{bookInfo?.name}</h3>
+                <h3>{bookInfo?.objectName}</h3>
               </Col>
             </Row>
           </Col>
