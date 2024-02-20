@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as echarts from 'echarts'
 import { Button, Col, Form, Input, Modal, Row, message, Spin, Space, Select, SelectProps, Tag, Result, Avatar, Breadcrumb, Alert } from 'antd';
 import classNames from 'classnames';
-function OptionBuilder(data: [number, number, string, number][]) {
+function OptionBuilder(data: [number, number, string, number][], activeId?: number) {
 
 
     return {
@@ -49,7 +49,10 @@ function OptionBuilder(data: [number, number, string, number][]) {
                 color: '#F9E79F',
                 itemStyle: {
                     borderColor: '#222',
-                    borderWidth: 2
+                    borderWidth: 2,
+                    color: (params) => {
+                        return params?.data?.[3] === activeId ? '#A9DFBF' : '#F9E79F'
+                    }
                 },
             },
         ]
@@ -58,11 +61,14 @@ function OptionBuilder(data: [number, number, string, number][]) {
 type Island = Partial<{
     id: number,
     owner_id: string,
+    owner_name?: string;
     created_at: string,
     updated_at: string,
     name: string,
     des: string,
-    avatar: string
+    avatar: string;
+    x?: number;
+    y?: number;
 }>
 // interface IslandProps {
 //     data: [number, number][];
@@ -76,7 +82,7 @@ import { IslandMembers, UserSimply } from '../../store/user.type';
 import { HomeOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 const colors = ['#F9E79F', '#283593', '#196F3D']
-export default function Island() {
+export const Component = function Island() {
     const navigate = useNavigate();
     const { t } = useTranslation()
     const [islandCreateOpen, setIslandCreateOpen] = useState<boolean>(false)
@@ -122,7 +128,11 @@ export default function Island() {
         try {
             const res = await requestor({
                 url: '/island/createIsland',
-                data: create_ref.getFieldsValue(),
+                data: {
+                    ...(create_ref.getFieldsValue() ?? {}),
+                    x: Math.random(),
+                    y: Math.random(),
+                },
             })
             message.success(t('添加岛屿成功'))
         } catch (error) {
@@ -184,8 +194,8 @@ export default function Island() {
     })
 
     const renderOptions = useMemo(() => {
-        return OptionBuilder((islands ?? []).map(el => [Math.random(), Math.random(), el.name, el.id]))
-    }, [islands])
+        return OptionBuilder((islands ?? []).map(el => [el.x ?? Math.random(), el.y ?? Math.random(), el.name, el.id]),currentIsland)
+    }, [islands, currentIsland])
     useEffect(() => {
         if (echarts_instance.current) {
             echarts_instance.current.dispose()
@@ -227,14 +237,14 @@ export default function Island() {
                             <Breadcrumb
                                 items={[
                                     {
-                                        // href: '/',
+                                        href: '',
                                         onClick: () => {
                                             navigate('/')
                                         },
                                         title: <HomeOutlined />,
                                     },
                                     {
-                                        title: `${t("当前岛屿")}: ${(islands ?? [])?.find(el => el.id === currentIsland)?.name ?? '请选择岛屿'}`,
+                                        title: `${t("当前岛屿")}: ${(islands ?? [])?.find(el => el.id === currentIsland)?.name ?? '-'}`,
                                     },
                                 ]}
                             />
@@ -242,7 +252,12 @@ export default function Island() {
                         </Col>
                         <Col>
                             <Space>
+                                {!currentIsland ? <Alert
+                                type='warning'
+                                message={t('请选择岛屿')}
+                                ></Alert> : undefined}
                                 <Button
+                                disabled={!currentIsland}
                                     onClick={() => setIslandCreateOpen(true)}
                                 >{t('新建岛屿')}</Button>
                                 <Button
@@ -285,15 +300,15 @@ export default function Island() {
 
                 </Col>
             </Row>
-            <Spin
+            {/* <Spin
                 indicator={<LoadingOutlined
                 />}
                 spinning={getSelfIslandLoading || queryMembersLoading || createLoading || searchUserLoading || addUserToIslandLoading}
-            >
+            > */}
                 <div
                     className={classNames(style.chart_container, style.island_container)}
                     ref={charts}></div>
-            </Spin>
+            {/* </Spin> */}
 
             <Modal
                 title={t("新建岛屿")}

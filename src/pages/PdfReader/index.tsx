@@ -103,7 +103,7 @@ export function getBookSeletedMenuKey(menu: ItemType<MenuItemType>[], target) {
 }
 
 
-export default function PdfReader() {
+export const Component = function PdfReader() {
   const db_instance = useBookState(state => state.db_instance)
   const [bookInfo, setBookInfo] = useState<BookItems | undefined>()
   const list_ref = useRef(null)

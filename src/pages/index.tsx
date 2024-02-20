@@ -1,6 +1,6 @@
-import { Flex, Layout } from 'antd'
+import { Flex, Layout, Result, Spin } from 'antd'
 import { Content, Footer, Header } from 'antd/es/layout/layout'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router-dom'
 import BookTabs from '../components/BookTabs'
 import style from './index.module.css'
 import classNames from 'classnames'
@@ -9,12 +9,27 @@ import { useBookState } from '../store'
 import { useAsyncEffect } from 'ahooks'
 import UploadContainer from '../components/UploadContainer'
 
-export default function App() {
+export const ErrorBoundary = () => <div
+    style={{
+        display: 'flex',
+        height: '90vh',
+        width: '100vw',
+        justifyContent: 'center',
+        alignItems: 'center',
+    }}
+>
+    <Result
+        status={'error'}
+        title="错误，请联系开发者"
+    ></Result>
+</div>
+
+export const Component = function App() {
     const location = useLocation()
     const navigate = useNavigate()
     const renderClassName = useMemo(() => {
-        return window.location.pathname === '/'
-    },[location])
+        return ['/', '/island'].includes(window.location.pathname)
+    }, [location])
     const [userOnline, setUserOnline] = useState<boolean>(true)
     const isUserOnline = useBookState(state => state.isUserOnline)
 
@@ -23,23 +38,30 @@ export default function App() {
     }, [location])
 
     useEffect(() => {
-        if(!userOnline) {
+        if (!userOnline) {
             navigate('/login')
         }
     }, [userOnline])
+    const {state} = useNavigation()
     return (
+
         <div>
             <UploadContainer></UploadContainer>
-            {userOnline && <Flex 
-            className={classNames({
-                [style.tabs_container]: renderClassName
-            })}
+            {userOnline && <Flex
+                className={classNames({
+                    [style.tabs_container]: renderClassName
+                })}
             >
                 <BookTabs
-                {...({className:style.tabs} as any)}
+                    {...({ className: style.tabs } as any)}
                 ></BookTabs>
             </Flex>}
+            <Spin
+            spinning={state === 'loading'}
+            >
             <Outlet></Outlet>
+            </Spin>
+            
         </div>
 
     )

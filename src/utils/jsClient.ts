@@ -32,7 +32,7 @@ type MessageType = 'init' | "progress" | "end" | "abort"
 interface LoadRes {
     type: MessageType;
     message: string;
-    status: 'success' | 'error';
+    status: 'success' | 'failed';
 }
 
 export type WsChangeCallback = (data: {status: MessageType, value?: string, progress?: number }) => void;
@@ -49,7 +49,7 @@ export class SiWs {
     constructor(url: string) {
         this.ws = new WebSocket(url)
         this.ws.addEventListener('open', (e) => {
-            console.log(e)
+            // console.log(e)
         })
         this.ws.addEventListener('error', (e) => {
             console.error(e)
@@ -60,7 +60,7 @@ export class SiWs {
     }
     init(file?: File, meta?: {[key: string]: string}, islandId?: number) {
 
-        console.log(islandId)
+        // console.log(islandId)
         if(typeof islandId !== 'number') {
             message.error("上传文件前，请选择岛屿")
             // this.destroy()
@@ -92,7 +92,6 @@ export class SiWs {
                 ...(meta ?? {}),
             }
         }
-        console.log(data)
         this.ws.send(JSON.stringify(data));
         this.ws.onmessage = (e) => {
             const datastring = e.data ?? "{}"
@@ -102,7 +101,12 @@ export class SiWs {
                 return
             }
             const rd = new FileReader()
-
+            switch(data.status) {
+                case 'failed':
+                    this.status = 'abort'
+                    this.destroy()
+                    break
+            }
             switch (data.type) {
                 case "init":
                     {
@@ -116,10 +120,10 @@ export class SiWs {
                         if (data.status == 'success') {
                             this.status = 'init'
                             rd.onloadstart = (e) => {
-                                console.log(e)
+                                // console.log(e)
                             }
                             rd.onprogress = (e) => {
-                                console.log(e)
+                                // console.log(e)
                             }
                             rd.onerror = () => {
 

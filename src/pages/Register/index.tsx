@@ -6,7 +6,7 @@ import { useRequest } from 'ahooks'
 import { requestor } from '../../utils/requestor'
 import { useNavigate, useNavigation } from 'react-router-dom';
 import { digestMessage } from '../../utils/sha515';
-export default function Register() {
+export const Component = function Register() {
     const { t } = useTranslation()
     const navigate = useNavigate()
     // const [form] = Form.useForm()

@@ -64,12 +64,12 @@ export function useUpload(
             })
             
             ws.init(info.file, {...(meta ?? {}), id: hash}, currentIsland)
-            uploadingTaskList_update([...(uploadingTaskList ?? []), {
+            uploadingTaskList.push({
                 ws,
                 name: info.file.name,
                 des: meta?.creator ?? meta?.Author ?? info.file.name,
-                
-            }])
+            })
+            uploadingTaskList_update(uploadingTaskList)
         } catch (error) {
             message.error(error instanceof Error ? error.message : error)
         } finally {

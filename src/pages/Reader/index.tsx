@@ -24,7 +24,7 @@ import dayjs from 'dayjs'
 import { motion } from 'framer-motion'
 import Draggable from 'react-draggable'
 
-export default function Reader() {
+export const Component = function Reader() {
   const db_instance = useBookState(state => state.db_instance)
   const navigate = useNavigate()
   const [bookInfo, setBookInfo] = useState<BookItems>()

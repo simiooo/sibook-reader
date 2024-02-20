@@ -25,7 +25,7 @@ import { requestor } from '../../utils/requestor';
 import { Book } from '../../store/book.type';
 
 
-export default function Bookshelf() {
+export const Component = function Bookshelf() {
     const { currentIsland, profile, isUserOnline } = useBookState(state => ({ currentIsland: state.currentIsland, profile: state.profile, isUserOnline: state.isUserOnline }))
     const db_instance = useBookState(state => state.db_instance)
     const { runAsync, loading: listLoading, data: list } = useRequest(async () => {
@@ -88,7 +88,7 @@ export default function Bookshelf() {
                 runAsync()
                 break;
             case 'export':
-                await exportFile(Array.from(selected))
+                await exportFile(list.filter(el => selected.has(el.objectId)))
                 runAsync()
                 break;
         }

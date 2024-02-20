@@ -3,6 +3,7 @@ import { Button, message } from 'antd'
 import React from 'react'
 import { useBookState } from '../../store';
 import { useTranslation } from 'react-i18next';
+import { Book } from '../../store/book.type';
 
 interface ExportButtonProps extends React.RefAttributes<HTMLElement> {
     keys: Set<string | undefined>;
@@ -26,19 +27,17 @@ const download = async (obj: {
 export function useExport() {
     const db_instance = useBookState(state => state.db_instance)
     const {t} = useTranslation()
-    const { runAsync: exportFile, loading } = useRequest(async (keys?: string[]) => {
-        if (!keys) {
+    const { runAsync: exportFile, loading } = useRequest(async (record?: Book[]) => {
+        if (!record) {
             return
         }
-        
         try {
             await db_instance?.transaction('rw', db_instance.book_blob, db_instance.book_items, async () => {
-                const records = await db_instance.book_items.where('hash').anyOf([...keys].filter(val => val)).toArray()
-                
-                for await (const record of records) {
+
+                for await (const key of record ?? []) {
                     download({
-                        blob: (await db_instance.book_blob.get(record.hash))?.blob,
-                        name: record.name
+                        blob: (await db_instance.book_blob.get(key?.id))?.blob,
+                        name: key?.id
                     })
                 }
             })

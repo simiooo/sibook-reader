@@ -12,7 +12,7 @@ export interface LoginType {
     token?: string;
 }
 
-export default function Login() {
+export const Component = function Login() {
     const {loading: imgLoading, data: backgroundImg} = useRequest(async () =>{
         const res = await requestor<Blob>({
             baseURL: '/',
