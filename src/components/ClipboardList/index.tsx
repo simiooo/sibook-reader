@@ -62,11 +62,13 @@ export default function ClipboardList(p: ClipboardListProps) {
                 throw Error(openai_res.statusText?.length > 0 ? openai_res.statusText : t('服务端异常, 请检查ai辅助设置是否正确'))
             }
             const reader = openai_res.body.getReader();
+            const output: string[] = []
             openai_stream_reader(reader, (line) => {
+                
                 if (line.startsWith('data:')) {
                     const data = line.replace('data: ', '');
                     if (data === '[DONE]') {
-
+                        0
                     } else {
                         const json_data = JSON.parse(data)
                         output.push(json_data?.choices?.[0]?.delta?.content)
@@ -119,7 +121,7 @@ export default function ClipboardList(p: ClipboardListProps) {
                                                 <Col>{t('翻译')}</Col>
                                                 <Col>
                                                     <Space>
-                                                        <Select
+                                                        {/* <Select
                                                             style={{
                                                                 width: '10rem'
                                                             }}
@@ -131,7 +133,7 @@ export default function ClipboardList(p: ClipboardListProps) {
                                                                 label: ele.model,
                                                                 value: ele.model,
                                                             }))}
-                                                        ></Select>
+                                                        ></Select> */}
                                                         <Select
                                                             style={{
                                                                 width: '10rem'
@@ -145,7 +147,7 @@ export default function ClipboardList(p: ClipboardListProps) {
                                                         <Button
                                                             onClick={() => runAsync()}
                                                             type="link"
-                                                            icon={<RedoOutlined />}></Button>
+                                                            icon={<RedoOutlined />}>{t("翻译")}</Button>
                                                     </Space>
                                                 </Col>
                                             </Row>

@@ -23,11 +23,13 @@ import { usePhone } from '../../utils/usePhone'
 import dayjs from 'dayjs'
 import { motion } from 'framer-motion'
 import Draggable from 'react-draggable'
+import { requestor } from '../../utils/requestor'
+import type { Book as BookInfo } from '../../store/book.type'
 
 export const Component = function Reader() {
   const db_instance = useBookState(state => state.db_instance)
   const navigate = useNavigate()
-  const [bookInfo, setBookInfo] = useState<BookItems>()
+  const [bookInfo, setBookInfo] = useState<BookInfo>()
   const container_ref = useRef<HTMLDivElement>(null)
   const article_inited_ref = useRef<boolean>(false)
   const { book_id } = useParams()
@@ -48,20 +50,20 @@ export const Component = function Reader() {
   const [imgContainerOpen, setImgContainerOpen] = useState<boolean>(false)
   const [imgScale, setImgScale] = useState<number>(1)
 
-  const {run: imgScaleHandler} = useThrottleFn((e: WheelEvent) => {
-    if(!imgContainerOpen) {
+  const { run: imgScaleHandler } = useThrottleFn((e: WheelEvent) => {
+    if (!imgContainerOpen) {
       return
     }
-    if(e.deltaY < 0) {
+    if (e.deltaY < 0) {
       setImgScale(imgScale + 0.1)
-    } else if(e.deltaY > 0) {
+    } else if (e.deltaY > 0) {
       setImgScale(Math.max(0.2, imgScale - 0.1))
     }
-    
+
   }, {
     wait: 25
   })
-  useEventListener('wheel',imgScaleHandler)
+  useEventListener('wheel', imgScaleHandler)
 
 
   const [menuItems, setMenuItems] = useState<MenuItemType[]>()
@@ -179,46 +181,70 @@ export const Component = function Reader() {
     target: container_ref
   })
 
+  const { currentIsland } = useBookState(state => ({ currentIsland: state.currentIsland }))
+
   const init = useCallback(
     async (book?: Book, rendition?: Rendition) => {
       setBookLoading(true)
-      return await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
-        const book_info = await db_instance.book_items.where('hash').equals(book_id).first()
-        const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
-        if (!(book_info && book_blob?.blob)) {
-          return { book, rendition }
+      try {
+        if (!currentIsland) {
+          return
         }
-        setBookInfo(book_info)
-        const tempBook = ePub(book_blob.blob?.buffer, {})
-
-        setBook(tempBook)
-        tempBook.ready.then(() => {
-          tempBook.locations.generate(512)
-          if (!article_inited_ref.current) {
-            article_inited_ref.current = true
-            const tempRendition = tempBook.renderTo('article', { stylesheet: tailwindcss, width: "100%", height: "100%" })
-            setRendition(tempRendition)
-            const cfi = sessionStorage.getItem(`book_id:${book_id}`)
-
-              ; (cfi && cfi !== '-1') ? tempRendition.display(cfi) : tempRendition.display()
-
-            setMenuItems(epubToMenuItemHandler(tempBook?.navigation?.toc))
-            return { book, rendition }
-          } else {
-            setBookLoading(false)
+        const res = await requestor<BookInfo>({
+          url: "/island/getBookInfoFromIsland",
+          data: {
+            "islandId": currentIsland,
+            "bookId": book_id
           }
         })
-          .catch(err => {
-            setError(true)
-          })
-          .finally(() => {
-            setBookLoading(false)
-          })
-
+        setBookInfo(res.data)
+      } catch (error) {
+        
+      }finally{
+        setBookLoading(false)
+      }
+      const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
+      if (!(book_blob?.blob)) {
         return { book, rendition }
+      }
+      // const decoder = new TextDecoder()
+      // const res = decoder.decode(await blob.arrayBuffer())
+      // blob = new Blob([res])
+      const tempBook = ePub(await book_blob.blob, {
+        
       })
+      
+      setBook(tempBook)
+      console.log(tempBook)
+      tempBook.ready.then(() => {
+        console.log('ready')
+        tempBook.locations.generate(512)
+        
+        if (!article_inited_ref.current) {
+          article_inited_ref.current = true
+          const tempRendition = tempBook.renderTo('article', { stylesheet: tailwindcss, width: "100%", height: "100%" })
+          setRendition(tempRendition)
+          const cfi = sessionStorage.getItem(`book_id:${book_id}`)
+
+            ; (cfi && cfi !== '-1') ? tempRendition.display(cfi) : tempRendition.display()
+
+          setMenuItems(epubToMenuItemHandler(tempBook?.navigation?.toc))
+          return { book, rendition }
+        } else {
+          setBookLoading(false)
+        }
+      })
+        .catch(err => {
+          console.error(err)
+          setError(true)
+        })
+        .finally(() => {
+          setBookLoading(false)
+        })
+
+      return { book, rendition }
     },
-    [db_instance, book_id],
+    [db_instance, book_id, currentIsland],
   )
 
   // const {book_id} = 
@@ -459,33 +485,33 @@ export const Component = function Reader() {
               >
                 <Col>{imgSrc && <Draggable><div
                 ><motion.img
-                  draggable={false}
-                  style={{
-                    maxHeight: '90vh',
-                    maxWidth: '90vw',
-                    scale: imgScale,
-                  }}
-                  initial={{
-                    // transform: 'scale(0.8)',
-                    // scale: 0.8,
-                    translateX: '10%',
-                    opacity: 0,
-                  }}
-                  animate={{
-                    // transform: 'scale(1)',
-                    translateX: 0,
-                    opacity: 1,
-                  }}
-                  transition={{
-                    duration: .25,
-                    delay: .1,
-                    type: "spring",
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}
-                  src={imgSrc} alt="Scale Image" /></div>
+                    draggable={false}
+                    style={{
+                      maxHeight: '90vh',
+                      maxWidth: '90vw',
+                      scale: imgScale,
+                    }}
+                    initial={{
+                      // transform: 'scale(0.8)',
+                      // scale: 0.8,
+                      translateX: '10%',
+                      opacity: 0,
+                    }}
+                    animate={{
+                      // transform: 'scale(1)',
+                      translateX: 0,
+                      opacity: 1,
+                    }}
+                    transition={{
+                      duration: .25,
+                      delay: .1,
+                      type: "spring",
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    src={imgSrc} alt="Scale Image" /></div>
 
                 </Draggable>}</Col>
               </Row>

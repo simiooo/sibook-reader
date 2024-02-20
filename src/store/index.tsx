@@ -9,7 +9,7 @@ import { UploadTask } from "../components/UploadContainer";
 import { User } from "./user.type";
 import { LoginType } from "../pages/Login";
 const OPENAI_BASE_URL = 'https://api.openai.com'
-export const OPENAI_PATHNAME = '/v1/chat/completions'
+export const OPENAI_PATHNAME = '/ai/openai/v1/chat/completions'
 const OPENAI_HEADERS = new Headers()
 OPENAI_HEADERS.append('Content-Type', 'application/json')
 
@@ -32,6 +32,7 @@ export interface BookStateType {
     }) => Promise<Response>;
     uploadingTaskList: UploadTask[];
     uploadingTaskList_update: (uploadingTaskList:  UploadTask[]) => void;
+    uploadingTaskListRead: () => void;
     profile?: User;
     profile_update?: (profile: User) => void;
     currentIsland: number;
@@ -76,8 +77,11 @@ export const useBookState = create<BookStateType>((set, get) => {
             openai_api_model,
         })),
         openaiRequest: async (body) => {
-            const url = new URL(OPENAI_PATHNAME, get().openai_base_url)
-            OPENAI_HEADERS.set('Authorization', `Bearer ${get().openai_api_key}`)
+            const baseurl = import.meta.env.VITE_API_URL
+            console.log(location.origin + baseurl)
+            const url = `${/^https?:\/\//.test(baseurl) ? baseurl : location.origin + baseurl }${OPENAI_PATHNAME}`
+            const authorization = JSON.parse(localStorage.getItem("authorization") ?? "{}") as LoginType 
+            OPENAI_HEADERS.set('Authorization', `Bearer ${authorization?.token}`)
             return fetch(url, {
                 method: 'POST',
                 headers: OPENAI_HEADERS,
@@ -101,6 +105,10 @@ export const useBookState = create<BookStateType>((set, get) => {
         },
         uploadingTaskList: [],
         uploadingTaskList_update: (uploadingTaskList: UploadTask[]) => set({uploadingTaskList: [...uploadingTaskList]}),
+        uploadingTaskListRead: () => set({uploadingTaskList: get().uploadingTaskList.map(val => ({
+            ...val, 
+            unread: false
+        }))}),
         profile: [],
         profile_update: (profile: User) => set({profile}),
         currentIsland: Number(localStorage.getItem('currentIsland')),

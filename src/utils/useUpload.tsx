@@ -17,19 +17,19 @@ export function useUpload(
         onFinish: (e: WsChangeEvent) => void
     }
 ) {
-    const {currentIsland} = useBookState(state => ({currentIsland: state.currentIsland}))
+    const { currentIsland } = useBookState(state => ({ currentIsland: state.currentIsland }))
 
-    const {db_instance, uploadingTaskList_update, uploadingTaskList} = useBookState((state) => ({
+    const { db_instance, uploadingTaskList_update, uploadingTaskList } = useBookState((state) => ({
         db_instance: state.db_instance,
         uploadingTaskList_update: state.uploadingTaskList_update,
         uploadingTaskList: state.uploadingTaskList
     }))
-    
-    const {t} = useTranslation()
+
+    const { t } = useTranslation()
     const [loading, setLoading] = useState<boolean>(false)
     // const [fileWs] = useState()
 
-    const upload =useCallback(async (info?: { file?: File; onSuccess?: (v: any) => void; onError?: (error: Error) => void }) => {
+    const upload = useCallback(async (info?: { file?: File; onSuccess?: (v: any) => void; onError?: (error: Error) => void }) => {
         setLoading(true)
         try {
             if (!info?.file) {
@@ -45,15 +45,15 @@ export function useUpload(
             const file = await readFileAsArrayBuffer(info.file)
             const hash = await sha256(file)
             let meta
-            if(info.file.type === 'application/pdf') {
+            if (info.file.type === 'application/pdf') {
                 // meta = await pdfMetaParser(file)
-            } else if(info.file.type === 'application/epub+zip') {
+            } else if (info.file.type === 'application/epub+zip') {
                 meta = await epubMetaParser(file)
             }
             const token = JSON.parse(localStorage.getItem('authorization') ?? "{}") as LoginType
             const ws = new SiWs(`${import.meta.env.VITE_WS_PROTOCOL}://${import.meta.env.VITE_WS_HOST}/island/addBookToIsland?token=${token.token}`)
             ws.onchange((e: WsChangeEvent) => {
-                if(e.status === 'end') {
+                if (e.status === 'end') {
                     options?.onFinish?.(e)
                     db.book_blob.add({
                         id: hash,
@@ -62,10 +62,12 @@ export function useUpload(
                     })
                 }
             })
-            
-            ws.init(info.file, {...(meta ?? {}), id: hash}, currentIsland)
-            uploadingTaskList.push({
+
+            ws.init(info.file, { ...(meta ?? {}), id: hash }, currentIsland)
+            uploadingTaskList.unshift({
                 ws,
+                type: 'upload',
+                unread: true,
                 name: info.file.name,
                 des: meta?.creator ?? meta?.Author ?? info.file.name,
             })
@@ -77,7 +79,7 @@ export function useUpload(
         }
 
     }, [currentIsland, uploadingTaskList])
-        
+
 
     return {
         loading,

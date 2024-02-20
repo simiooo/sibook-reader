@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
-import { useEventListener, useMap, useRequest, useThrottle, useThrottleFn } from 'ahooks';
+import { useDebounceFn, useEventListener, useMap, useRequest, useThrottle, useThrottleFn } from 'ahooks';
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import Draggable, { DraggableEventHandler } from 'react-draggable';
@@ -20,6 +20,9 @@ import dayjs from 'dayjs';
 import { requestor } from '../../utils/requestor';
 import { useBookState } from '../../store';
 import { useCacheBookTab } from '../../utils/useCacheBookTab';
+import { HttpTask } from '../UploadContainer';
+import { AxiosProgressEvent } from 'axios';
+import { readFileAsArrayBuffer } from '../../dbs/createBook';
 
 export const tagMap = {
     'application/pdf': {
@@ -43,7 +46,11 @@ interface BookItemListProps {
 export default function BookItemList(p: BookItemListProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const { toCache} = useCacheBookTab()
+    const { toCache } = useCacheBookTab()
+    const {uploadingTaskList, uploadingTaskList_update} = useBookState(state => ({
+        uploadingTaskList: state.uploadingTaskList,
+        uploadingTaskList_update: state.uploadingTaskList_update,
+    }))
     const container_ref = useRef()
     const [intersectionContainer, {
         set: setInter,
@@ -53,55 +60,17 @@ export default function BookItemList(p: BookItemListProps) {
         id: 'you',
     });
 
-    // const {
-    //     uploadingTaskList,
-    //     uploadingTaskList_update,
-    // } = useBookState(state => ({uploadingTaskList: state.uploadingTaskList,uploadingTaskList_update: state.uploadingTaskList_update}))
     useEventListener('contextmenu', (e) => {
         e.preventDefault()
         show({ event: e })
     })
 
-    const [currentLoadingProgress, setCurrentLoadingProgress] = useState(0)
 
     const { runAsync: openHandler, loading: bookBinaryLoading } = useRequest(async (ele: Book) => {
         try {
-            setCurrentLoadingProgress(0)
-        const cache = await db.book_blob.get(ele.objectId)
-        if (cache && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
-            if (ele?.objectType === 'application/epub+zip') {
-                const pathname = `/reader/${ele.objectId}`
-                toCache({
-                    url: pathname,
-                    label: ele.objectName,
-                    closable: true
-                })
-                navigate(pathname)
-            } else if (ele?.objectType === 'application/pdf') {
-                const pathname = `/pdf_reader/${ele.objectId}`
-                toCache({
-                    url: pathname,
-                    label: ele.objectName,
-                    closable: true
-                })
-                navigate(pathname)
-            } else {
-                message.error(t('暂不支持'))
-            }
-        } else {
-            const res = await requestor<Uint8Array>({
-                url: "/island/getBookBinaryFromIsland",
-                responseType: 'arraybuffer',
-                data: {
-                    bookId: ele.objectId
-                }
-            })
             
-            db.book_blob.add({
-                id: ele.objectId,
-                blob: res.data,
-                updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-            }).then(() => {
+            const cache = await db.book_blob.get(ele.objectId)
+            if (cache && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
                 if (ele?.objectType === 'application/epub+zip') {
                     const pathname = `/reader/${ele.objectId}`
                     toCache({
@@ -121,16 +90,73 @@ export default function BookItemList(p: BookItemListProps) {
                 } else {
                     message.error(t('暂不支持'))
                 }
-            })
-        }
+            } else {
+                const httpUploadTask = (() => {
+                    const httpUploadTask: HttpTask = {
+                        name: ele.objectName,
+                        des: ele.objectName,
+                        type: 'download',
+                        unread: true,
+                        httpMeta: {
+                            size: ele.objectSize,
+                            current: 0,
+                            error: false,
+                            onDownloadProgress: function (e: AxiosProgressEvent) {
+                                e
+                            }
+                        }
+                    }
+                    const progressHandler = (e: AxiosProgressEvent) => {
+                        e.loaded
+                        httpUploadTask.httpMeta.current = e.loaded
+                    }
+                    httpUploadTask.httpMeta.onDownloadProgress = progressHandler
+                    return httpUploadTask
+                })()
+                uploadingTaskList.unshift(httpUploadTask)
+                uploadingTaskList_update(uploadingTaskList)
+                const res = await requestor<Blob>({
+                    url: "/island/getBookBinaryFromIsland",
+                    responseType: 'blob',
+                    onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress,
+                    data: {
+                        bookId: ele.objectId
+                    }
+                })
+                db.book_blob.add({
+                    id: ele.objectId,
+                    blob: await readFileAsArrayBuffer(new File([res.data], ele.objectName)),
+                    updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                }).then(() => {
+                    if (ele?.objectType === 'application/epub+zip') {
+                        const pathname = `/reader/${ele.objectId}`
+                        toCache({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else if (ele?.objectType === 'application/pdf') {
+                        const pathname = `/pdf_reader/${ele.objectId}`
+                        toCache({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else {
+                        message.error(t('暂不支持'))
+                    }
+                })
+            }
         } catch (error) {
             message.error(error.message)
         }
-        
+
     }, {
         manual: true,
     })
-
+    const {run: openDebouncedHandler} = useDebounceFn(openHandler)
     const { run: sortHandler } = useThrottleFn<DraggableEventHandler>((e, data) => {
         const ele = data.node as (HTMLDivElement | undefined)
         resetInter()
@@ -162,11 +188,22 @@ export default function BookItemList(p: BookItemListProps) {
 
     }, [p.data, intersectionContainer])
 
+    const {run: selectHandler} = useThrottleFn((e: any | { added: HTMLElement[], removed: HTMLElement[] }) => {
+        if (e.inputEvent?.srcElement?.className === 'contexify_itemContent') {
+            return
+        }
+        e.added.forEach((el: HTMLElement) => {
+            p?.onAdd?.(el?.dataset?.hash)
+        });
+        e.removed.forEach((el: HTMLElement) => {
+            p?.onRemove?.(el?.dataset?.hash);
+        });
+    }, {
+        wait: 50
+    })
+
     return (
-        <Spin
-            spinning={bookBinaryLoading}
-            
-        >
+        
             <Row
                 gutter={[32, 20]}
                 className={style.container}
@@ -206,17 +243,7 @@ export default function BookItemList(p: BookItemListProps) {
 
                     toggleContinueSelect={"shift"}
                     keyContainer={window}
-                    onSelect={(e: any | { added: HTMLElement[], removed: HTMLElement[] }) => {
-                        if (e.inputEvent?.srcElement?.className === 'contexify_itemContent') {
-                            return
-                        }
-                        e.added.forEach((el: HTMLElement) => {
-                            p?.onAdd?.(el?.dataset?.hash)
-                        });
-                        e.removed.forEach((el: HTMLElement) => {
-                            p?.onRemove?.(el?.dataset?.hash);
-                        });
-                    }}
+                    onSelect={selectHandler}
                 />
                 {
                     (renderList.sort((pre, val) => dayjs(pre.uploadDate).isBefore(val.uploadDate) ? -1 : 1) ?? []).map((ele, index) => {
@@ -247,8 +274,8 @@ export default function BookItemList(p: BookItemListProps) {
                                         data-hash={ele?.objectId}
                                         extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
                                         className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
-                                        onDoubleClick={() => openHandler(ele)}
-                                        onTouchEnd={() => openHandler(ele)}
+                                        onDoubleClick={() => openDebouncedHandler(ele)}
+                                        onTouchEnd={() => openDebouncedHandler(ele)}
                                         title={<Tooltip
                                         >
                                             <Tooltip
@@ -267,7 +294,6 @@ export default function BookItemList(p: BookItemListProps) {
                     })
                 }
             </Row>
-        </Spin>
 
     )
 }

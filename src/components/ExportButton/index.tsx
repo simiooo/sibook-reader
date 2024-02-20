@@ -36,8 +36,8 @@ export function useExport() {
 
                 for await (const key of record ?? []) {
                     download({
-                        blob: (await db_instance.book_blob.get(key?.id))?.blob,
-                        name: key?.id
+                        blob: (await db_instance.book_blob.get(key?.objectId))?.blob,
+                        name: key?.objectName
                     })
                 }
             })
