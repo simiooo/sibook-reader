@@ -1,4 +1,4 @@
-import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber, Modal, Badge } from 'antd'
+import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber, Modal, Badge, Tooltip } from 'antd'
 import { Document, Outline, Page } from 'react-pdf';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -7,7 +7,7 @@ import { useBookState } from '../../store';
 import { BookItems } from '../../dbs/db';
 import { useNavigate, useParams } from 'react-router-dom';
 import Draggable from 'react-draggable';
-import { CameraOutlined, HomeOutlined, LeftOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined, RightOutlined } from '@ant-design/icons';
+import { AlertOutlined, CameraOutlined, FrownOutlined, HomeOutlined, LeftOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined, RadarChartOutlined, ReadOutlined, RightOutlined, SnippetsOutlined, SoundOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 const stylecss = style
 import { pdfjs } from 'react-pdf';
@@ -17,7 +17,7 @@ import { createPortal } from 'react-dom';
 import { ItemType, MenuItemType } from 'antd/es/menu/hooks/useItems';
 import List from 'react-virtualized/dist/commonjs/List';
 
-import FloatAiMenu from '../../components/FloatAiMenu';
+// import FloatAiMenu from '../../components/FloatAiMenu';
 import { PDFPageProxy } from 'pdfjs-dist/types/web/interfaces';
 import { motion } from 'framer-motion';
 import Cropper, { ReactCropperElement } from "react-cropper";
@@ -433,7 +433,7 @@ export const Component = function PdfReader() {
         className={style.container}
         gutter={[10, 16]}
       >
-        <FloatAiMenu
+        {/* <FloatAiMenu
           copiedText={copiedText}
           translator={{
             value: translatorOpen,
@@ -443,7 +443,7 @@ export const Component = function PdfReader() {
             value: explainerOpen,
             onCancel: setExplainerOpen
           }}
-        ></FloatAiMenu>
+        ></FloatAiMenu> */}
         <Col span={24}>
           <Row
             justify={'space-between'}
@@ -633,7 +633,50 @@ export const Component = function PdfReader() {
                         <CameraOutlined />
                       </motion.div>
                     }
-
+                    <motion.div
+                    {...ANIMATION_STATIC}
+                    >
+                      <Tooltip
+                        title={t('摘要生成')}
+                      >
+                        <SnippetsOutlined />
+                      </Tooltip>
+                    </motion.div>
+                    <motion.div
+                    {...ANIMATION_STATIC}
+                    >
+                      <Tooltip title={t('阐释并列举例子')}>
+                        <AlertOutlined />
+                      </Tooltip>
+                    </motion.div>
+                    <motion.div
+                    {...ANIMATION_STATIC}
+                    >
+                      <Tooltip title={t('生成练习题目')}>
+                        <FrownOutlined />
+                      </Tooltip>
+                    </motion.div>
+                    <motion.div
+                    {...ANIMATION_STATIC}
+                    >
+                      <Tooltip title={t('名词解释')}>
+                        <RadarChartOutlined />
+                      </Tooltip>
+                    </motion.div>
+                    <motion.div
+                    {...ANIMATION_STATIC}
+                    >
+                      <Tooltip title={t('相关阅读推荐')}>
+                        <ReadOutlined />
+                      </Tooltip>
+                    </motion.div>
+                    <motion.div
+                    {...ANIMATION_STATIC}
+                    >
+                      <Tooltip title={t('数据解读')}>
+                        <SoundOutlined />
+                      </Tooltip>
+                    </motion.div>
                   </Space>
                 </div>
                 <Row
@@ -691,18 +734,18 @@ export const Component = function PdfReader() {
                 </Col>
                 : <Col flex="0 1">
                   <Badge
-                  count={clipboardList.filter(val => !val.read).length}
+                    count={clipboardList.filter(val => !val.read).length}
                   >
                     <div
-                    style={{
-                      height: size?.height,
-                      // width: 400,
-                    }}
-                    onClick={() => {
-                      setClipboardListOpen(true)
-                      clipboardList_update(clipboardList.map(ele => ({...ele, read: true})))
-                    }}
-                    className={style.clipboard_switch}
+                      style={{
+                        height: size?.height,
+                        // width: 400,
+                      }}
+                      onClick={() => {
+                        setClipboardListOpen(true)
+                        clipboardList_update(clipboardList.map(ele => ({ ...ele, read: true })))
+                      }}
+                      className={style.clipboard_switch}
                     >
                       <LeftOutlined />
                     </div>

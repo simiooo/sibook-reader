@@ -31,7 +31,7 @@ i18n
     }
   });
 
-const green = '#80aa51'
+const green = 'rgba(101, 170, 12, 1)'
 
 Spin.setDefaultIndicator(<Indicator />)
 

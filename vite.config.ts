@@ -35,7 +35,7 @@ export default defineConfig({
         name: 'Si Reader',
         short_name: 'Si Reader',
         description: 'Si Reader application',
-        theme_color: '#80aa51',
+        theme_color: 'rgba(101, 170, 12, 1)',
         background_color: '#ffffff',
         icons: [
           {
