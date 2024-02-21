@@ -1,5 +1,5 @@
 .container {
-  padding: 0rem 1.5rem;
+  padding: 0.5rem 1.5rem 0rem;
   /* --container-height: ; */
   .menu_container {
     height: calc(92vh - 20px - 54px);
@@ -82,6 +82,19 @@
       }
     }
     
+  }
+
+  .clipboard_switch{
+    background-color: transparent;
+    transition: .25s ease;
+    width: 1.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px 0px 0px 8px;
+    &:hover{
+      background-color: #f2f2f2;
+    }
   }
   
 

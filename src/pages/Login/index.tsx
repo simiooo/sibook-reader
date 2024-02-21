@@ -1,4 +1,4 @@
-import { Button, Col, Form, Input, Row, Space, message } from 'antd'
+import { Button, Col, Form, Input, Row, Space, Spin, message } from 'antd'
 import React, { useState } from 'react'
 import style from './index.module.css'
 import { useRequest } from 'ahooks'
@@ -140,7 +140,9 @@ export const Component = function Login() {
 
                 </div>
             </Col>
-        </Row> : undefined
+        </Row> : <Spin>
+            
+        </Spin>
 
     )
 }

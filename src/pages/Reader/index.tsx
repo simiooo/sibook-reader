@@ -215,9 +215,7 @@ export const Component = function Reader() {
       })
       
       setBook(tempBook)
-      console.log(tempBook)
       tempBook.ready.then(() => {
-        console.log('ready')
         tempBook.locations.generate(512)
         
         if (!article_inited_ref.current) {

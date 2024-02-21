@@ -693,15 +693,19 @@ export const Component = function PdfReader() {
                   <Badge
                   count={clipboardList.filter(val => !val.read).length}
                   >
-                    <Button
-                      onClick={() => {
-                        setClipboardListOpen(true)
-                        clipboardList_update(clipboardList.map(ele => ({...ele, read: true})))
-                      }}
-                      icon={<LeftOutlined />}
-                      type="link"
-                      size='small'
-                    ></Button>
+                    <div
+                    style={{
+                      height: size?.height,
+                      // width: 400,
+                    }}
+                    onClick={() => {
+                      setClipboardListOpen(true)
+                      clipboardList_update(clipboardList.map(ele => ({...ele, read: true})))
+                    }}
+                    className={style.clipboard_switch}
+                    >
+                      <LeftOutlined />
+                    </div>
                   </Badge>
 
                 </Col>

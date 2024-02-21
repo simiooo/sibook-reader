@@ -1,9 +1,9 @@
 // import { useLocalStorageState } from 'ahooks';
 import { Tabs } from 'antd';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, } from 'react-router-dom';
 import style from './index.module.css'
-import { useCacheBookTab } from '../../utils/useCacheBookTab';
+import { useBookState } from '../../store';
 
 export interface PageType {
     type: 'shell' | 'reader';
@@ -13,21 +13,21 @@ export interface PageType {
 
 }
 
-// interface BookTabsProp {
-//     className?: string;
-// }
+interface BookTabsProp {
+    className?: string;
+}
 
-export default function BookTabs() {
+export default function BookTabs(p: BookTabsProp) {
     const [active, setActive] = useState<string>()
+    const {tabs, tabs_remove} = useBookState(state => state)
     const navigate = useNavigate()
     const location = useLocation()
-    const {tabs, remove} = useCacheBookTab()
     useEffect(() => {
         setActive(location.pathname)
     }, [location])
-    useEffect(() => {
-        console.log(Object.values(tabs))
-    }, [tabs])
+    const renderTabs = useMemo(() => {
+        return Object.values(tabs ?? {})
+    }, [tabs]) 
     return (
         <Tabs
             size='small'
@@ -39,11 +39,15 @@ export default function BookTabs() {
             type="editable-card"
             onEdit={(e, action) => {
                     if(action === 'remove') {
-                        remove(e.toString())
+                        if(location.pathname === e.toString()) {
+                            setActive('/')
+                            navigate('/')
+                        }
+                        tabs_remove(e.toString())
                     }
             }}
             hideAdd={true}
-            items={Object.values(tabs).map((tab) => {
+            items={renderTabs.map((tab) => {
                 return {
                     label: tab.label,
                     key: tab.url,

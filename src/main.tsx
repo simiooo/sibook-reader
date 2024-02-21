@@ -4,13 +4,14 @@ import './index.css'
 import 'normalize.css'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, Spin } from 'antd'
 import { inject } from '@vercel/analytics';
 import { useTranslation, initReactI18next } from "react-i18next";
 import i18n from "i18next";
 import en from './translations/en.json'
 import ja from './translations/ja.json'
 import zh from './translations/zh.json'
+import Indicator from './components/Indicator'
 
 inject()
 
@@ -32,6 +33,8 @@ i18n
 
 const green = '#80aa51'
 
+Spin.setDefaultIndicator(<Indicator />)
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ConfigProvider
@@ -47,6 +50,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           // borderRadius: 8,
 
         },
+        components: {
+          Spin: {
+            dotSize: 60,
+            // contentHeight: 800
+          },
+        }
       }}
     >
       <RouterProvider

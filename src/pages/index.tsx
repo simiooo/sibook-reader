@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useBookState } from '../store'
 import { useAsyncEffect } from 'ahooks'
 import UploadContainer from '../components/UploadContainer'
+import { useCacheBookTab } from '../utils/useCacheBookTab'
 
 export const ErrorBoundary = () => <div
     style={{
@@ -36,13 +37,12 @@ export const Component = function App() {
     useAsyncEffect(async () => {
         setUserOnline(await isUserOnline())
     }, [location])
-
     useEffect(() => {
         if (!userOnline) {
             navigate('/login')
         }
     }, [userOnline])
-    const {state} = useNavigation()
+    const { state } = useNavigation()
     return (
 
         <div>
@@ -53,15 +53,16 @@ export const Component = function App() {
                 })}
             >
                 <BookTabs
-                    {...({ className: style.tabs } as any)}
+                    className={style.tabs}
                 ></BookTabs>
             </Flex>}
             <Spin
-            spinning={state === 'loading'}
+                spinning={state === 'loading'}
+                delay={100}
             >
-            <Outlet></Outlet>
+                <Outlet></Outlet>
             </Spin>
-            
+
         </div>
 
     )

@@ -19,7 +19,6 @@ import { Book } from '../../store/book.type';
 import dayjs from 'dayjs';
 import { requestor } from '../../utils/requestor';
 import { useBookState } from '../../store';
-import { useCacheBookTab } from '../../utils/useCacheBookTab';
 import { HttpTask } from '../UploadContainer';
 import { AxiosProgressEvent } from 'axios';
 import { readFileAsArrayBuffer } from '../../dbs/createBook';
@@ -46,7 +45,7 @@ interface BookItemListProps {
 export default function BookItemList(p: BookItemListProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const { toCache } = useCacheBookTab()
+    const {tabs, tabs_add} = useBookState(state => state)
     const {uploadingTaskList, uploadingTaskList_update} = useBookState(state => ({
         uploadingTaskList: state.uploadingTaskList,
         uploadingTaskList_update: state.uploadingTaskList_update,
@@ -73,7 +72,7 @@ export default function BookItemList(p: BookItemListProps) {
             if (cache && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
                 if (ele?.objectType === 'application/epub+zip') {
                     const pathname = `/reader/${ele.objectId}`
-                    toCache({
+                    tabs_add({
                         url: pathname,
                         label: ele.objectName,
                         closable: true
@@ -81,7 +80,7 @@ export default function BookItemList(p: BookItemListProps) {
                     navigate(pathname)
                 } else if (ele?.objectType === 'application/pdf') {
                     const pathname = `/pdf_reader/${ele.objectId}`
-                    toCache({
+                    tabs_add({
                         url: pathname,
                         label: ele.objectName,
                         closable: true
@@ -130,7 +129,7 @@ export default function BookItemList(p: BookItemListProps) {
                 }).then(() => {
                     if (ele?.objectType === 'application/epub+zip') {
                         const pathname = `/reader/${ele.objectId}`
-                        toCache({
+                        tabs_add({
                             url: pathname,
                             label: ele.objectName,
                             closable: true
@@ -138,7 +137,7 @@ export default function BookItemList(p: BookItemListProps) {
                         navigate(pathname)
                     } else if (ele?.objectType === 'application/pdf') {
                         const pathname = `/pdf_reader/${ele.objectId}`
-                        toCache({
+                        tabs_add({
                             url: pathname,
                             label: ele.objectName,
                             closable: true
@@ -156,7 +155,9 @@ export default function BookItemList(p: BookItemListProps) {
     }, {
         manual: true,
     })
-    const {run: openDebouncedHandler} = useDebounceFn(openHandler)
+    const {run: openDebouncedHandler} = useDebounceFn(openHandler, {
+        leading: true,
+    })
     const { run: sortHandler } = useThrottleFn<DraggableEventHandler>((e, data) => {
         const ele = data.node as (HTMLDivElement | undefined)
         resetInter()
@@ -180,7 +181,8 @@ export default function BookItemList(p: BookItemListProps) {
 
         }
     }, {
-        wait: 200
+        wait: 200,
+        
     })
 
     const renderList = useMemo(() => {
@@ -205,7 +207,7 @@ export default function BookItemList(p: BookItemListProps) {
     return (
         
             <Row
-                gutter={[32, 20]}
+                gutter={[16, 20]}
                 className={style.container}
                 justify={'start'}
                 align={'top'}

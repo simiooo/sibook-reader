@@ -8,6 +8,7 @@ import { requestor } from "../utils/requestor";
 import { UploadTask } from "../components/UploadContainer";
 import { User } from "./user.type";
 import { LoginType } from "../pages/Login";
+import { HistoryTab } from "../utils/useCacheBookTab";
 const OPENAI_BASE_URL = 'https://api.openai.com'
 export const OPENAI_PATHNAME = '/ai/openai/v1/chat/completions'
 const OPENAI_HEADERS = new Headers()
@@ -37,6 +38,9 @@ export interface BookStateType {
     profile_update?: (profile: User) => void;
     currentIsland: number;
     currentIsland_update?: (currentIsland: number) => void;
+    tabs: HistoryTab;
+    tabs_add: (tabs: HistoryTab) => void;
+    tabs_remove: (key: string) => void;
 }
 
 export type ChatCompletion = {
@@ -113,6 +117,21 @@ export const useBookState = create<BookStateType>((set, get) => {
         profile_update: (profile: User) => set({profile}),
         currentIsland: Number(localStorage.getItem('currentIsland')),
         currentIsland_update: (currentIsland: number) => set({currentIsland}),
+        tabs: JSON.parse(localStorage.getItem('tabs') ?? '{"/":{"url":"/","label":"首页","closable":false}}') ?? {
+            "/": {
+                url: '/',
+                label: '首页',
+                closable: false,
+            }
+        },
+        tabs_add: (payload: HistoryTab) => set({
+            tabs: {...get().tabs,
+            [payload.url]: payload,}
+        }),
+        tabs_remove: (key: string) => {
+            delete get().tabs[key]
+            set({tabs: {...get().tabs}})
+        },
     }
 })
 
@@ -131,6 +150,9 @@ useBookState.subscribe((state) => {
     }
     if(state.currentIsland && state.currentIsland.toString() !== localStorage.getItem('currentIsland')) {
         localStorage.setItem('currentIsland', state.currentIsland.toString())
+    }
+    if(state.tabs && state.tabs.toString() !== localStorage.getItem('tabs')) {
+        localStorage.setItem('tabs', JSON.stringify(state.tabs))
     }
 })
 

@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { requestor } from '../../utils/requestor';
 import { Book } from '../../store/book.type';
+import LeftMenu from '../../components/LeftMenu';
 
 
 export const Component = function Bookshelf() {
@@ -132,13 +133,19 @@ export const Component = function Bookshelf() {
     }, [list, filterValue])
 
     return (
-        <Layout
-            ref={containerRef}
-            className={style.main}
+        <Row
+        className={style.container}
         >
-            <Row>
-            </Row>
-            {/* <SyncModal
+            <Col>
+                <LeftMenu></LeftMenu>
+            </Col>
+            <Col flex={'1 1'}>
+                <Layout
+                    ref={containerRef}
+                    className={style.main}
+                >
+
+                    {/* <SyncModal
             open={islandOpen}
             onOk={() => {
                 runAsync()
@@ -146,169 +153,112 @@ export const Component = function Bookshelf() {
             }}
             onCancel={() => setIslandOpen(false)}
             ></SyncModal> */}
-            <Spin spinning={loading}>
+                    <Spin spinning={loading}>
 
-                <Content className={style.content}>
-                    <Row gutter={[20, 32]}>
-                        <Col>
-                        </Col>
-                        <Col span={24}>
-                            <Row justify={'space-between'}>
+                        <Content className={style.content}>
+                            <Row gutter={[20, 32]}>
                                 <Col>
-                                    <Input
-                                        bordered={false}
-                                        size='large'
-                                        placeholder={t('搜索书籍')}
-                                        value={filterValue}
-                                        onChange={(e) => setFilterValue(e.target.value)}
-                                    ></Input>
                                 </Col>
-                                <Col >
-                                    <Space
-                                        wrap={true}
-                                    >
-                                        <BookNewButton
-                                            onChange={async () => {
-                                                runAsync()
-                                            }}
-
-                                        ></BookNewButton>
-
-                                        <Button
-                                            icon={<ShopOutlined />}
-                                            type="link"
-                                            size='small'
-                                            onClick={() => navigate('/island')}
-                                        >{t('岛屿')}</Button>
-                                        <Select
-                                            size='small'
-                                            bordered={false}
-                                            placeholder={
-                                                <TranslationOutlined title={t('选择语言')} />}
-                                            onChange={(e) => {
-                                                i18n.changeLanguage(e)
-                                            }}
-
-                                            value={i18n.language}
-                                            options={[
-                                                {
-                                                    label: <Space><TranslationOutlined /><span>Chinese</span></Space>,
-                                                    value: 'zh',
-                                                },
-                                                {
-                                                    label: <Space><TranslationOutlined /><span>Japanese</span> </Space>,
-                                                    value: 'ja',
-                                                },
-                                                {
-                                                    label: <Space><TranslationOutlined /><span>English</span> </Space>,
-                                                    value: 'en',
-                                                },
-                                            ]}
-                                        ></Select>
-                                        <Popover
-                                            placement="bottomLeft"
-                                            content={<Row>
-                                                <Col span={24}>
-                                                    {profile.nickname}
-                                                </Col>
-                                                <Col span={24}>
-                                                    <Space>
-                                                        <Button
-                                                            type="link"
-                                                            danger
-                                                            onClick={() => {
-                                                                localStorage.removeItem('authorization')
-                                                                navigate('/login')
-                                                            }}
-                                                        >
-                                                            {t("退出")}
-                                                        </Button>
-                                                    </Space>
-                                                </Col>
-                                            </Row>}
-                                        >
-                                            <Avatar
-                                                style={{
-                                                    background: '#80aa51'
-                                                }}
-                                            >
-                                                {profile?.nickname?.[0] ?? t('我')}
-                                            </Avatar>
-                                        </Popover>
-
-                                    </Space>
-
-                                </Col>
-
-                            </Row>
-                        </Col>
-                        <Col span={24}>
-                            <Row justify={'center'} gutter={[20, 20]}>
                                 <Col span={24}>
-                                    {renderList?.length > 0 ? <BookItemList
-                                        data={renderList}
-                                        selected={selected}
-                                        onAdd={add}
-                                        onRemove={remove}
-                                        contextmenuList={contextmenuList}
-                                        onContextmenuSelect={(e) => {
-                                            contextmenuSelectedHandler(e?.type)
-                                        }}
-                                    ></BookItemList> : <div>
-                                        <Divider></Divider>
-                                        <Result
-                                            icon={<SmileOutlined
-                                                style={{ color: '#283593' }}
-                                            />}
-                                            title={
-                                                <Space
-                                                    direction='vertical'
-                                                    align='start'
-                                                >
-                                                    <h2>{t("请上传书籍")}</h2>
-                                                    <div>
+                                    <Row justify={'space-between'}>
+                                        <Col>
+                                            <Input
+                                                bordered={false}
+                                                size='large'
+                                                placeholder={t('搜索书籍')}
+                                                value={filterValue}
+                                                onChange={(e) => setFilterValue(e.target.value)}
+                                            ></Input>
+                                        </Col>
+                                        <Col >
+                                            <Space
+                                                wrap={true}
+                                            >
+                                                <BookNewButton
+                                                    onChange={async () => {
+                                                        runAsync()
+                                                    }}
+
+                                                ></BookNewButton>
+
+                                                
+
+                                            </Space>
+
+                                        </Col>
+
+                                    </Row>
+                                </Col>
+                                <Col span={24}>
+                                    <Row justify={'center'} gutter={[20, 20]}>
+                                        <Col span={24}>
+                                            {renderList?.length > 0 ? <BookItemList
+                                                data={renderList}
+                                                selected={selected}
+                                                onAdd={add}
+                                                onRemove={remove}
+                                                contextmenuList={contextmenuList}
+                                                onContextmenuSelect={(e) => {
+                                                    contextmenuSelectedHandler(e?.type)
+                                                }}
+                                            ></BookItemList> : <div>
+                                                <Divider></Divider>
+                                                <Result
+                                                    icon={<SmileOutlined
+                                                        style={{ color: '#283593' }}
+                                                    />}
+                                                    title={
                                                         <Space
                                                             direction='vertical'
-                                                            align="start"
-                                                            className={style.empty_content}
+                                                            align='start'
                                                         >
-                                                            <span><DragOutlined /> {t('可拖拽到此处')}</span>
-                                                            <span><CopyOutlined /> {t('可粘贴文件在此处')}</span>
+                                                            <h2>{t("请上传书籍")}</h2>
+                                                            <div>
+                                                                <Space
+                                                                    direction='vertical'
+                                                                    align="start"
+                                                                    className={style.empty_content}
+                                                                >
+                                                                    <span><DragOutlined /> {t('可拖拽到此处')}</span>
+                                                                    <span><CopyOutlined /> {t('可粘贴文件在此处')}</span>
+                                                                </Space>
+                                                            </div>
                                                         </Space>
-                                                    </div>
-                                                </Space>
 
-                                            }
-                                        />
-                                    </div>}
+                                                    }
+                                                />
+                                            </div>}
+                                        </Col>
+                                    </Row>
+                                </Col>
+                                <Col span={24}>
+                                    <Row>
+                                        <Col></Col>
+                                    </Row>
                                 </Col>
                             </Row>
-                        </Col>
-                        <Col span={24}>
-                            <Row>
-                                <Col></Col>
-                            </Row>
-                        </Col>
-                    </Row>
-                </Content>
+                        </Content>
 
-            </Spin>
+                    </Spin>
 
-            {dropModalOpen && <div
-                className={style.upload_modal_container}
-            >
-                <div
-                    className={style.upload_modal}
-                >
-                    <FileTextTwoTone
-                        twoToneColor={'#222'}
-                        style={{
-                            fontSize: '10rem'
-                        }}
-                    />
-                </div>
-            </div>}
-        </Layout>
+                    {dropModalOpen && <div
+                        className={style.upload_modal_container}
+                    >
+                        <div
+                            className={style.upload_modal}
+                        >
+                            <FileTextTwoTone
+                                twoToneColor={'#222'}
+                                style={{
+                                    fontSize: '10rem'
+                                }}
+                            />
+                        </div>
+                    </div>}
+                </Layout>
+            </Col>
+        </Row>
+
 
     );
 }

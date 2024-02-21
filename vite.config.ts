@@ -28,6 +28,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        cleanupOutdatedCaches: false
+      },
       manifest: {
         name: 'Si Reader',
         short_name: 'Si Reader',

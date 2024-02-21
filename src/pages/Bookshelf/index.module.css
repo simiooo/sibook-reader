@@ -1,5 +1,9 @@
 .main{
   padding: 0rem 1.5rem;
+  
+}
+.container{
+  
 }
 .content {
   width: cacl(100vw - 48px);
