@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useHover } from 'ahooks'
+import { useBookState } from '../../store'
 
 const maxWidth = '4.1rem'
 const minWidth = '0rem'
@@ -14,6 +15,7 @@ export default function LeftMenu() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const ref = useRef<HTMLDivElement>(null)
+  const { profile } = useBookState(state => state)
   const hover = useHover(ref)
   useEffect(() => {
     if (hover) {
@@ -94,9 +96,9 @@ export default function LeftMenu() {
               transform: 'translateX(-.25rem)'
             }}
           >
-            {t('我')}
+            {profile?.nickname?.[0] ?? t('我')}
           </Avatar>,
-            title: t('我'),
+            title: profile?.nickname ?? t('我'),
             key: 'profile'
           }
         ]}

@@ -1,4 +1,4 @@
-import { Flex, Layout, Result, Spin } from 'antd'
+import { Flex, Layout, Result, Spin, message } from 'antd'
 import { Content, Footer, Header } from 'antd/es/layout/layout'
 import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router-dom'
 import BookTabs from '../components/BookTabs'
@@ -6,9 +6,11 @@ import style from './index.module.css'
 import classNames from 'classnames'
 import { useEffect, useMemo, useState } from 'react'
 import { useBookState } from '../store'
-import { useAsyncEffect } from 'ahooks'
+import { useAsyncEffect, useRequest } from 'ahooks'
 import UploadContainer from '../components/UploadContainer'
 import { useCacheBookTab } from '../utils/useCacheBookTab'
+import { requestor } from '../utils/requestor'
+import { User } from '../store/user.type'
 
 export const ErrorBoundary = () => <div
     style={{
@@ -42,6 +44,31 @@ export const Component = function App() {
             navigate('/login')
         }
     }, [userOnline])
+
+    const {authorization, profile_update} = useBookState(state => state)
+
+    useRequest(async () => {
+        if(!authorization.token) {
+            return 
+        }
+        try {
+            const res = await requestor<{data?: User}>({
+                url: '/profile/v/getSelfUserInfo'
+            }) 
+            if(!res.data?.data) {
+                throw Error("获取用户信息失败")
+            }
+            profile_update(res.data.data)
+        } catch (error) {
+            message.error('获取用户信息失败')
+        }
+        
+
+    }, {
+        refreshDeps: [
+            authorization,
+        ]
+    })
     const { state } = useNavigation()
     return (
 

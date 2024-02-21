@@ -28,7 +28,6 @@ import LeftMenu from '../../components/LeftMenu';
 
 export const Component = function Bookshelf() {
     const { currentIsland, profile, isUserOnline } = useBookState(state => ({ currentIsland: state.currentIsland, profile: state.profile, isUserOnline: state.isUserOnline }))
-    const db_instance = useBookState(state => state.db_instance)
     const { runAsync, loading: listLoading, data: list } = useRequest(async () => {
         // const res = await db_instance?.book_items?.toArray()
         try {

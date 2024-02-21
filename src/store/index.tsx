@@ -41,6 +41,8 @@ export interface BookStateType {
     tabs: HistoryTab;
     tabs_add: (tabs: HistoryTab) => void;
     tabs_remove: (key: string) => void;
+    authorization: Partial<LoginType>
+    authorization_update?: (authorization: Partial<LoginType>) => void;
 }
 
 export type ChatCompletion = {
@@ -132,6 +134,8 @@ export const useBookState = create<BookStateType>((set, get) => {
             delete get().tabs[key]
             set({tabs: {...get().tabs}})
         },
+        authorization: JSON.parse(localStorage.getItem('authorization') ?? '{}') as Partial<LoginType>,
+        authorization_update: (payload: Partial<LoginType>) => set({authorization: payload})
     }
 })
 
