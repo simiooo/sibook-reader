@@ -11,7 +11,7 @@ import { LoginType } from "../pages/Login";
 import { HistoryTab } from "../utils/useCacheBookTab";
 const OPENAI_BASE_URL = 'https://api.openai.com'
 export const OPENAI_PATHNAME = '/ai/openai/v1/chat/completions'
-const OPENAI_HEADERS = new Headers()
+export const OPENAI_HEADERS = new Headers()
 OPENAI_HEADERS.append('Content-Type', 'application/json')
 
 export interface BookStateType {
@@ -30,7 +30,7 @@ export interface BookStateType {
     openaiRequest?: <T extends Object>(body: {
         type: 'translator' | 'explainer';
         message: T;
-    }) => Promise<Response>;
+    } | {content: string; featureType: string}) => Promise<Response>;
     uploadingTaskList: UploadTask[];
     uploadingTaskList_update: (uploadingTaskList:  UploadTask[]) => void;
     uploadingTaskListRead: () => void;
@@ -82,13 +82,12 @@ export const useBookState = create<BookStateType>((set, get) => {
             openai_api_key,
             openai_api_model,
         })),
-        openaiRequest: async (body) => {
+        openaiRequest: async (body, customUrl?: string) => {
             const baseurl = import.meta.env.VITE_API_URL
-            console.log(location.origin + baseurl)
             const url = `${/^https?:\/\//.test(baseurl) ? baseurl : location.origin + baseurl }${OPENAI_PATHNAME}`
             const authorization = JSON.parse(localStorage.getItem("authorization") ?? "{}") as LoginType 
             OPENAI_HEADERS.set('Authorization', `Bearer ${authorization?.token}`)
-            return fetch(url, {
+            return fetch(customUrl ?? url, {
                 method: 'POST',
                 headers: OPENAI_HEADERS,
                 body: JSON.stringify(body.type == 'translator' ? translator(body.message, {model: get().openai_api_model}) : explainer(body.message, {model: get().openai_api_model}))

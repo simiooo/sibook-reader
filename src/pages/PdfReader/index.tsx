@@ -31,6 +31,7 @@ import { PDFDocumentProxy } from 'pdfjs-dist';
 import html2canvas from 'html2canvas'
 import dayjs from 'dayjs';
 import ClipboardList from '../../components/ClipboardList';
+import AiResponse, { AiFeature } from '../../components/AiResponse';
 
 
 const SCALE_GAP = 0.1
@@ -214,7 +215,6 @@ export const Component = function PdfReader() {
     // PDFDocument.current = null
     setSwitchOpen(true)
     setDragableDisabled(true)
-    // container_ref.current = null
     setPdfOutline([])
     setCounter(undefined)
     setTranslatorOpen(false)
@@ -371,6 +371,48 @@ export const Component = function PdfReader() {
 
   useEventListener('wheel', scrollHandler, {
     target: pdf_document_ref
+  })
+  const [currentAiFeature, setCurrentAiFeature] = useState<AiFeature>()
+  const modal_ref = useRef<{start: () => Promise<void>}>()
+  // 模拟选择文字事件
+  useEventListener('mousedown', (e: MouseEvent) => {
+    const start = dayjs()
+    const selectHandler = (e: MouseEvent) => {
+      const end = dayjs()
+      if (end.diff(start, 'millisecond') < 500) {
+        container_ref.current?.removeEventListener('mouseup', selectHandler)
+        return
+      }
+      
+      const text = window.getSelection().toString()
+      if (text?.length > 0) {
+        if(!currentAiFeature) {
+          message.warning('请选择一种工具选择模式')
+          return 
+        }
+        Modal.info({
+          title: text,
+          content: <AiResponse
+            ref={modal_ref}
+            type={currentAiFeature}
+            content={text}
+          ></AiResponse>,
+          maskClosable: true,
+          width: '80%',
+        })
+        setTimeout(() => {
+          console.log(modal_ref)
+          modal_ref?.current?.start?.()
+        }, 200);
+        
+      }
+
+      container_ref.current?.removeEventListener('mouseup', selectHandler)
+    }
+
+    container_ref.current?.addEventListener?.('mouseup', selectHandler)
+  }, {
+    target: container_ref
   })
   useEffect(() => {
     document.addEventListener('keydown', keydownHandler);
@@ -633,48 +675,72 @@ export const Component = function PdfReader() {
                         <CameraOutlined />
                       </motion.div>
                     }
+                    {/* <Divider
+                    type="vertical"
+                    
+                    >
+
+                    </Divider> */}
                     <motion.div
-                    {...ANIMATION_STATIC}
+                      {...ANIMATION_STATIC}
                     >
                       <Tooltip
                         title={t('摘要生成')}
                       >
-                        <SnippetsOutlined />
+                        <div
+                          onClick={() => setCurrentAiFeature('digest')}
+                        ><SnippetsOutlined /></div>
+
                       </Tooltip>
                     </motion.div>
                     <motion.div
-                    {...ANIMATION_STATIC}
+                      {...ANIMATION_STATIC}
                     >
                       <Tooltip title={t('阐释并列举例子')}>
-                        <AlertOutlined />
+                        <div
+                          onClick={() => setCurrentAiFeature('example')}
+                        ><AlertOutlined /></div>
+
                       </Tooltip>
                     </motion.div>
                     <motion.div
-                    {...ANIMATION_STATIC}
+                      {...ANIMATION_STATIC}
                     >
                       <Tooltip title={t('生成练习题目')}>
-                        <FrownOutlined />
+                        <div
+                          onClick={() => setCurrentAiFeature('exercises')}
+                        ><FrownOutlined /></div>
+
                       </Tooltip>
                     </motion.div>
                     <motion.div
-                    {...ANIMATION_STATIC}
+                      {...ANIMATION_STATIC}
                     >
                       <Tooltip title={t('名词解释')}>
-                        <RadarChartOutlined />
+                        <div
+                          onClick={() => setCurrentAiFeature('explain')}
+                        ><RadarChartOutlined /></div>
+
                       </Tooltip>
                     </motion.div>
                     <motion.div
-                    {...ANIMATION_STATIC}
+                      {...ANIMATION_STATIC}
                     >
                       <Tooltip title={t('相关阅读推荐')}>
-                        <ReadOutlined />
+                        <div
+                          onClick={() => setCurrentAiFeature('recommandation')}
+                        ><ReadOutlined /></div>
+
                       </Tooltip>
                     </motion.div>
                     <motion.div
-                    {...ANIMATION_STATIC}
+                      {...ANIMATION_STATIC}
                     >
                       <Tooltip title={t('数据解读')}>
-                        <SoundOutlined />
+                        <div
+                          onClick={() => setCurrentAiFeature('dataAnalysis')}
+                        ><SoundOutlined /></div>
+
                       </Tooltip>
                     </motion.div>
                   </Space>
