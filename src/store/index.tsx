@@ -30,7 +30,7 @@ export interface BookStateType {
     openaiRequest?: <T extends Object>(body: {
         type: 'translator' | 'explainer';
         message: T;
-    } | {content: string; featureType: string}) => Promise<Response>;
+    }) => Promise<Response>;
     uploadingTaskList: UploadTask[];
     uploadingTaskList_update: (uploadingTaskList:  UploadTask[]) => void;
     uploadingTaskListRead: () => void;

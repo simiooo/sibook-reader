@@ -373,7 +373,7 @@ export const Component = function PdfReader() {
     target: pdf_document_ref
   })
   const [currentAiFeature, setCurrentAiFeature] = useState<AiFeature>()
-  const modal_ref = useRef<{start: () => Promise<void>}>()
+  const modal_ref = useRef<{ start: () => Promise<void> }>()
   // 模拟选择文字事件
   useEventListener('mousedown', (e: MouseEvent) => {
     const start = dayjs()
@@ -383,12 +383,12 @@ export const Component = function PdfReader() {
         container_ref.current?.removeEventListener('mouseup', selectHandler)
         return
       }
-      
+
       const text = window.getSelection().toString()
       if (text?.length > 0) {
-        if(!currentAiFeature) {
+        if (!currentAiFeature) {
           message.warning('请选择一种工具选择模式')
-          return 
+          return
         }
         Modal.info({
           title: text,
@@ -404,7 +404,7 @@ export const Component = function PdfReader() {
           console.log(modal_ref)
           modal_ref?.current?.start?.()
         }, 200);
-        
+
       }
 
       container_ref.current?.removeEventListener('mouseup', selectHandler)
@@ -466,6 +466,41 @@ export const Component = function PdfReader() {
   const renderListRowHeight = useMemo(() => {
     return (renderPageHeight + 10) * ThrottleScale
   }, [renderPageHeight, ThrottleScale])
+
+  const renderAiFeature = useMemo(() => {
+    return [
+      {
+        "title": "摘要生成",
+        "key": "digest",
+        icon: SnippetsOutlined,
+      },
+      {
+        "title": "阐释并列举例子",
+        "key": "example",
+        icon: AlertOutlined,
+      },
+      {
+        "title": "生成练习题目",
+        "key": "exercises",
+        icon: FrownOutlined,
+      },
+      {
+        "title": "名词解释",
+        "key": "explain",
+        icon: RadarChartOutlined,
+      },
+      {
+        "title": "相关阅读推荐",
+        "key": "recommandation",
+        icon: ReadOutlined,
+      },
+      {
+        "title": "数据解读",
+        "key": "dataAnalysis",
+        icon: SoundOutlined,
+      }
+    ] as const
+  }, [])
 
   return (
     <Spin
@@ -651,7 +686,8 @@ export const Component = function PdfReader() {
                       title={t("放大")}
                       {...ANIMATION_STATIC}
                       onClick={scaleUp}
-                    ><PlusCircleOutlined /></motion.div>
+                    ><PlusCircleOutlined
+                      /></motion.div>
                     <motion.div
                       title={t("缩小")}
                       {...ANIMATION_STATIC}
@@ -681,68 +717,28 @@ export const Component = function PdfReader() {
                     >
 
                     </Divider> */}
-                    <motion.div
-                      {...ANIMATION_STATIC}
-                    >
-                      <Tooltip
-                        title={t('摘要生成')}
-                      >
-                        <div
-                          onClick={() => setCurrentAiFeature('digest')}
-                        ><SnippetsOutlined /></div>
+                    {
+                      renderAiFeature.map(el => (
+                        <motion.div
+                          key={el.key}
+                          {...ANIMATION_STATIC}
+                        >
+                          <Tooltip
+                            title={t(el.title)}
+                          >
+                            <div
+                              onClick={() => setCurrentAiFeature(el.key)}
+                            ><el.icon
+                            style={{
+                              color: el.key === currentAiFeature ? '#80aa51' : undefined
+                            }}
+                              /></div>
 
-                      </Tooltip>
-                    </motion.div>
-                    <motion.div
-                      {...ANIMATION_STATIC}
-                    >
-                      <Tooltip title={t('阐释并列举例子')}>
-                        <div
-                          onClick={() => setCurrentAiFeature('example')}
-                        ><AlertOutlined /></div>
+                          </Tooltip>
+                        </motion.div>
+                      ))
+                    }
 
-                      </Tooltip>
-                    </motion.div>
-                    <motion.div
-                      {...ANIMATION_STATIC}
-                    >
-                      <Tooltip title={t('生成练习题目')}>
-                        <div
-                          onClick={() => setCurrentAiFeature('exercises')}
-                        ><FrownOutlined /></div>
-
-                      </Tooltip>
-                    </motion.div>
-                    <motion.div
-                      {...ANIMATION_STATIC}
-                    >
-                      <Tooltip title={t('名词解释')}>
-                        <div
-                          onClick={() => setCurrentAiFeature('explain')}
-                        ><RadarChartOutlined /></div>
-
-                      </Tooltip>
-                    </motion.div>
-                    <motion.div
-                      {...ANIMATION_STATIC}
-                    >
-                      <Tooltip title={t('相关阅读推荐')}>
-                        <div
-                          onClick={() => setCurrentAiFeature('recommandation')}
-                        ><ReadOutlined /></div>
-
-                      </Tooltip>
-                    </motion.div>
-                    <motion.div
-                      {...ANIMATION_STATIC}
-                    >
-                      <Tooltip title={t('数据解读')}>
-                        <div
-                          onClick={() => setCurrentAiFeature('dataAnalysis')}
-                        ><SoundOutlined /></div>
-
-                      </Tooltip>
-                    </motion.div>
                   </Space>
                 </div>
                 <Row
