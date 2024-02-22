@@ -75,9 +75,9 @@ const AiResponse = React.forwardRef(function (p: AiResponseProps, ref) {
         // refreshDeps: [],
         manual: true,
     })
-    // ref = React.createRef<null | {
-    //     start: () => Promise<void>,
-    // }>()
+    ref = React.createRef<null | {
+        start: () => Promise<void>,
+    }>()
     ref.current = { start: runAsync }
     return (
         <Spin
