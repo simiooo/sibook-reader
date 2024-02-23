@@ -7,7 +7,7 @@ import { useBookState } from '../../store';
 import { BookItems } from '../../dbs/db';
 import { useNavigate, useParams } from 'react-router-dom';
 import Draggable from 'react-draggable';
-import { AlertOutlined, CameraOutlined, FrownOutlined, HomeOutlined, LeftOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined, RadarChartOutlined, ReadOutlined, RightOutlined, SnippetsOutlined, SoundOutlined } from '@ant-design/icons';
+import { AlertOutlined, AlignCenterOutlined, CameraOutlined, FrownOutlined, HomeOutlined, LeftOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined, RadarChartOutlined, ReadOutlined, RightOutlined, SnippetsOutlined, SoundOutlined } from '@ant-design/icons';
 import style from './index.module.css'
 const stylecss = style
 import { pdfjs } from 'react-pdf';
@@ -387,7 +387,7 @@ export const Component = function PdfReader() {
       const text = window.getSelection().toString()
       if (text?.length > 0) {
         if (!currentAiFeature) {
-          message.warning('请选择一种工具选择模式')
+          // message.warning('请选择一种工具选择模式')
           return
         }
         Modal.info({
@@ -469,6 +469,11 @@ export const Component = function PdfReader() {
 
   const renderAiFeature = useMemo(() => {
     return [
+      {
+        "title": "普通模式",
+        "key": undefined,
+        icon: AlignCenterOutlined,
+      },,
       {
         "title": "摘要生成",
         "key": "digest",
