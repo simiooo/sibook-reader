@@ -10,7 +10,7 @@ import tailwindcss from './default.css?url'
 import { BookItems } from '../../dbs/db'
 import { Breadcrumb } from 'antd'
 import { useNavigate } from 'react-router-dom'
-import { CloseOutlined, HomeOutlined } from '@ant-design/icons'
+import { AlertOutlined, AlignCenterOutlined, CloseOutlined, FrownOutlined, HomeOutlined, RadarChartOutlined, ReadOutlined, SnippetsOutlined, SoundOutlined } from '@ant-design/icons'
 import { createPortal } from 'react-dom'
 import { Slider } from 'antd'
 import { useEventListener, useResponsive, useThrottleFn } from 'ahooks'
@@ -25,6 +25,7 @@ import { motion } from 'framer-motion'
 import Draggable from 'react-draggable'
 import { requestor } from '../../utils/requestor'
 import type { Book as BookInfo } from '../../store/book.type'
+import AiFeatureMenu from '../../components/AiFeatureMenu'
 
 export const Component = function Reader() {
   const db_instance = useBookState(state => state.db_instance)
@@ -49,6 +50,8 @@ export const Component = function Reader() {
   const [imgSrc, setImgSrc] = useState<string>()
   const [imgContainerOpen, setImgContainerOpen] = useState<boolean>(false)
   const [imgScale, setImgScale] = useState<number>(1)
+
+
 
   const { run: imgScaleHandler } = useThrottleFn((e: WheelEvent) => {
     if (!imgContainerOpen) {
@@ -267,7 +270,6 @@ export const Component = function Reader() {
     }
     const book: Book | undefined = undefined
     const rendition: Rendition | undefined = undefined
-
     init(book, rendition)
     return () => {
       rendition?.destroy?.()
@@ -399,6 +401,14 @@ export const Component = function Reader() {
               </Col>
                 : undefined
               }
+              <div
+              className={style.float_menu}
+              >
+                <AiFeatureMenu
+                container_ref={container_ref}
+                customEventListener={rendition}
+                ></AiFeatureMenu>
+              </div>
               <Col
                 flex="1 1"
               >

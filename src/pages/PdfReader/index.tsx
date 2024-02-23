@@ -32,6 +32,7 @@ import html2canvas from 'html2canvas'
 import dayjs from 'dayjs';
 import ClipboardList from '../../components/ClipboardList';
 import AiResponse, { AiFeature } from '../../components/AiResponse';
+import AiFeatureMenu from '../../components/AiFeatureMenu';
 
 
 const SCALE_GAP = 0.1
@@ -373,47 +374,48 @@ export const Component = function PdfReader() {
     target: pdf_document_ref
   })
   const [currentAiFeature, setCurrentAiFeature] = useState<AiFeature>()
-  const modal_ref = useRef<{ start: () => Promise<void> }>()
-  // 模拟选择文字事件
-  useEventListener('mousedown', (e: MouseEvent) => {
-    const start = dayjs()
-    const selectHandler = (e: MouseEvent) => {
-      const end = dayjs()
-      if (end.diff(start, 'millisecond') < 500) {
-        container_ref.current?.removeEventListener('mouseup', selectHandler)
-        return
-      }
+  
+  // const modal_ref = useRef<{ start: () => Promise<void> }>()
+  // // 模拟选择文字事件
+  // useEventListener('mousedown', (e: MouseEvent) => {
+  //   const start = dayjs()
+  //   const selectHandler = (e: MouseEvent) => {
+  //     const end = dayjs()
+  //     if (end.diff(start, 'millisecond') < 500) {
+  //       container_ref.current?.removeEventListener('mouseup', selectHandler)
+  //       return
+  //     }
 
-      const text = window.getSelection().toString()
-      if (text?.length > 0) {
-        if (!currentAiFeature) {
-          // message.warning('请选择一种工具选择模式')
-          return
-        }
-        Modal.info({
-          title: text,
-          content: <AiResponse
-            ref={modal_ref}
-            type={currentAiFeature}
-            content={text}
-          ></AiResponse>,
-          maskClosable: true,
-          width: '80%',
-        })
-        setTimeout(() => {
-          console.log(modal_ref)
-          modal_ref?.current?.start?.()
-        }, 200);
+  //     const text = window.getSelection().toString()
+  //     if (text?.length > 0) {
+  //       if (!currentAiFeature) {
+  //         // message.warning('请选择一种工具选择模式')
+  //         return
+  //       }
+  //       Modal.info({
+  //         title: text,
+  //         content: <AiResponse
+  //           ref={modal_ref}
+  //           type={currentAiFeature}
+  //           content={text}
+  //         ></AiResponse>,
+  //         maskClosable: true,
+  //         width: '80%',
+  //       })
+  //       setTimeout(() => {
+  //         console.log(modal_ref)
+  //         modal_ref?.current?.start?.()
+  //       }, 200);
 
-      }
+  //     }
 
-      container_ref.current?.removeEventListener('mouseup', selectHandler)
-    }
+  //     container_ref.current?.removeEventListener('mouseup', selectHandler)
+  //   }
 
-    container_ref.current?.addEventListener?.('mouseup', selectHandler)
-  }, {
-    target: container_ref
-  })
+  //   container_ref.current?.addEventListener?.('mouseup', selectHandler)
+  // }, {
+  //   target: container_ref
+  // })
   useEffect(() => {
     document.addEventListener('keydown', keydownHandler);
     document.addEventListener('wheel', scrollHandlerForDocument, { passive: false })
@@ -467,45 +469,45 @@ export const Component = function PdfReader() {
     return (renderPageHeight + 10) * ThrottleScale
   }, [renderPageHeight, ThrottleScale])
 
-  const renderAiFeature = useMemo(() => {
-    return [
-      {
-        "title": "普通模式",
-        "key": undefined,
-        icon: AlignCenterOutlined,
-      },,
-      {
-        "title": "摘要生成",
-        "key": "digest",
-        icon: SnippetsOutlined,
-      },
-      {
-        "title": "阐释并列举例子",
-        "key": "example",
-        icon: AlertOutlined,
-      },
-      {
-        "title": "生成练习题目",
-        "key": "exercises",
-        icon: FrownOutlined,
-      },
-      {
-        "title": "名词解释",
-        "key": "explain",
-        icon: RadarChartOutlined,
-      },
-      {
-        "title": "相关阅读推荐",
-        "key": "recommandation",
-        icon: ReadOutlined,
-      },
-      {
-        "title": "数据解读",
-        "key": "dataAnalysis",
-        icon: SoundOutlined,
-      }
-    ] as const
-  }, [])
+  // const renderAiFeature = useMemo(() => {
+  //   return [
+  //     {
+  //       "title": "普通模式",
+  //       "key": undefined,
+  //       icon: AlignCenterOutlined,
+  //     },,
+  //     {
+  //       "title": "摘要生成",
+  //       "key": "digest",
+  //       icon: SnippetsOutlined,
+  //     },
+  //     {
+  //       "title": "阐释并列举例子",
+  //       "key": "example",
+  //       icon: AlertOutlined,
+  //     },
+  //     {
+  //       "title": "生成练习题目",
+  //       "key": "exercises",
+  //       icon: FrownOutlined,
+  //     },
+  //     {
+  //       "title": "名词解释",
+  //       "key": "explain",
+  //       icon: RadarChartOutlined,
+  //     },
+  //     {
+  //       "title": "相关阅读推荐",
+  //       "key": "recommandation",
+  //       icon: ReadOutlined,
+  //     },
+  //     {
+  //       "title": "数据解读",
+  //       "key": "dataAnalysis",
+  //       icon: SoundOutlined,
+  //     }
+  //   ] as const
+  // }, [])
 
   return (
     <Spin
@@ -722,7 +724,10 @@ export const Component = function PdfReader() {
                     >
 
                     </Divider> */}
-                    {
+                    <AiFeatureMenu
+                    container_ref={container_ref}
+                    ></AiFeatureMenu>
+                    {/* {
                       renderAiFeature.map(el => (
                         <motion.div
                           key={el.key}
@@ -742,7 +747,7 @@ export const Component = function PdfReader() {
                           </Tooltip>
                         </motion.div>
                       ))
-                    }
+                    } */}
 
                   </Space>
                 </div>

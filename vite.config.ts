@@ -19,13 +19,11 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://squirrelsi.top",
-        // rewrite: (path) => path.replace(/^\/api/, ""),
+        target: "http://localhost:8080",
+        rewrite: (path) => path.replace(/^\/api/, ""),
         bypass: (req, res) => {
-          // req.headers.host = "squirrelsi.top";
-          // req.headers.referer = "https://squirrelsi.top";
-          delete req.headers.host;
-          delete req.headers.referer;
+          // delete req.headers.host;
+          // delete req.headers.referer;
         }
       },
     }

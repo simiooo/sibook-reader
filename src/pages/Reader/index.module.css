@@ -1,15 +1,33 @@
 .container {
     padding: 0.5rem 1.5rem 0rem;
 
+    .float_menu {
+        position: absolute;
+        right: 3.9rem;
+        top: -1rem;
+        background-color: #fff;
+        border-radius: 10px;
+        border: 2px solid #b2b2b2;
+        overflow: hidden;
+        padding: .35rem .6rem;
+        z-index: 1;
+        &:hover {
+            border: 2px solid #222222;
+        }
+    }
+
     .toolbar {}
-    .menu_container{
+
+    .menu_container {
         height: calc(100vh - 20px - 6.7rem);
         overflow: auto;
         overflow-x: hidden;
-        &::-webkit-scrollbar{
+
+        &::-webkit-scrollbar {
             display: none;
         }
     }
+
     .article {
         height: calc(90vh - 54px);
         width: 100%;
@@ -24,9 +42,10 @@
     right: 10vw;
     left: 10vw;
 }
-.img_container{
+
+.img_container {
     overflow: hidden;
-    background-color: rgba(0,0,0,0.42);
+    background-color: rgba(0, 0, 0, 0.42);
     box-sizing: border-box;
     width: 100vw;
     padding: 1rem 1.5rem;
