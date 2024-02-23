@@ -143,8 +143,9 @@ export const Component = function Island() {
 
     }, {
         manual: true,
-        onSuccess: () => {
-            getSelfIslands()
+        onSuccess: async () => {
+            await getSelfIslands()
+            
         }
     })
 
@@ -257,7 +258,7 @@ export const Component = function Island() {
                                 message={t('请选择岛屿')}
                                 ></Alert> : undefined}
                                 <Button
-                                disabled={!currentIsland}
+                                // disabled={!currentIsland}
                                     onClick={() => setIslandCreateOpen(true)}
                                 >{t('新建岛屿')}</Button>
                                 <Button
