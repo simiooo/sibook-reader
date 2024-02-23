@@ -18,7 +18,6 @@ const AiResponse = React.forwardRef(function (p: AiResponseProps, ref) {
     const [res, setRes] = useState<string[]>([])
     const [error, setError] = useState<Error | undefined>()
     const renderContent = useMemo(() => {
-        console.log(res.join(''))
         return ((marked.parse(res?.join('') ?? '')))
     }, [res])
     const { runAsync, loading } = useRequest(async () => {
