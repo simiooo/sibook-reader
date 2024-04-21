@@ -1,109 +1,83 @@
+
 .container {
-  padding: 0.5rem 1.5rem 0rem;
-  /* --container-height: ; */
-  .menu_container {
-    height: calc(92vh - 20px - 54px);
-    overflow: auto;
-    overflow-x: hidden;
-
-    &::-webkit-scrollbar {
-      width: 0.5rem;
-      height: 0.5rem;
-    }
-    &::-webkit-scrollbar-thumb {
-      background-color: #d2d2d2;
-      border-radius: 0.25rem;
-    }
+  --content-max-height: calc(100vh - 38px);
+  height:  calc(100vh - 38px);
+  width: 100vw;
+  &::-webkit-scrollbar {
+    display: none;
   }
-
-  .pdf_container {
-    height: calc(100vh - 6.7rem);
-    width: 100%;
-    /* overflow: auto; */
-    overflow: hidden;
-    background-color: #f2f2f2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    position: relative;
-    border: 2px solid transparent;
-    .float_tooltip, .scale_controller{
-      position: absolute;
-      right: 1rem;
-      top: 1rem;
-      background-color: #fff;
-      border-radius: 10px;
-      border: 2px solid #b2b2b2;
-      overflow: hidden;
-      padding: .35rem .6rem;
-      &:hover{
-        border: 2px solid #222222;
-      }
-    }
-    .pdf_document {
-      width: 100%;
-      background-color: transparent;
-      .list_container{
-        background-color: transparent;
-        &::-webkit-scrollbar{
-          width: 0.5rem;
-          height: 0.5rem;
-        }
-        &::-webkit-scrollbar-thumb{
-          background-color: #b2b2b2;
-          border-radius: 0.25rem;
-        }
-      }
-    }
-    .scale_controller{
-      left: 1rem;
-      top: 1rem;
-      width: 19rem;
-      border: 2px solid #222222;
-    }
-
-    .outline {
+  .menuContainer{
+    height: var(--content-max-height);
+    overflow-x: hidden;
+    overflow-y: auto;
+    &::-webkit-scrollbar {
       display: none;
     }
   }
-  .pddf_pages_si{
-    /* border: 2px solid transparent; */
-  }
-  .pdf_container_selecting{
-    /* border: 2px solid #222; */
-    background-color: #b2b2b2;
-    
-    .pdf_page_selecting{
-      border: 2px solid transparent;
-      &:hover{
-        border: 2px solid #222;
-        /* box-shadow: 2px 6px 4px 0px #222; */
-      }
+  .viewDrag {
+    height: var(--content-max-height);
+    width: 2px;
+    position: absolute;
+    z-index: 1;
+    /* box-sizing: content-box; */
+    background-color: rgba(0, 0, 0, 0.24);
+    &::before {
+      content: " ";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 6px;
+      background-color: black;
+      position: relative;
+      top: -12px;
+      left: -5px;
     }
-    
+    &:hover {
+      background-color: black;
+      cursor: grab;
+      width: 2px;
+      /* border-right: 6px solid balck; */
+    }
   }
-
-  .clipboard_switch{
-    background-color: transparent;
-    transition: .25s ease;
-    width: 1.4rem;
+  .reader{
+    background-color: #f2f2f2;
+    height: 100%;
     display: flex;
     justify-content: center;
-    align-items: center;
-    border-radius: 8px 0px 0px 8px;
-    &:hover{
-      background-color: #f2f2f2;
+    align-items: flex-start;
+    overflow: hidden;
+    .pageContainer{
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      align-items:center;
+      flex-direction: column;
+      background: transparent;
+    }
+    .pageDivider{
+      height: 12px;
+    }
+    .canvasContainer{
+      box-shadow: 0 0 4px 2px #e2e2e2;
+      border-radius: 3px;
+      overflow: hidden;
+      &:focus{
+        border: 1px solid #222;
+      }
+    }
+    .textLayerContainer{
+      position: relative;
+    }
+    .reader_tooltip{
+      display: inline-flex;
+      position: absolute;
+      right: 2rem;
+      top: 1rem;
+      .page{
+        /* background-color: #fff; */
+        z-index: 1;
+        width: 5.6rem;
+      }
     }
   }
-  
-
-}
-
-.reader_progress {
-  width: 80vw;
-  position: absolute;
-  bottom: 0rem;
-  right: 10vw;
-  left: 10vw;
 }

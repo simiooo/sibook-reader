@@ -1,880 +1,260 @@
-import { Col, Menu, Row, Breadcrumb, Spin, Result, Slider, message, Button, Space, Switch, Divider, Input, InputNumber, Modal, Badge, Tooltip } from 'antd'
-import { Document, Outline, Page } from 'react-pdf';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-import { useBookState } from '../../store';
-import { BookItems } from '../../dbs/db';
-import { useNavigate, useParams } from 'react-router-dom';
-import Draggable from 'react-draggable';
-import { AlertOutlined, AlignCenterOutlined, CameraOutlined, FrownOutlined, HomeOutlined, LeftOutlined, LoadingOutlined, MinusCircleOutlined, PlusCircleOutlined, RadarChartOutlined, ReadOutlined, RightOutlined, SnippetsOutlined, SoundOutlined } from '@ant-design/icons';
-import style from './index.module.css'
-const stylecss = style
-import { pdfjs } from 'react-pdf';
-import worker from 'react-pdf/'
-import { useDebounce, useDebounceFn, useEventListener, useKeyPress, useMap, usePrevious, useResponsive, useSize, useThrottle, useThrottleFn } from 'ahooks';
-import { createPortal } from 'react-dom';
-import { ItemType, MenuItemType } from 'antd/es/menu/hooks/useItems';
-import List from 'react-virtualized/dist/commonjs/List';
-
-// import FloatAiMenu from '../../components/FloatAiMenu';
-import { PDFPageProxy } from 'pdfjs-dist/types/web/interfaces';
-import { motion } from 'framer-motion';
-import Cropper, { ReactCropperElement } from "react-cropper";
-import "cropperjs/dist/cropper.css";
-import { ImgToText } from '../../utils/imgToText';
-import { readFileAsArrayBuffer } from '../../dbs/createBook';
-import { useTranslation } from 'react-i18next';
-import { usePhone } from '../../utils/usePhone';
-import { usePagination } from './usePagination';
-import { PDFDocumentProxy } from 'pdfjs-dist';
-import html2canvas from 'html2canvas'
-import dayjs from 'dayjs';
-import ClipboardList from '../../components/ClipboardList';
-import AiResponse, { AiFeature } from '../../components/AiResponse';
-import AiFeatureMenu from '../../components/AiFeatureMenu';
-
-
-const SCALE_GAP = 0.1
+import { Col, Divider, Form, Input, Menu, Row, Spin } from 'antd'
+import React, { useEffect, useRef, useState } from 'react'
+import styles from './index.module.css'
+import * as pdfjs from 'pdfjs-dist'
+import 'pdfjs-dist/web/pdf_viewer.css'
+import { VList, VListHandle } from "virtua";
+import { useLocation, useParams } from 'react-router-dom'
+import panzoomify, { PanZoom } from 'panzoomify'
+import { useDebounceFn, useDrag, useLongPress, useRequest, useSize } from 'ahooks'
+import { useBookState } from '../../store'
 export const ANIMATION_STATIC = {
-  whileTap: { scale: 0.75 },
-  whileHover: { scale: 1.35 },
-  transition: { type: "spring", stiffness: 400, damping: 17 },
+    whileTap: { scale: 0.75 },
+    whileHover: { scale: 1.35 },
+    transition: { type: "spring", stiffness: 400, damping: 17 },
 }
-
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
-
-const pdfToMenuItemHandler = async (pdfItems?: any[], pdfDocument?: PDFDocumentProxy, parent?: any) => {
-  return Promise.all(pdfItems?.map(async ele => {
-    let key
-    try {
-      if (ele.dest instanceof Array) {
-        key = await pdfDocument?.getPageIndex?.(ele.dest?.find?.(ele2 => typeof ele2 === 'object' && Object.keys(ele2).some(ele3 => ['gen', 'num'].includes(ele3))))
-      } else {
-        const detail = (await pdfDocument?.getDestination(ele.dest))
-        key = await pdfDocument?.getPageIndex?.(detail?.[0])
-      }
-    } catch (error) {
-      console.log(ele)
-      console.log(error)
-    }
-    return {
-      label: ele.title,
-      key: `${key},${ele.title},${parent?.key}`,
-      children: ele.items?.length > 0 ? await pdfToMenuItemHandler(ele.items, pdfDocument, ele) : undefined
-    }
-  }))
-}
-
-export function mennuTarvesal(items: ItemType<MenuItemType>[], cb: (item: ItemType<MenuItemType>) => void) {
-  for (const item of items) {
-    cb(item)
-    if ((item as MenuItemType & { children?: ItemType<MenuItemType>[] }).children?.length > 0) {
-      mennuTarvesal((item as MenuItemType & { children?: ItemType<MenuItemType>[] }).children, cb)
-    }
-  }
-}
-
-export function getBookSeletedMenuKey(menu: ItemType<MenuItemType>[], target) {
-  let start: number = -1
-  let start_ref: ItemType<MenuItemType> = null
-  let tail: number = -1
-  let tail_ref: ItemType<MenuItemType> = null
-  mennuTarvesal(menu, (item) => {
-    if (typeof item.key === 'string') {
-      const temp = item.key.split(',').shift()
-      const thisPage = Number(temp)
-      if (target > thisPage) {
-        start = thisPage
-        start_ref = item
-        tail = -1
-      } else if (tail === -1 && target < thisPage && target > start) {
-        tail = thisPage
-        tail_ref = item
-      }
-    }
-  })
-  if (tail >= start && start != -1 && typeof start_ref.key === 'string') {
-    return [start_ref.key]
-  }
-  return []
-}
-
-
+type ElementType<T> = T extends (infer U)[] ? U : T;
+type OutlineType = ElementType<Awaited<ReturnType<pdfjs.PDFDocumentProxy["getOutline"]>>>
+import { usePdfBook } from './usePdfBook'
+import { ItemType } from 'antd/es/menu/hooks/useItems'
+import { RenderTask } from 'pdfjs-dist';
 export const Component = function PdfReader() {
-  const db_instance = useBookState(state => state.db_instance)
-  const [bookInfo, setBookInfo] = useState<BookItems | undefined>()
-  const list_ref = useRef(null)
-  const pdf_document_ref = useRef<HTMLDivElement>()
-  const PDFDocument = useRef<PDFDocumentProxy>(null)
-  const { t } = useTranslation()
-  const [switchOpen, setSwitchOpen] = useState<boolean>(true)
-  const navigate = useNavigate()
-  const [dragableDisabled, setDragableDisabled] = useState<boolean>(true)
-  const container_ref = useRef(null)
-  const [pdfOutline, setPdfOutline] = useState<MenuItemType[]>([])
-  const [counter, setCounter] = useState<number>(0)
-  const preCounter = usePrevious(counter)
-  const [isScaling, setIsScaling] = useState<boolean>()
-  const [translatorOpen, setTranslatorOpen] = useState<boolean>(false)
-  const [explainerOpen, setExplainerOpen] = useState<boolean>(false)
-  const [copiedText, setCopiedText] = useState<string>()
-  const [maxWidthPage, setMaxWidthPage] = useState<PDFPageProxy>()
-  const [loading, setLoading] = useState<boolean>(false)
-  const [cropOpen, setCropOpen] = useState<boolean>(false)
-  const [screenShot, setScreenShot] = useState<string>()
-  const cropRef = useRef()
-  const [isPageSelecting, setIsPageSelecting] = useState<boolean>(false)
-  const [resultImg, setResultImg] = useState<Uint8Array | null>()
-  const [isRecognizing, setIsRecognizing] = useState<boolean>(false)
+    const [book, pdfDocument, meta, loading] = usePdfBook()
+    const [dividerLeft, setDividerLeft] = useState<number>(300)
+    const zoomInstance = useRef<PanZoom>(null)
+    const params = useParams()
 
-  const [clipboardListOpen, setClipboardListOpen] = useState<boolean>(false)
-  const [ratio, setRatio] = useState<number>()
+    const dividerRef = useRef<HTMLDivElement>(null)
+    const listRef = useRef<HTMLDivElement>(null)
+    const [canvasScale, setCanvasScale] = useState(1)
+    useEffect(() => {
+        listRef.current.style.setProperty('--scale-factor', '1')
+        zoomInstance.current?.resume?.()
+    }, [canvasScale])
+    const { run: canvasScaleHandler } = useDebounceFn((e) => {
+        setCanvasScale(e?.getTransform?.()?.scale ?? 1)
+    }, {
+        wait: 200,
+    })
+    useEffect(() => {
+        if(!zoomInstance) {
+            return
+        }
+        zoomInstance.current = panzoomify(listRef.current, {
+            beforeWheel: function (e) {
+                const shouldIgnore = !e.ctrlKey;
+                return shouldIgnore;
+            },
+            beforeMouseDown: function (e) {
+                const shouldIgnore = !e.ctrlKey;
+                return shouldIgnore;
 
-  const size = useSize(container_ref);
-  const { book_id } = useParams()
-  const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([])
-  const [menuOpenKeys, setMenuOpenKeys] = useState<string[]>([])
-  const onPageLoadSuccess = useCallback((e: PDFPageProxy) => {
-    if (!maxWidthPage) {
-      setMaxWidthPage(e)
-    }
-    if ((e as any)?.originalWidth > (maxWidthPage as any)?.originalWidth) {
-      setMaxWidthPage(e)
-    }
-  }, [maxWidthPage])
+            },
+            zoomDoubleClickSpeed: 1,
+            onDoubleClick: function(e) {
+                return false; 
+              }
+        })
+        zoomInstance.current.on('zoom', canvasScaleHandler)
+    }, [])
 
-  const [ocrPending, setOcrPending] = useState<boolean>(false)
+    useDrag(undefined, dividerRef, {
+        onDragEnd(event) {
+            setDividerLeft(event.clientX)
+        },
+    })
 
-  const [blob, setBlob] = useState<{ data: Uint8Array }>()
-  const [numPages, setNumPages] = useState<number>(0);
+    // 避免pdfjs重复调用render方法
+    const pageRenderTask = useRef<Map<CanvasRenderingContext2D, { renderTask: RenderTask }>>(new Map())
+    useEffect(() => {
+        pageRenderTask.current.clear()
+    }, [params])
+    const [form] = Form.useForm()
 
-  async function onDocumentLoadSuccess({ numPages, ...others }: { numPages: number, _transport: any }) {
-    PDFDocument.current = await others._transport.loadingTask.promise
-    setPdfOutline(await pdfToMenuItemHandler(await PDFDocument.current.getOutline() ?? [], PDFDocument.current))
-    setNumPages(numPages);
-  }
+    // 生成 pdf 页对象 引用
+    const { data: pages } = useRequest(async () => {
+        if (!meta?.numPages) return
+        const pages = (await Promise.allSettled(
+            new Array(meta.numPages).fill(0).map((el, index) => pdfDocument.getPage(index + 1))
+        )).map(el => 'value' in el ? el.value : undefined)
+        return pages
+    }, {
+        refreshDeps: [meta?.numPages]
+    })
 
-  const {
-    scaleDown,
-    scaleUp,
-    scale,
-    pageNumber,
-    setPageNumber,
-    paginationInit,
-  } = usePagination({
-    numPages,
-    book_id,
-  })
-  const ThrottleScale = useThrottle(scale, { wait: 80 })
-
-  // 修复缩放时定位
-  const scaleFixer = useCallback(() => {
-    if (list_ref.current) {
-      const top = ratio * renderListRowHeight * numPages
-      list_ref.current.scrollToPosition(top)
-    }
-  }, [ThrottleScale])
-  useEffect(() => {
-    scaleFixer()
-  }, [ThrottleScale])
-
-  const { run: resizeHandler } = useThrottleFn((e: UIEvent) => {
-    console.log(e)
-    if (list_ref.current && ratio) {
-      const top = ratio * renderListRowHeight * numPages
-      list_ref.current.scrollToPosition(top)
-    }
-  }, {
-    wait: 50
-  })
-  useEventListener('resize', resizeHandler, {
-    target: window
-  })
-  // useEventListener('visibilitychange', resizeHandler, {
-  //   target: window
-  // })
-
-  useEffect(() => {
-    setCounter(pageNumber)
-  }, [pageNumber])
-  const renderPageHeight = useMemo(() => {
-    return ThrottleScale * ((size?.height ?? 20) - 20)
-  }, [size, ThrottleScale])
-
-  const destroy = useCallback(() => {
-    setBookInfo(undefined)
-    // list_ref.current = null
-    // pdf_document_ref.current = null
-    if (PDFDocument.current) {
-      PDFDocument.current.destroy()
-    }
-    // PDFDocument.current = null
-    setSwitchOpen(true)
-    setDragableDisabled(true)
-    setPdfOutline([])
-    setCounter(undefined)
-    setTranslatorOpen(false)
-    setExplainerOpen(false)
-    setCopiedText(undefined)
-    setMaxWidthPage(undefined)
-    setCropOpen(false)
-    setScreenShot(undefined)
-    // cropRef.current = null
-    setIsRecognizing(false)
-    setMenuSelectedKeys([])
-    setMenuOpenKeys([])
-    setBlob(undefined)
-    setNumPages(0)
-  }, [])
-
-  const init = useCallback(async () => {
-    try {
-      setLoading(true)
-      destroy()
-      await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
-        const book_info = await db_instance.book_items.where('hash').equals(book_id).first()
-        const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
-        setBlob({ data: book_blob.blob })
-        setBookInfo(book_info)
-      })
-      paginationInit()
-    } catch (error) {
-
-    } finally {
-      setLoading(false)
-    }
-
-  }, [book_id])
-
-  const { clipboardList, clipboardList_update } = useBookState(state => state)
-
-  const copyHandler = useCallback(async () => {
-    try {
-      const res = await window.navigator.clipboard.readText()
-      if (!clipboardList.find(ele => ele.content === res)) {
-        clipboardList_update([{
-          create_date: +dayjs(),
-          content: res,
-          read: false,
-        }, ...clipboardList])
-      }
-      message.success(t('复制成功'))
-      setCopiedText(res)
-    } catch (error) {
-      console.error(error instanceof Error ? error.message : error)
-      message.error(t('粘贴失败'))
-    }
-  }, [clipboardList])
-
-  useEventListener('copy', copyHandler)
-
-  const shotCompleteHandler = useCallback(async () => {
-    try {
-      setIsRecognizing(true)
-      const text = await ImgToText(resultImg)
-      await navigator.clipboard.writeText(text)
-      message.success(t('读取文字成功，请在ai辅助功能里使用'))
-      await copyHandler()
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : error)
-    } finally {
-      setIsRecognizing(false)
-      setCropOpen(false)
-      setIsPageSelecting(false)
-      setScreenShot(null)
-      setIsPageSelecting(false)
-      setResultImg(null)
-    }
-
-  }, [resultImg])
-
-  useKeyPress('alt.a', () => {
-    setScreenShot(null)
-    setIsPageSelecting(true)
-  })
-
-  const keydownHandler = useCallback((event) => {
-    if (event.ctrlKey) {
-      if (event.keyCode === 187 || event.key === '+') {
-        event.preventDefault();
-        scaleUp()
-
-      } else if (event.keyCode === 189 || event.key === '-') {
-        event.preventDefault();
-        scaleDown()
-      }
-    }
-  }, [ThrottleScale, pageNumber, numPages])
-
-  const { isPhone } = usePhone()
-
-  const dragHandler = useCallback((e: KeyboardEvent | MouseEvent) => {
-    switch (e.type) {
-      case 'keydown':
-        setDragableDisabled(false)
-        break;
-      case 'keyup':
-        setDragableDisabled(true)
-        break
-    }
-  }, [ThrottleScale, pageNumber, numPages])
-
-  useKeyPress('ctrl', dragHandler, {
-    events: ['keydown', 'keyup']
-  })
-
-  const scrollHandlerForDocument = (e) => {
-    if (e?.ctrlKey) {
-      e.preventDefault()
-    }
-  }
-
-  const scrollHandler = useCallback((event) => {
-    if (event.ctrlKey) {
-      event.preventDefault();
-      if (event.deltaY < 0) {
-        scaleUp()
-      } else {
-        scaleDown()
-      }
-    }
-  }, [ThrottleScale, pageNumber])
-
-  const { run: scrollToView } = useDebounceFn((number?: number) => {
-    list_ref.current?.scrollToRow(number ?? pageNumber)
-  }, {
-    wait: 100,
-  })
-  useEffect(scrollToView, [pageNumber, numPages])
-
-  useEffect(() => {
-    if (!book_id) {
-      return
-    }
-    setMenuSelectedKeys(getBookSeletedMenuKey(pdfOutline, counter))
+    const size = useSize(listRef)
 
 
-  }, [counter])
+    return (
+        <Spin
+            spinning={Object?.values(loading ?? {})?.some?.(loading => loading)}
+        ><div
+            className={styles.container}
+        >
+                <Row
+                    wrap={false}
 
-  useEffect(() => {
-    if (!preCounter || !counter) {
-      return
-    }
-    const pageNum = String(counter || 1)
-    localStorage.setItem(`book_id:${book_id}`, pageNum)
-  }, [counter])
-
-
-  useEventListener('wheel', scrollHandler, {
-    target: pdf_document_ref
-  })
-  const [currentAiFeature, setCurrentAiFeature] = useState<AiFeature>()
-  
-  // const modal_ref = useRef<{ start: () => Promise<void> }>()
-  // // 模拟选择文字事件
-  // useEventListener('mousedown', (e: MouseEvent) => {
-  //   const start = dayjs()
-  //   const selectHandler = (e: MouseEvent) => {
-  //     const end = dayjs()
-  //     if (end.diff(start, 'millisecond') < 500) {
-  //       container_ref.current?.removeEventListener('mouseup', selectHandler)
-  //       return
-  //     }
-
-  //     const text = window.getSelection().toString()
-  //     if (text?.length > 0) {
-  //       if (!currentAiFeature) {
-  //         // message.warning('请选择一种工具选择模式')
-  //         return
-  //       }
-  //       Modal.info({
-  //         title: text,
-  //         content: <AiResponse
-  //           ref={modal_ref}
-  //           type={currentAiFeature}
-  //           content={text}
-  //         ></AiResponse>,
-  //         maskClosable: true,
-  //         width: '80%',
-  //       })
-  //       setTimeout(() => {
-  //         console.log(modal_ref)
-  //         modal_ref?.current?.start?.()
-  //       }, 200);
-
-  //     }
-
-  //     container_ref.current?.removeEventListener('mouseup', selectHandler)
-  //   }
-
-  //   container_ref.current?.addEventListener?.('mouseup', selectHandler)
-  // }, {
-  //   target: container_ref
-  // })
-  useEffect(() => {
-    document.addEventListener('keydown', keydownHandler);
-    document.addEventListener('wheel', scrollHandlerForDocument, { passive: false })
-    return () => {
-      document.removeEventListener('keydown', keydownHandler)
-      document.removeEventListener('wheel', scrollHandlerForDocument)
-
-    }
-  }, [ThrottleScale, pageNumber, numPages])
-
-  const { run: cropHandler } = useDebounceFn(async (e: Cropper.CropEvent<HTMLImageElement>) => {
-    if (!cropRef.current) {
-      return
-    }
-    try {
-      ; (cropRef.current as any)?.cropper?.getCroppedCanvas()?.toBlob(async (data) => {
-        setResultImg(await readFileAsArrayBuffer(data))
-      })
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : error)
-    }
-
-  }, {
-    wait: 300
-  })
-
-  useEffect(() => {
-    if (isPageSelecting && screenShot) {
-      setCropOpen(true)
-    }
-  }, [
-    screenShot,
-    isPageSelecting
-  ])
-
-  //初始化书籍
-  useEffect(() => {
-    if (!book_id) {
-      return
-    }
-    init()
-  }, [book_id])
-
-  const renderListWidth = useMemo(() => {
-    return ((maxWidthPage as any)?.originalWidth ?? 1) / ((maxWidthPage as any)?.originalHeight ?? 1) * renderPageHeight * scale
-  }, [maxWidthPage, renderPageHeight, scale])
-  const renderListHeight = useMemo(() => {
-    return size?.height
-  }, [size])
-  const renderListRowHeight = useMemo(() => {
-    return (renderPageHeight + 10) * ThrottleScale
-  }, [renderPageHeight, ThrottleScale])
-
-  // const renderAiFeature = useMemo(() => {
-  //   return [
-  //     {
-  //       "title": "普通模式",
-  //       "key": undefined,
-  //       icon: AlignCenterOutlined,
-  //     },,
-  //     {
-  //       "title": "摘要生成",
-  //       "key": "digest",
-  //       icon: SnippetsOutlined,
-  //     },
-  //     {
-  //       "title": "阐释并列举例子",
-  //       "key": "example",
-  //       icon: AlertOutlined,
-  //     },
-  //     {
-  //       "title": "生成练习题目",
-  //       "key": "exercises",
-  //       icon: FrownOutlined,
-  //     },
-  //     {
-  //       "title": "名词解释",
-  //       "key": "explain",
-  //       icon: RadarChartOutlined,
-  //     },
-  //     {
-  //       "title": "相关阅读推荐",
-  //       "key": "recommandation",
-  //       icon: ReadOutlined,
-  //     },
-  //     {
-  //       "title": "数据解读",
-  //       "key": "dataAnalysis",
-  //       icon: SoundOutlined,
-  //     }
-  //   ] as const
-  // }, [])
-
-  return (
-    <Spin
-      spinning={loading}
-    >
-      <Row
-        className={style.container}
-        gutter={[10, 16]}
-      >
-        {/* <FloatAiMenu
-          copiedText={copiedText}
-          translator={{
-            value: translatorOpen,
-            onCancel: setTranslatorOpen
-          }}
-          explainer={{
-            value: explainerOpen,
-            onCancel: setExplainerOpen
-          }}
-        ></FloatAiMenu> */}
-        <Col span={24}>
-          <Row
-            justify={'space-between'}
-            align={'middle'}
-          >
-            <Col>
-              <Space>
-
-                <Breadcrumb
-                  items={[
-                    {
-                      title: <a type="link"><HomeOutlined /></a>,
-                      onClick: () => navigate('/')
-                    },
-                    {
-                      title: t('该书籍'),
-                    }
-                  ]}
-                ></Breadcrumb>
-                <Divider
-                  type="vertical"
-                ></Divider>
-                <Switch
-                  checkedChildren={t("目录（开）")}
-                  unCheckedChildren={t("目录（关）")}
-                  defaultChecked
-                  checked={switchOpen}
-                  onChange={setSwitchOpen}
-                />
-              </Space>
-
-            </Col>
-            <Col>
-              <h3>{bookInfo?.name}</h3>
-            </Col>
-          </Row>
-        </Col>
-        <Col span={24}>
-          <Row
-            gutter={20}
-            wrap={false}
-            style={{
-              width: '100%'
-            }}
-          >
-            {
-              switchOpen ? <Col
-                xxl={4}
-                xl={4}
-                lg={6}
-                md={8}
-                span={4}
-                sm={4}
-                xs={4}
-                // sm={isPhone ? 24 : 8}
-                // xs={isPhone ? 24 : 8}
-                className={style.menu_container}
-              // style={{
-              //   height: isPhone ? '2.9rem' : undefined,
-              // }}
-              >
-                <Menu
-                  // mode={isPhone ? 'horizontal' : undefined}
-                  items={pdfOutline}
-                  openKeys={menuOpenKeys}
-                  selectedKeys={menuSelectedKeys}
-                  onOpenChange={(e) => {
-                    setMenuOpenKeys(e)
-                  }}
-                  onSelect={(e) => {
-                    setMenuSelectedKeys(e.selectedKeys)
-                    setPageNumber(Number(e.selectedKeys?.[0]?.split?.(',')?.[0]))
-                  }}
-                ></Menu>
-              </Col>
-                : undefined
-            }
-
-            <Col
-              flex={'1 1'}
-            >
-              <div
-                ref={container_ref}
-                className={[
-                  style.pdf_container
-                ].filter(val => val).join(' ')}
-                id="pdf_container">
-
-                <Draggable
-                  disabled={dragableDisabled}
                 >
-                  <div
-                    style={{
-                      background: 'transparent',
-                    }}
-                  >
-                    <Document
-                      inputRef={pdf_document_ref}
-                      className={style.pdf_document}
-                      loading={<Spin spinning={true}><div
-                        style={{
-                          height: '100%',
-                          width: '100%',
-                        }}
-                      ></div></Spin>}
-                      error={<Result
-                        status="error"
-                        title={t("书籍加载失败")}
-                      ></Result>}
-                      file={blob}
-                      onLoadSuccess={onDocumentLoadSuccess}
+                    <Col
+                        flex={`0 1 ${dividerLeft}px`}
                     >
-                      <List
-                        rowCount={numPages ?? 0}
-                        height={renderListHeight}
-                        onScroll={(e) => {
-                          setRatio(e.scrollTop / e.scrollHeight)
-                          setCounter(Math.round(e.scrollTop / renderListRowHeight))
-                        }}
-                        width={renderListWidth}
-                        rowHeight={renderListRowHeight}
-                        ref={list_ref}
-                        className={style.list_container}
-                        rowRenderer={({ key, style, index }) => {
-                          return (
+                        <div
+                            className={styles.menuContainer}
+                        >
+                            <Menu
+                                items={pdfToMenuItemHandler(meta?.outline as any)}
+                            ></Menu>
+                        </div>
+
+                    </Col>
+                    <Col
+                        flex={'0 1'}
+                    >
+                        <div
+                            ref={dividerRef}
+                            className={styles.viewDrag}
+                        >
+
+                        </div>
+                    </Col>
+                    <Col flex={'1 0'}>
+                        <div className={styles.reader}>
                             <div
-                              key={key}
-                              style={style}
+                                className={styles.reader_tooltip}
                             >
-                              <Page
-                                className={[
-                                  style.pddf_pages_si,
-                                  stylecss.pdf_page_selecting
-                                ].join(' ')}
-                                height={renderPageHeight}
-                                scale={ThrottleScale}
-                                loading={<Spin spinning={true}><div
-                                  style={{
-                                    height: size.height
-                                  }}
-                                ></div></Spin>}
-                                error={<Result
-                                  status="error"
-                                  title={t("书籍加载失败")}
-                                ></Result>}
-                                pageNumber={index + 1}
-                                onLoadSuccess={onPageLoadSuccess}
-                              ></Page>
+                                <div className={styles.page}>
+                                    <Form
+                                        form={form}
+                                        initialValues={{
+                                            page: 1
+                                        }}
+                                    >
+                                        <Form.Item
+                                            name="page"
+                                            normalize={(v?: string) => {
+                                                const text = v?.replaceAll(/[^\d]/g, '') || '1'
+                                                return Math.max(1, Math.min(meta.numPages as number, Number(text)))
+                                            }}
+                                        >
+                                            <Input
+                                                suffix={<span>/ {(meta?.numPages ?? 0) as number}</span>}
+                                            ></Input>
+                                        </Form.Item>
+                                    </Form>
+
+                                </div>
+                            </div>
+                            <div
+                                ref={listRef}
+                                style={{
+                                    height: '100%',
+                                    width: '100%',
+                                }}
+                            >
+                                <VList
+                                    count={pages?.length ?? 0}
+                                    style={{
+                                        height: '100%',
+                                        width: '100%',
+                                    }}
+                                    
+                                    overscan={4}
+                                    onRangeChange={(startIndex, endIndex) => {
+                                        const start = Math.max(0, startIndex)
+                                        const end = Math.min(endIndex, pages?.length)
+                                        form.setFieldValue(['page'], startIndex + 1)
+                                        for (let i = start; i <= end; i++) {
+                                            const page = pages[i]
+                                            const dpr = window.devicePixelRatio || 1;
+                                            const canvas = document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)[i - start]
+                                            const textLayer = document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)[i - start]
+                                            const ctx = canvas?.getContext('2d')
+
+
+                                            // 取消相同引用未完成的渲染任务
+                                            pageRenderTask.current.get(ctx)?.renderTask?.cancel?.()
+
+                                            // 只缩放没有被缩放的元素
+                                            if (!pageRenderTask.current.get(ctx)) {
+                                                ctx.scale(dpr, dpr)
+                                            }
+                                            const task = page.render({
+                                                viewport: page.getViewport({ scale: canvasScale }),
+                                                canvasContext: canvas?.getContext('2d')
+                                            })
+                                            pdfjs.renderTextLayer({
+                                                textContentSource: page.streamTextContent(),
+                                                viewport: page.getViewport({ scale: canvasScale }),
+                                                container: textLayer,
+                                            })
+                                            task.promise.catch(err => {
+                                                // 屏蔽这个异常，因为这个异常是故意的
+                                                if (err instanceof pdfjs.RenderingCancelledException) {
+                                                    return
+                                                }
+                                                console.error(err)
+                                            })
+
+                                            // 避免潜在的竞态情况
+                                            pageRenderTask.current.set(ctx, { renderTask: task })
+                                        }
+                                    }}
+                                >
+                                    {(pages ?? []).map((page, index) => {
+                                        const viewport = page.getViewport({
+                                            scale: canvasScale
+                                        })
+                                        const dpr = window.devicePixelRatio || 1;
+                                        return <div
+                                            className={styles.pageContainer}
+                                            key={index}
+                                        >
+                                            <div
+                                                className={styles.pageDivider}
+                                            ></div>
+                                            <canvas
+                                                className={styles.canvasContainer}
+                                                width={viewport.width * dpr}
+
+                                                height={viewport.height * dpr}
+                                                style={{
+                                                    height: viewport.height,
+                                                    width: viewport.width,
+                                                    background: 'white',
+                                                }}
+                                            ></canvas>
+                                            <div
+                                                className={`textLayer ${styles.textLayerContainer}`}
+                                                style={{
+                                                    height: viewport.height,
+                                                    width: viewport.width,
+                                                    position: 'absolute',
+                                                    left: ((size?.width ?? 0) - viewport.width) / 2,
+                                                    top: 12,
+                                                }}
+                                            ></div>
+                                        </div>
+                                    })}
+                                </VList>
                             </div>
 
-                          )
-                        }}
-                      >
-                      </List>
-                    </Document>
-                  </div>
-                </Draggable>
-                <div className={style.scale_controller}>
-                  <Space
-                    size={'middle'}
-                  >
-                    <motion.div
-                      title={t("放大")}
-                      {...ANIMATION_STATIC}
-                      onClick={scaleUp}
-                    ><PlusCircleOutlined
-                      /></motion.div>
-                    <motion.div
-                      title={t("缩小")}
-                      {...ANIMATION_STATIC}
-                      onClick={scaleDown}
-                    ><MinusCircleOutlined /></motion.div>
-                    {
-                      ocrPending ? <motion.div
-                        {...ANIMATION_STATIC}
-                      >
-                        <LoadingOutlined />
-                      </motion.div> : <motion.div
-                        {...ANIMATION_STATIC}
-                        title={t("文字转图片")}
-                        onClick={async () => {
-                          setScreenShot(null)
-                          const c = await html2canvas(container_ref.current)
-                          setScreenShot(c.toDataURL('image/png', 1))
-                          setIsPageSelecting(true)
-                        }}
-                      >
-                        <CameraOutlined />
-                      </motion.div>
-                    }
-                    {/* <Divider
-                    type="vertical"
-                    
-                    >
 
-                    </Divider> */}
-                    <AiFeatureMenu
-                    container_ref={container_ref}
-                    ></AiFeatureMenu>
-                    {/* {
-                      renderAiFeature.map(el => (
-                        <motion.div
-                          key={el.key}
-                          {...ANIMATION_STATIC}
-                        >
-                          <Tooltip
-                            title={t(el.title)}
-                          >
-                            <div
-                              onClick={() => setCurrentAiFeature(el.key)}
-                            ><el.icon
-                            style={{
-                              color: el.key === currentAiFeature ? '#80aa51' : undefined
-                            }}
-                              /></div>
-
-                          </Tooltip>
-                        </motion.div>
-                      ))
-                    } */}
-
-                  </Space>
-                </div>
-                <Row
-                  className={style.float_tooltip}
-                  align={'middle'}
-                >
-                  <Col>
-                    <Space>
-                      <InputNumber
-                        bordered={false}
-                        value={counter}
-                        onChange={(e) => setCounter(e)}
-                        onBlur={(e) => {
-                          const target = Number(e.target?.value)
-                          if (Number.isNaN(target)) {
-                            return
-                          }
-                          setPageNumber(target)
-                        }}
-                        style={{
-                          width: '50px'
-                        }}
-                      ></InputNumber>
-                      <span>{`/ ${numPages ?? '0'}`}</span>
-                    </Space>
-                  </Col>
-
+                        </div>
+                    </Col>
                 </Row>
-              </div>
+            </div>
+        </Spin>
+    )
+}
 
 
-            </Col>
-            {
-              clipboardListOpen
-                ? <Col
-                  span={4}
-                >
-                  <div
-                    style={{
-                      height: size?.height,
-                      // width: 400,
-                    }}
-                  >
-                    <Button
-                      type="link"
-                      icon={<RightOutlined />}
-                      danger
-                      onClick={() => setClipboardListOpen(false)}
-                    >Close</Button>
-                    <ClipboardList
-                      height={size?.height - 32}
-                    ></ClipboardList>
-                  </div>
-
-                </Col>
-                : <Col flex="0 1">
-                  <Badge
-                    count={clipboardList.filter(val => !val.read).length}
-                  >
-                    <div
-                      style={{
-                        height: size?.height,
-                        // width: 400,
-                      }}
-                      onClick={() => {
-                        setClipboardListOpen(true)
-                        clipboardList_update(clipboardList.map(ele => ({ ...ele, read: true })))
-                      }}
-                      className={style.clipboard_switch}
-                    >
-                      <LeftOutlined />
-                    </div>
-                  </Badge>
-
-                </Col>
-            }
-
-
-          </Row>
-        </Col>
-        <Modal
-          style={{ top: 10 }}
-          open={cropOpen}
-          footer={null}
-          title={t('裁切图片')}
-          onCancel={() => {
-            setIsPageSelecting(false)
-            setScreenShot(null)
-            setCropOpen(false)
-          }}
-          width={'90vw'}
-        >
-          {/* <Divider></Divider> */}
-          <Row gutter={[12, 12]}>
-            <Col span={24}>
-              <Row justify={'end'}>
-                <Col>
-                  <Space>
-                    <Button
-                      loading={isRecognizing}
-                      onClick={() => {
-                        shotCompleteHandler()
-                      }}
-                    >{t('完成')}</Button>
-                  </Space>
-                </Col>
-              </Row>
-
-            </Col>
-            <Col span={24}>
-              <Cropper
-                src={screenShot}
-                style={{ height: 850, width: "100%" }}
-                // Cropper.js options
-                initialAspectRatio={16 / 9}
-                guides={false}
-                crop={cropHandler}
-                ref={cropRef}
-              />
-            </Col>
-          </Row>
-
-
-        </Modal>
-      </Row>
-    </Spin>
-
-  )
+const pdfToMenuItemHandler = (item?: OutlineType[]): ItemType[] => {
+    return item?.map(el => {
+        return {
+            label: el.title,
+            origininfo: el,
+            key: el.title + JSON.stringify(el?.dest ?? []),
+            children: el.items?.length > 0 ? pdfToMenuItemHandler(el.items) : undefined
+        }
+    })
 }

@@ -1,0 +1,91 @@
+import { useParams } from "react-router-dom"
+import { useBookState } from "../../store"
+import { useRequest } from "ahooks"
+import * as pdfjs from 'pdfjs-dist'
+import workerUrl from 'pdfjs-dist/build/pdf.worker?url'
+import { BookBlob, BookItems } from "../../dbs/db"
+import { useCallback, useEffect, useRef } from "react"
+import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api"
+pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
+
+export function usePdfBook() {
+    const db_instance = useBookState(state => state.db_instance)
+    const { book_id } = useParams()
+
+    useEffect(() => {
+        if(pdfDocument) {
+            pdfDocument.destroy()
+        }
+    }, [book_id])
+
+    const cacheRef = useRef<{document:PDFDocumentProxy}>({document: undefined})
+
+    const { runAsync: getBook, data: book, loading: bookLoading } = useRequest(async () => {
+        const book = await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
+            const book_info = await db_instance.book_items.where('hash').equals(book_id).first()
+            const book_blob = await db_instance.book_blob.where('id').equals(book_id).first()
+            return {
+                ...book_info,
+                blob: book_blob,
+            }
+        })
+        return book
+    }, {
+        refreshDeps: [
+            book_id
+        ]
+    })
+    const { runAsync: getPdfDocument, data: pdfDocument, loading: pdfDocumentLoading } = useRequest(async () => {
+        if (book?.blob) {
+            if(cacheRef.current?.document) {
+                cacheRef.current.document.destroy()
+            }
+            const document = await pdfjs.getDocument(book?.blob.blob).promise
+            cacheRef.current.document = document
+            return document
+        }
+    }, {
+        refreshDeps: [
+            book
+        ]
+    })
+
+    const { data: meta, loading: metaLoading } = useRequest(async () => {
+        if (!pdfDocument) {
+            return
+        }
+        const [markInfo, metadata, outline, pageLabels, pageLayout, pageMode, viewerPreferences, numPages] = (await Promise.allSettled([
+            pdfDocument.getMarkInfo(),
+            pdfDocument.getMetadata(),
+            pdfDocument.getOutline(),
+            pdfDocument.getPageLabels(),
+            pdfDocument.getPageLayout(),
+            pdfDocument.getPageMode(),
+            pdfDocument.getViewerPreferences(),
+            pdfDocument.numPages
+        ])).map(el => 'value' in el ? el.value : undefined)
+        return {
+            markInfo,
+            metadata,
+            outline,
+            pageLabels,
+            pageLayout,
+            pageMode,
+            viewerPreferences,
+            numPages,
+        }
+    }, {
+        refreshDeps: [
+            pdfDocument
+        ]
+    })
+
+    const destroy = useCallback(() =>{
+        pdfDocument.destroy()
+    }, [pdfDocument])
+
+    return [book, pdfDocument, meta, {
+        pdfDocumentLoading,
+        metaLoading, bookLoading
+    }, {destroy}] as const
+}
