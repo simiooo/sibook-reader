@@ -26,6 +26,7 @@ export const Component = function PdfReader() {
 
     const dividerRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
+    const VlistRef = useRef<VListHandle>(null)
     const [canvasScale, setCanvasScale] = useState(1)
     useEffect(() => {
         listRef.current.style.setProperty('--scale-factor', '1')
@@ -128,6 +129,11 @@ export const Component = function PdfReader() {
                                         initialValues={{
                                             page: 1
                                         }}
+                                        onValuesChange={(v) => {
+                                            if(v?.page) {
+                                                VlistRef.current.scrollToIndex(v.page)
+                                            }
+                                        }}
                                     >
                                         <Form.Item
                                             name="page"
@@ -152,6 +158,7 @@ export const Component = function PdfReader() {
                                 }}
                             >
                                 <VList
+                                    ref={VlistRef}
                                     count={pages?.length ?? 0}
                                     style={{
                                         height: '100%',
@@ -161,15 +168,22 @@ export const Component = function PdfReader() {
                                     overscan={4}
                                     onRangeChange={(startIndex, endIndex) => {
                                         const start = Math.max(0, startIndex)
-                                        const end = Math.min(endIndex, pages?.length)
+                                        const end = Math.min(endIndex, pages?.length) //这里有问题
                                         form.setFieldValue(['page'], startIndex + 1)
-                                        for (let i = start; i <= end; i++) {
+                                        console.log(startIndex, endIndex)
+                                        for (let i = start; i <= end ; i++) {
                                             const page = pages[i]
+                                            if(!page){
+                                                continue
+                                            }
                                             const dpr = window.devicePixelRatio || 1;
                                             const canvas = document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)[i - start]
-                                            const textLayer = document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)[i - start]
+                                            const textLayer = document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)[i - start] 
+                                            
                                             const ctx = canvas?.getContext('2d')
-
+                                            if(!ctx){
+                                                continue
+                                            }
 
                                             // 取消相同引用未完成的渲染任务
                                             pageRenderTask.current.get(ctx)?.renderTask?.cancel?.()
