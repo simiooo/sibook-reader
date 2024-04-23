@@ -36,7 +36,6 @@ export default function LeftMenu() {
         selectedKeys={[]}
         inlineCollapsed={true}
         onSelect={(e) => {
-          console.log(e)
           switch (e.key) {
             case "island":
               navigate('/island')

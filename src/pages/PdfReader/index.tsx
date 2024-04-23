@@ -29,11 +29,13 @@ export const Component = function PdfReader() {
     const VlistRef = useRef<VListHandle>(null)
     const [canvasScale, setCanvasScale] = useState(1)
     useEffect(() => {
-        listRef.current.style.setProperty('--scale-factor', '1')
-        zoomInstance.current?.resume?.()
+        listRef.current.style.setProperty('--scale-factor', String(canvasScale))
+        
     }, [canvasScale])
     const { run: canvasScaleHandler } = useDebounceFn((e) => {
         setCanvasScale(e?.getTransform?.()?.scale ?? 1)
+        // console.log(e)
+        zoomInstance.current?.resume?.()
     }, {
         wait: 200,
     })
@@ -57,6 +59,7 @@ export const Component = function PdfReader() {
               }
         })
         zoomInstance.current.on('zoom', canvasScaleHandler)
+        // zoomInstance.current.on('zoom', canvasScaleHandler)
     }, [])
 
     useDrag(undefined, dividerRef, {
@@ -170,16 +173,15 @@ export const Component = function PdfReader() {
                                         const start = Math.max(0, startIndex)
                                         const end = Math.min(endIndex, pages?.length) //这里有问题
                                         form.setFieldValue(['page'], startIndex + 1)
-                                        console.log(startIndex, endIndex)
+                                        
                                         for (let i = start; i <= end ; i++) {
                                             const page = pages[i]
                                             if(!page){
                                                 continue
                                             }
                                             const dpr = window.devicePixelRatio || 1;
-                                            const canvas = document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)[i - start]
-                                            const textLayer = document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)[i - start] 
-                                            
+                                            const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
+                                            const textLayer = [...document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
                                             const ctx = canvas?.getContext('2d')
                                             if(!ctx){
                                                 continue
@@ -192,9 +194,10 @@ export const Component = function PdfReader() {
                                             if (!pageRenderTask.current.get(ctx)) {
                                                 ctx.scale(dpr, dpr)
                                             }
+                                            // console.log({start, end, page, canvasScale, ctx})
                                             const task = page.render({
                                                 viewport: page.getViewport({ scale: canvasScale }),
-                                                canvasContext: canvas?.getContext('2d')
+                                                canvasContext: ctx
                                             })
                                             pdfjs.renderTextLayer({
                                                 textContentSource: page.streamTextContent(),
@@ -229,7 +232,7 @@ export const Component = function PdfReader() {
                                             <canvas
                                                 className={styles.canvasContainer}
                                                 width={viewport.width * dpr}
-
+                                                data-pageindex={index}
                                                 height={viewport.height * dpr}
                                                 style={{
                                                     height: viewport.height,
@@ -238,6 +241,7 @@ export const Component = function PdfReader() {
                                                 }}
                                             ></canvas>
                                             <div
+                                            data-pageindex={index}
                                                 className={`textLayer ${styles.textLayerContainer}`}
                                                 style={{
                                                     height: viewport.height,
