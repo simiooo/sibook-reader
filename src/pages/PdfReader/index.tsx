@@ -5,7 +5,7 @@ import * as pdfjs from 'pdfjs-dist'
 import 'pdfjs-dist/web/pdf_viewer.css'
 import { VList, VListHandle } from "virtua";
 import { useLocation, useParams } from 'react-router-dom'
-import panzoomify, { PanZoom } from 'panzoomify'
+import panzoomify, { PanZoom } from 'panzoom'
 import { useDebounceFn, useDrag, useLongPress, useRequest, useSize } from 'ahooks'
 import { useBookState } from '../../store'
 export const ANIMATION_STATIC = {
@@ -28,38 +28,44 @@ export const Component = function PdfReader() {
     const listRef = useRef<HTMLDivElement>(null)
     const VlistRef = useRef<VListHandle>(null)
     const [canvasScale, setCanvasScale] = useState(1)
-    useEffect(() => {
-        listRef.current.style.setProperty('--scale-factor', String(canvasScale))
-        
-    }, [canvasScale])
-    const { run: canvasScaleHandler } = useDebounceFn((e) => {
-        setCanvasScale(e?.getTransform?.()?.scale ?? 1)
-        // console.log(e)
-        zoomInstance.current?.resume?.()
-    }, {
-        wait: 200,
+    const panzoomifyFactory = () => panzoomify(listRef.current, {
+        beforeWheel: function (e) {
+            const shouldIgnore = !e.ctrlKey;
+            return shouldIgnore;
+        },
+        onDoubleClick() {
+            return false
+        },
+        beforeMouseDown: function (e) {
+            const shouldIgnore = !e.ctrlKey;
+            return shouldIgnore;
+
+        },
+        zoomDoubleClickSpeed: 1,
     })
     useEffect(() => {
-        if(!zoomInstance) {
+        listRef.current.style.setProperty('--scale-factor', String(canvasScale))
+    }, [canvasScale])
+    const { run: canvasScaleHandler } = useDebounceFn((e) => {
+        const scale = e?.getTransform?.()?.scale
+        setCanvasScale(scale ?? 1)
+
+        zoomInstance.current = panzoomifyFactory()
+    }, {
+        wait: 100,
+    })
+
+
+
+    useEffect(() => {
+        if (!zoomInstance) {
             return
         }
-        zoomInstance.current = panzoomify(listRef.current, {
-            beforeWheel: function (e) {
-                const shouldIgnore = !e.ctrlKey;
-                return shouldIgnore;
-            },
-            beforeMouseDown: function (e) {
-                const shouldIgnore = !e.ctrlKey;
-                return shouldIgnore;
-
-            },
-            zoomDoubleClickSpeed: 1,
-            onDoubleClick: function(e) {
-                return false; 
-              }
-        })
+        zoomInstance.current = panzoomifyFactory()
         zoomInstance.current.on('zoom', canvasScaleHandler)
-        // zoomInstance.current.on('zoom', canvasScaleHandler)
+        return () => {
+            zoomInstance.current.dispose()
+        }
     }, [])
 
     useDrag(undefined, dividerRef, {
@@ -92,9 +98,10 @@ export const Component = function PdfReader() {
     return (
         <Spin
             spinning={Object?.values(loading ?? {})?.some?.(loading => loading)}
-        ><div
-            className={styles.container}
         >
+            <div
+                className={styles.container}
+            >
                 <Row
                     wrap={false}
 
@@ -133,7 +140,7 @@ export const Component = function PdfReader() {
                                             page: 1
                                         }}
                                         onValuesChange={(v) => {
-                                            if(v?.page) {
+                                            if (v?.page) {
                                                 VlistRef.current.scrollToIndex(v.page)
                                             }
                                         }}
@@ -167,23 +174,25 @@ export const Component = function PdfReader() {
                                         height: '100%',
                                         width: '100%',
                                     }}
-                                    
+
                                     overscan={4}
                                     onRangeChange={(startIndex, endIndex) => {
+                                        // 该方法在缩放时不被调用，需要让它被调用；
+
                                         const start = Math.max(0, startIndex)
                                         const end = Math.min(endIndex, pages?.length) //这里有问题
                                         form.setFieldValue(['page'], startIndex + 1)
                                         
-                                        for (let i = start; i <= end ; i++) {
+                                        for (let i = start; i <= end; i++) {
                                             const page = pages[i]
-                                            if(!page){
+                                            if (!page) {
                                                 continue
                                             }
                                             const dpr = window.devicePixelRatio || 1;
                                             const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
                                             const textLayer = [...document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
                                             const ctx = canvas?.getContext('2d')
-                                            if(!ctx){
+                                            if (!ctx) {
                                                 continue
                                             }
 
@@ -194,14 +203,15 @@ export const Component = function PdfReader() {
                                             if (!pageRenderTask.current.get(ctx)) {
                                                 ctx.scale(dpr, dpr)
                                             }
-                                            // console.log({start, end, page, canvasScale, ctx})
+                                            const viewport = page.getViewport({ scale: canvasScale })
+                                            // console.log({viewport}, 'render')
                                             const task = page.render({
-                                                viewport: page.getViewport({ scale: canvasScale }),
+                                                viewport,
                                                 canvasContext: ctx
                                             })
                                             pdfjs.renderTextLayer({
                                                 textContentSource: page.streamTextContent(),
-                                                viewport: page.getViewport({ scale: canvasScale }),
+                                                viewport,
                                                 container: textLayer,
                                             })
                                             task.promise.catch(err => {
@@ -221,6 +231,8 @@ export const Component = function PdfReader() {
                                         const viewport = page.getViewport({
                                             scale: canvasScale
                                         })
+                                        // console.log({viewport}, 'jsx');
+                                        
                                         const dpr = window.devicePixelRatio || 1;
                                         return <div
                                             className={styles.pageContainer}
@@ -241,7 +253,7 @@ export const Component = function PdfReader() {
                                                 }}
                                             ></canvas>
                                             <div
-                                            data-pageindex={index}
+                                                data-pageindex={index}
                                                 className={`textLayer ${styles.textLayerContainer}`}
                                                 style={{
                                                     height: viewport.height,

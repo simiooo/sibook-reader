@@ -37,7 +37,7 @@
     "marked": "^11.1.0",
     "match-sorter": "^6.3.1",
     "normalize.css": "^8.0.1",
-    "panzoomify": "^1.0.3",
+    "panzoom": "^9.4.3",
     "pdfjs-dist": "^3.11.174",
     "postcss": "^8.4.31",
     "re-resizable": "^6.9.11",

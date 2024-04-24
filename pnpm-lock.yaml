@@ -80,9 +80,9 @@ dependencies:
   normalize.css:
     specifier: ^8.0.1
     version: 8.0.1
-  panzoomify:
-    specifier: ^1.0.3
-    version: 1.0.3
+  panzoom:
+    specifier: ^9.4.3
+    version: 9.4.3
   pdfjs-dist:
     specifier: ^3.11.174
     version: 3.11.174
@@ -4596,8 +4596,8 @@ packages:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
     dev: false
 
-  /panzoomify@1.0.3:
-    resolution: {integrity: sha512-ccHLGZMDD7wZlTrGHFfTWZIF568SWmYl0l1BHV5gFKKyOuVE+Rh+ZSrU3YQ++wnnzICP4b9QMXlKwKG9EfHM4w==}
+  /panzoom@9.4.3:
+    resolution: {integrity: sha512-xaxCpElcRbQsUtIdwlrZA90P90+BHip4Vda2BC8MEb4tkI05PmR6cKECdqUCZ85ZvBHjpI9htJrZBxV5Gp/q/w==}
     dependencies:
       amator: 1.1.0
       ngraph.events: 1.2.2
