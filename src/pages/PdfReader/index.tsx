@@ -44,15 +44,24 @@ export const Component = function PdfReader() {
         zoomDoubleClickSpeed: 1,
     })
     useEffect(() => {
-        listRef.current.style.setProperty('--scale-factor', String(canvasScale))
+        listRef.current.style.setProperty('--scale-factor', String(1))
+        
+        pdfPageRenderHandler(0, (pages ??[]).length ?? 0, pages, {canvasScale, clearDpr: true})
     }, [canvasScale])
+
+    const zoomRefresh = () => {
+        // listRef.current.style.transform = ''
+        // zoomInstance.current.dispose()
+        // zoomInstance.current = panzoomifyFactory()
+        // zoomInstance.current.on('zoom', canvasScaleHandler)
+    }
+
     const { run: canvasScaleHandler } = useDebounceFn((e) => {
         const scale = e?.getTransform?.()?.scale
         setCanvasScale(scale ?? 1)
-
-        zoomInstance.current = panzoomifyFactory()
+        zoomRefresh()
     }, {
-        wait: 100,
+        wait: 200,
     })
 
 
@@ -93,6 +102,58 @@ export const Component = function PdfReader() {
     })
 
     const size = useSize(listRef)
+
+    const pdfPageRenderHandler = (startIndex: number, endIndex: number, pages: pdfjs.PDFPageProxy[],options?:{pageIndicator?: number, canvasScale?: number, clearDpr?: boolean}) => {
+        // 该方法在缩放时不被调用，需要让它被调用；
+
+        const start = Math.max(0, startIndex)
+        const end = Math.min(endIndex, pages?.length) //这里有问题
+        if (options?.pageIndicator) {
+            form.setFieldValue(['page'], options?.pageIndicator)
+        }
+        for (let i = start; i <= end; i++) {
+            const page = pages[i]
+            if (!page) {
+                continue
+            }
+            const dpr = window.devicePixelRatio || 1;
+            const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
+            const textLayer = [...document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
+            const ctx = canvas?.getContext('2d')
+            if (!ctx) {
+                continue
+            }
+
+            // 取消相同引用未完成的渲染任务
+            pageRenderTask.current.get(ctx)?.renderTask?.cancel?.()
+
+            // 只缩放没有被缩放的元素
+            if (options?.clearDpr ||!pageRenderTask.current.get(ctx)) {
+                ctx.scale(dpr, dpr)
+            }
+            const viewport = page.getViewport({ scale: options?.canvasScale ?? canvasScale })
+            const textViewport = page.getViewport({ scale: 1 })
+            const task = page.render({
+                viewport,
+                canvasContext: ctx
+            })
+            pdfjs.renderTextLayer({
+                textContentSource: page.streamTextContent(),
+                viewport: textViewport,
+                container: textLayer,
+            })
+            task.promise.catch(err => {
+                // 屏蔽这个异常，因为这个异常是故意的
+                if (err instanceof pdfjs.RenderingCancelledException) {
+                    return
+                }
+                console.error(err)
+            })
+
+            // 避免潜在的竞态情况
+            pageRenderTask.current.set(ctx, { renderTask: task })
+        }
+    }
 
 
     return (
@@ -178,61 +239,17 @@ export const Component = function PdfReader() {
                                     overscan={4}
                                     onRangeChange={(startIndex, endIndex) => {
                                         // 该方法在缩放时不被调用，需要让它被调用；
-
-                                        const start = Math.max(0, startIndex)
-                                        const end = Math.min(endIndex, pages?.length) //这里有问题
-                                        form.setFieldValue(['page'], startIndex + 1)
-                                        
-                                        for (let i = start; i <= end; i++) {
-                                            const page = pages[i]
-                                            if (!page) {
-                                                continue
-                                            }
-                                            const dpr = window.devicePixelRatio || 1;
-                                            const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
-                                            const textLayer = [...document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
-                                            const ctx = canvas?.getContext('2d')
-                                            if (!ctx) {
-                                                continue
-                                            }
-
-                                            // 取消相同引用未完成的渲染任务
-                                            pageRenderTask.current.get(ctx)?.renderTask?.cancel?.()
-
-                                            // 只缩放没有被缩放的元素
-                                            if (!pageRenderTask.current.get(ctx)) {
-                                                ctx.scale(dpr, dpr)
-                                            }
-                                            const viewport = page.getViewport({ scale: canvasScale })
-                                            // console.log({viewport}, 'render')
-                                            const task = page.render({
-                                                viewport,
-                                                canvasContext: ctx
-                                            })
-                                            pdfjs.renderTextLayer({
-                                                textContentSource: page.streamTextContent(),
-                                                viewport,
-                                                container: textLayer,
-                                            })
-                                            task.promise.catch(err => {
-                                                // 屏蔽这个异常，因为这个异常是故意的
-                                                if (err instanceof pdfjs.RenderingCancelledException) {
-                                                    return
-                                                }
-                                                console.error(err)
-                                            })
-
-                                            // 避免潜在的竞态情况
-                                            pageRenderTask.current.set(ctx, { renderTask: task })
-                                        }
+                                        pdfPageRenderHandler(startIndex, endIndex, pages, {
+                                            canvasScale,
+                                            pageIndicator: startIndex + 1
+                                        })
                                     }}
                                 >
                                     {(pages ?? []).map((page, index) => {
                                         const viewport = page.getViewport({
-                                            scale: canvasScale
+                                            scale: 1
                                         })
-                                        // console.log({viewport}, 'jsx');
-                                        
+
                                         const dpr = window.devicePixelRatio || 1;
                                         return <div
                                             className={styles.pageContainer}
@@ -243,9 +260,9 @@ export const Component = function PdfReader() {
                                             ></div>
                                             <canvas
                                                 className={styles.canvasContainer}
-                                                width={viewport.width * dpr}
+                                                width={viewport.width *canvasScale * dpr}
                                                 data-pageindex={index}
-                                                height={viewport.height * dpr}
+                                                height={viewport.height * canvasScale * dpr}
                                                 style={{
                                                     height: viewport.height,
                                                     width: viewport.width,
@@ -256,10 +273,8 @@ export const Component = function PdfReader() {
                                                 data-pageindex={index}
                                                 className={`textLayer ${styles.textLayerContainer}`}
                                                 style={{
-                                                    height: viewport.height,
-                                                    width: viewport.width,
                                                     position: 'absolute',
-                                                    left: ((size?.width ?? 0) - viewport.width) / 2,
+                                                    left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
                                                     top: 12,
                                                 }}
                                             ></div>
