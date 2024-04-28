@@ -31,7 +31,7 @@ i18n
     }
   });
 
-const green = 'rgba(101, 170, 12, 1)'
+const green = '#50aa81'
 
 Spin.setDefaultIndicator(<Indicator />)
 
@@ -47,13 +47,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           colorSuccess: '#4CAF50',
           colorWarning: '#FFEB3B',
           fontSize: 16,
-          // borderRadius: 8,
+          borderRadius: 8,
 
         },
         components: {
           Spin: {
             dotSize: 60,
-            // contentHeight: 800
           },
         }
       }}

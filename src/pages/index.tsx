@@ -6,11 +6,12 @@ import style from './index.module.css'
 import classNames from 'classnames'
 import { useEffect, useMemo, useState } from 'react'
 import { useBookState } from '../store'
-import { useAsyncEffect, useRequest } from 'ahooks'
+import { useAsyncEffect, useEventListener, useRequest } from 'ahooks'
 import UploadContainer from '../components/UploadContainer'
 import { useCacheBookTab } from '../utils/useCacheBookTab'
 import { requestor } from '../utils/requestor'
 import { User } from '../store/user.type'
+import { useRefresh } from '../utils/useRefresh'
 
 export const ErrorBoundary = () => <div
     style={{
@@ -30,39 +31,46 @@ export const ErrorBoundary = () => <div
 export const Component = function App() {
     const location = useLocation()
     const navigate = useNavigate()
+    const [refreshData, refresh] = useRefresh()
+    useEventListener('load', () => {
+        refresh()
+    })
     const renderClassName = useMemo(() => {
         return ['/', '/island'].includes(window.location.pathname)
     }, [location])
-    const [userOnline, setUserOnline] = useState<boolean>(true)
-    const isUserOnline = useBookState(state => state.isUserOnline)
 
+    const isUserOnline = useBookState(state => state.isUserOnline)
+    const { data: userOnline, } = useRequest(async () => {
+        return await isUserOnline()
+    }, {
+        refreshDeps: [
+            location
+        ]
+    })
     useAsyncEffect(async () => {
-        setUserOnline(await isUserOnline())
-    }, [location])
-    useEffect(() => {
-        if (!userOnline) {
+        if (typeof userOnline === 'boolean' && !userOnline) {
             navigate('/login')
         }
     }, [userOnline])
 
-    const {authorization, profile_update} = useBookState(state => state)
+    const { authorization, profile_update } = useBookState(state => state)
 
     useRequest(async () => {
-        if(!authorization.token) {
-            return 
+        if (!authorization.token) {
+            return
         }
         try {
-            const res = await requestor<{data?: User}>({
+            const res = await requestor<{ data?: User }>({
                 url: '/profile/v/getSelfUserInfo'
-            }) 
-            if(!res.data?.data) {
+            })
+            if (!res.data?.data) {
                 throw Error("获取用户信息失败")
             }
             profile_update(res.data.data)
         } catch (error) {
             message.error('获取用户信息失败')
         }
-        
+
 
     }, {
         refreshDeps: [

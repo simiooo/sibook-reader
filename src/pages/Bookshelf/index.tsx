@@ -153,9 +153,13 @@ export const Component = function Bookshelf() {
             onCancel={() => setIslandOpen(false)}
             ></SyncModal> */}
                     <Spin spinning={loading}>
-
-                        <Content className={style.content}>
-                            <Row gutter={[20, 32]}>
+                        <div
+                       className={style.content}  
+                        >
+                        <Content>
+                            <Row 
+                            
+                            gutter={[20, 32]}>
                                 <Col>
                                 </Col>
                                 <Col span={24}>
@@ -237,6 +241,8 @@ export const Component = function Bookshelf() {
                                 </Col>
                             </Row>
                         </Content>
+                        </div>
+                        
 
                     </Spin>
 

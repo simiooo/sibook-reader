@@ -3,13 +3,13 @@
   
 }
 .container{
-  
+    overflow: auto;
 }
 .content {
   width: cacl(100vw - 48px);
-
-  height: calc(100vh - 2.3rem);
   padding: 4px 0px;
+  overflow: hidden;
+  height: calc(100vh - 38px);
 }
 .upload_modal_container {
   overflow: hidden;

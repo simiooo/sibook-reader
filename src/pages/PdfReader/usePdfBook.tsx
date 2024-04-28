@@ -86,6 +86,7 @@ export function usePdfBook() {
 
     return [book, pdfDocument, meta, {
         pdfDocumentLoading,
-        metaLoading, bookLoading
-    }, {destroy}] as const
+        metaLoading, bookLoading,
+        
+    }, {destroy, book_id,}] as const
 }

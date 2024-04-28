@@ -6,7 +6,7 @@ import 'pdfjs-dist/web/pdf_viewer.css'
 import { VList, VListHandle } from "virtua";
 import { useLocation, useParams } from 'react-router-dom'
 import panzoomify, { PanZoom } from 'panzoom'
-import { useDebounceFn, useDrag, useLongPress, useRequest, useSize } from 'ahooks'
+import { useDebounceFn, useDrag, useLocalStorageState, useLongPress, useRequest, useSize } from 'ahooks'
 import { useBookState } from '../../store'
 export const ANIMATION_STATIC = {
     whileTap: { scale: 0.75 },
@@ -19,11 +19,12 @@ import { usePdfBook } from './usePdfBook'
 import { ItemType } from 'antd/es/menu/hooks/useItems'
 import { RenderTask } from 'pdfjs-dist';
 export const Component = function PdfReader() {
-    const [book, pdfDocument, meta, loading] = usePdfBook()
+    const [book, pdfDocument, meta, loading, {book_id}] = usePdfBook()
     const [dividerLeft, setDividerLeft] = useState<number>(300)
     const zoomInstance = useRef<PanZoom>(null)
     const params = useParams()
-
+    const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
+    
     const dividerRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
     const VlistRef = useRef<VListHandle>(null)
@@ -45,21 +46,12 @@ export const Component = function PdfReader() {
     })
     useEffect(() => {
         listRef.current.style.setProperty('--scale-factor', String(1))
-        
         pdfPageRenderHandler(0, (pages ??[]).length ?? 0, pages, {canvasScale, clearDpr: true})
     }, [canvasScale])
-
-    const zoomRefresh = () => {
-        // listRef.current.style.transform = ''
-        // zoomInstance.current.dispose()
-        // zoomInstance.current = panzoomifyFactory()
-        // zoomInstance.current.on('zoom', canvasScaleHandler)
-    }
 
     const { run: canvasScaleHandler } = useDebounceFn((e) => {
         const scale = e?.getTransform?.()?.scale
         setCanvasScale(scale ?? 1)
-        zoomRefresh()
     }, {
         wait: 200,
     })
@@ -90,6 +82,12 @@ export const Component = function PdfReader() {
     }, [params])
     const [form] = Form.useForm()
 
+    // // 初始化页码
+    // useEffect(() => {
+    //     form.setFieldValue(['page'], pagination)
+    //     VlistRef.current.scrollToIndex(pagination - 1)
+    // }, [])
+
     // 生成 pdf 页对象 引用
     const { data: pages } = useRequest(async () => {
         if (!meta?.numPages) return
@@ -110,6 +108,7 @@ export const Component = function PdfReader() {
         const end = Math.min(endIndex, pages?.length) //这里有问题
         if (options?.pageIndicator) {
             form.setFieldValue(['page'], options?.pageIndicator)
+            setPagination(options?.pageIndicator)
         }
         for (let i = start; i <= end; i++) {
             const page = pages[i]

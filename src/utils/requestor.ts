@@ -11,3 +11,7 @@ requestor.interceptors.request.use(config => {
     config.headers['Authorization'] = `Bearer ${token.token}`
     return config
 })
+
+requestor.interceptors.response.use(config => {
+    return config
+})

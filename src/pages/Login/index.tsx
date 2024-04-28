@@ -35,8 +35,8 @@ export const Component = function Login() {
                 }
             })
             if (res.status !== 200) {
-                message.error('登陆失败')
-                return
+                
+                throw Error('登录失败')
             }
             localStorage.setItem('authorization', JSON.stringify(res.data))
             navigate('/')
@@ -47,6 +47,8 @@ export const Component = function Login() {
     }, {
         manual: true,
     })
+
+   
 
     return (
         backgroundImg ? <Row
