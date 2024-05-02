@@ -209,7 +209,7 @@ export default function BookItemList(p: BookItemListProps) {
             <Row
                 gutter={[16, 20]}
                 className={style.container}
-                justify={'start'}
+                justify={'center'}
                 align={'top'}
                 wrap={true}
                 ref={container_ref}
@@ -273,6 +273,7 @@ export default function BookItemList(p: BookItemListProps) {
                                     }}
                                 >
                                     <Card
+                                    cover={<img></img>}
                                         data-hash={ele?.objectId}
                                         extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
                                         className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}

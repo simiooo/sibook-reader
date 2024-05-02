@@ -71,13 +71,20 @@
     .reader_tooltip{
       display: inline-flex;
       position: absolute;
-      right: 2rem;
+      right: 11.85rem;
       top: 1rem;
       .page{
         /* background-color: #fff; */
         z-index: 1;
         width: 5.6rem;
       }
+    }
+    .toolbar{
+      display: flex;
+      justify-content: flex-end;
+    }
+    .ocrLayer{
+      
     }
   }
 }
