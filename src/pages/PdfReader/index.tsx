@@ -280,32 +280,32 @@ export const Component = function PdfReader() {
     }
   }
 
-  const renderPathData = useMemo(() => {
-    return points.map(point => {
-      const stroke = getStroke(point, {
-        size: 32,
-        thinning: 0.5,
-        smoothing: 0.5,
-        streamline: 0.5,
-        easing: (t) => t,
-        start: {
-          taper: 0,
-          easing: (t) => t,
-          cap: true
-        },
-        end: {
-          taper: 100,
-          easing: (t) => t,
-          cap: true
-        }
-      })
-      const pathData = getSvgPathFromStroke(stroke)
-      return pathData
-    })
+  // const renderPathData = useMemo(() => {
+  //   return points.map(point => {
+  //     const stroke = getStroke(point, {
+  //       size: 32,
+  //       thinning: 0.5,
+  //       smoothing: 0.5,
+  //       streamline: 0.5,
+  //       easing: (t) => t,
+  //       start: {
+  //         taper: 0,
+  //         easing: (t) => t,
+  //         cap: true
+  //       },
+  //       end: {
+  //         taper: 100,
+  //         easing: (t) => t,
+  //         cap: true
+  //       }
+  //     })
+  //     const pathData = getSvgPathFromStroke(stroke)
+  //     return pathData
+  //   })
     
-  }, [
-    points
-  ])
+  // }, [
+  //   points
+  // ])
 
 
   return (
@@ -327,7 +327,17 @@ export const Component = function PdfReader() {
             >
               <Menu
                 items={pdfToMenuItemHandler(meta?.outline as any)}
-                onSelect={(v) => {
+                onSelect={async (v) => {
+                  const keyIndex = v.key.indexOf('[')
+                  if(keyIndex > -1) {
+                    const key = v.key.slice(keyIndex)
+                    const destRef = JSON.parse(key || "{}")
+                    const pageRef = destRef.find(el => el?.num)
+                    const page = pages.find(el => JSON.stringify(el.ref) === JSON.stringify(pageRef ?? "{}"))
+                    console.log(page.pageNumber);
+                    form.setFieldValue(['page'], page.pageNumber)
+                    VlistRef.current.scrollToIndex(page.pageNumber - 1)
+                  }
                   setSelectedMenuKey(v.keyPath ?? [])
                 }}
                 selectedKeys={selectedMenuKey}
@@ -394,7 +404,7 @@ export const Component = function PdfReader() {
                       >
                         <Input
                           style={{
-                            minWidth: '5rem',
+                            minWidth: '6rem',
                           }}
                           suffix={<span>/ {(meta?.numPages ?? 0) as number}</span>}
                         ></Input>
