@@ -1,6 +1,6 @@
 import { createWorker } from 'tesseract.js'
-import * as htmlparser2 from "htmlparser2";
-
+// import * as htmlparser2 from "htmlparser2";
+import workerUrl from 'tesseract.js/dist/worker.min.js?url'
 function base64ToBytes(base64) {
     const binString = atob(base64);
     return Uint8Array.from(binString, (m) => m.codePointAt(0));
@@ -25,7 +25,12 @@ export async function ImgToText(data?: string | Uint8Array, languages?: string[]
     if(workerMap.has(JSON.stringify(languagesParam))) {
         worker = workerMap.get(JSON.stringify(languagesParam))
     } else {
-        worker  = await createWorker(result_languages.join('+'));
+        worker  = await createWorker(result_languages.join('+'), 1 , {
+            // workerPath: 'https://cdn.staticfile.net/tesseract.js/5.0.5/worker.min.js',
+            workerPath: workerUrl,
+            langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+            corePath: '/tesseract.js-core',
+        });
         workerMap.set(JSON.stringify(languagesParam), worker)
     }
     
