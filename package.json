@@ -40,6 +40,7 @@
     "normalize.css": "^8.0.1",
     "panzoom": "^9.4.3",
     "pdfjs-dist": "^3.11.174",
+    "perfect-freehand": "^1.2.2",
     "postcss": "^8.4.31",
     "re-resizable": "^6.9.11",
     "react": "^18.2.0",

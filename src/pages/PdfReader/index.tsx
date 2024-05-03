@@ -1,5 +1,5 @@
-import { Button, Col, Divider, Form, Input, Menu, Row, Select, Space, Spin, Tooltip } from 'antd'
-import React, { useEffect, useRef, useState } from 'react'
+import { Alert, Button, Col, Divider, Form, Input, Menu, Row, Select, Space, Spin, Switch, Tooltip } from 'antd'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './index.module.css'
 import * as pdfjs from 'pdfjs-dist'
 import 'pdfjs-dist/web/pdf_viewer.css'
@@ -20,12 +20,13 @@ type OcrTask = Partial<{
 }>
 type ElementType<T> = T extends (infer U)[] ? U : T;
 type OutlineType = ElementType<Awaited<ReturnType<pdfjs.PDFDocumentProxy["getOutline"]>>>
+import { getStroke } from 'perfect-freehand'
 import { usePdfBook } from './usePdfBook'
 import { ItemType } from 'antd/es/menu/hooks/useItems'
 import { RenderTask } from 'pdfjs-dist';
 import { ImgToText } from '../../utils/imgToText'
 import { readFileAsArrayBuffer } from '../../dbs/createBook'
-import { CloseOutlined, FontColorsOutlined } from '@ant-design/icons'
+import { CloseOutlined, FontColorsOutlined, TranslationOutlined } from '@ant-design/icons'
 import { tesseractLuanguages } from '../../utils/tesseractLanguages'
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id }] = usePdfBook()
@@ -90,6 +91,20 @@ export const Component = function PdfReader() {
     return
   }
 
+  // const [points, setPoints] = useState<[number, number, number][][]>([])
+  // const handlePointerDown = useCallback(async function handlePointerDown(e) {
+  //   e.target.setPointerCapture(e.pointerId)
+  //   setPoints([...points,[[e.pageX, e.pageY, e.pressure]]])
+  // }, [points])
+
+  // const handlePointerMove = useCallback(async function (e) {
+  //   if (e.buttons !== 1) return
+  //   console.log(points)
+  //   const thisPoint = points.pop() ?? []
+  //   setPoints([...points, [...thisPoint, [e.pageX, e.pageY, e.pressure]]])
+  // }, [points])
+  
+
   // ocr 文字识别层
   const ocrTextLayerBuilder = (canvas: HTMLCanvasElement, index: number) => {
     canvas.toBlob(async (blob) => {
@@ -113,7 +128,7 @@ export const Component = function PdfReader() {
         if (result?.bbox && dom.className === 'ocr_line' && 'style' in dom) {
           const [left, top, right, bottom] = result?.bbox?.split(' ') ?? []
           dom.style.position = `absolute`
-          dom.style.left = `${Number(left) /factor}px`
+          dom.style.left = `${Number(left) / factor}px`
           dom.style.top = `${Number(top) / factor}px`
           const height = bottom - top
           // const width = right - left
@@ -265,6 +280,33 @@ export const Component = function PdfReader() {
     }
   }
 
+  const renderPathData = useMemo(() => {
+    return points.map(point => {
+      const stroke = getStroke(point, {
+        size: 32,
+        thinning: 0.5,
+        smoothing: 0.5,
+        streamline: 0.5,
+        easing: (t) => t,
+        start: {
+          taper: 0,
+          easing: (t) => t,
+          cap: true
+        },
+        end: {
+          taper: 100,
+          easing: (t) => t,
+          cap: true
+        }
+      })
+      const pathData = getSvgPathFromStroke(stroke)
+      return pathData
+    })
+    
+  }, [
+    points
+  ])
+
 
   return (
     <Spin
@@ -306,6 +348,25 @@ export const Component = function PdfReader() {
           <Col flex={'1 0'}>
             <div className={styles.reader}>
               <div
+                className={styles.tips}
+              >
+                <Space
+                  direction='vertical'
+                >
+                  <Alert
+                    closable
+                    type='warning'
+                    message={'按住 Ctrl 时，滑动鼠标滚轮可缩放文档'}
+                  ></Alert>
+                  <Alert
+                    closable
+                    type='warning'
+                    message={'按住 Ctrl 时，鼠标左键可拖动文档位置'}
+                  ></Alert>
+                </Space>
+
+              </div>
+              <div
                 className={styles.reader_tooltip}
               >
                 <div className={styles.page}>
@@ -322,9 +383,9 @@ export const Component = function PdfReader() {
                     }}
                   >
                     <Space
-                    align='start'
+                      align='start'
                     >
-                    <Form.Item
+                      <Form.Item
                         name="page"
                         normalize={(v?: string) => {
                           const text = v?.replaceAll(/[^\d]/g, '') || '1'
@@ -339,24 +400,24 @@ export const Component = function PdfReader() {
                         ></Input>
                       </Form.Item>
                       <Form.Item
-                      name={'ocr'}
+                        name={'ocr'}
                       >
                         <Select
-                        style={{minWidth: '9rem'}}
-                        options={tesseractLuanguages.map(el => ({
-                          label: el.Language,
-                          value: el['Lang Code']
-                        }))}
-                        // maxTagCount={2}
-                        mode="multiple"
-                        placeholder={'请选择OCR语言'}
-                        showSearch
-                        filterOption={(value, option) => {
-                          return JSON.stringify(option ?? {}).indexOf(value) > -1
-                        }}
+                          style={{ minWidth: '9rem' }}
+                          options={tesseractLuanguages.map(el => ({
+                            label: el.Language,
+                            value: el['Lang Code']
+                          }))}
+                          // maxTagCount={2}
+                          mode="multiple"
+                          placeholder={'请选择OCR语言'}
+                          showSearch
+                          filterOption={(value, option) => {
+                            return JSON.stringify(option ?? {}).indexOf(value) > -1
+                          }}
                         ></Select>
                       </Form.Item>
-                      
+
                     </Space>
 
                   </Form>
@@ -446,49 +507,75 @@ export const Component = function PdfReader() {
                           transform: 'translateX(calc(-100% - 0.25rem))'
                         }}
                       >
-                        <Tooltip
-                          title={'提取图片文字'}
+                        <Space>
+                          <Tooltip
+                            title={'提取图片文字'}
 
-                        >
-                          {ocrTaskMap.get(index)?.status !== 'done' ? <Button
-                            type="primary"
-                            size='small'
-                            loading={ocrTaskMap.get(index)?.status === 'loading'}
-                            icon={<FontColorsOutlined />}
-                            onClick={() => {
-                              try {
-                                const cache = ocrTaskMap.get(index)
-                                if (cache && ['hidden', 'done'].includes(cache.status)) {
-                                  getCacheOcrFragment(index, cache)
-                                  cache.status = 'done'
-                                  set(index, cache)
-                                  return
+                          >
+                            {ocrTaskMap.get(index)?.status !== 'done' ? <Button
+                              type="primary"
+                              size='small'
+                              loading={ocrTaskMap.get(index)?.status === 'loading'}
+                              icon={<FontColorsOutlined />}
+                              onClick={() => {
+                                try {
+                                  const cache = ocrTaskMap.get(index)
+                                  if (cache && ['hidden', 'done'].includes(cache.status)) {
+                                    getCacheOcrFragment(index, cache)
+                                    cache.status = 'done'
+                                    set(index, cache)
+                                    return
+                                  }
+                                  set(index, { status: 'loading' })
+                                  const canvas = document.querySelector<HTMLCanvasElement>(`canvas[data-pageindex="${index}"]`)
+                                  ocrTextLayerBuilder(canvas, index)
+                                } catch (error) {
+                                  console.error(error)
+                                  set(index, { status: 'error', error })
                                 }
-                                set(index, { status: 'loading' })
-                                const canvas = document.querySelector<HTMLCanvasElement>(`canvas[data-pageindex="${index}"]`)
-                                ocrTextLayerBuilder(canvas, index)
-                              } catch (error) {
-                                console.error(error)
-                                set(index, { status: 'error', error })
-                              }
 
 
-                            }}
-                          ></Button> : <Button
-                            type="primary"
-                            size='small'
-                            icon={<CloseOutlined />}
-                            onClick={() => {
-                              const cache = ocrTaskMap.get(index)
-                              cache.status = 'hidden'
-                              set(index, cache)
-                              document.querySelector(`[data-ocrpageindex="${index}"]`).innerHTML = ''
-                            }}
-                          ></Button>}
-                        </Tooltip>
-
+                              }}
+                            ></Button> : <Button
+                              type="primary"
+                              size='small'
+                              icon={<CloseOutlined />}
+                              onClick={() => {
+                                const cache = ocrTaskMap.get(index)
+                                cache.status = 'hidden'
+                                set(index, cache)
+                                document.querySelector(`[data-ocrpageindex="${index}"]`).innerHTML = ''
+                              }}
+                            ></Button>}
+                          </Tooltip>
+                        </Space>
                       </div>
-
+                      {/* <div
+                      className={styles.anontation}
+                      style={{
+                        position: 'absolute',
+                        height: viewport.height,
+                          width: viewport.width,
+                        left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
+                        top: 12 / window.devicePixelRatio,
+                        zIndex: 2,
+                      }}
+                      >
+                        <svg
+                        onPointerDown={handlePointerDown}
+                        onPointerMove={handlePointerMove}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          touchAction: 'none',
+                          
+                        }}
+                        >
+                          {renderPathData.map((point) => {
+                            return <path d={point}></path>
+                          })}
+                        </svg>
+                      </div> */}
                     </div>
                   })}
                 </VList>
@@ -527,4 +614,21 @@ export function traversalDom(dom?: Element | HTMLElement | DocumentFragment, cb?
     cb?.(el)
     traversalDom(el, cb)
   }
+}
+
+
+export function getSvgPathFromStroke(stroke) {
+  if (!stroke.length) return ""
+
+  const d = stroke.reduce(
+    (acc, [x0, y0], i, arr) => {
+      const [x1, y1] = arr[(i + 1) % arr.length]
+      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2)
+      return acc
+    },
+    ["M", ...stroke[0], "Q"]
+  )
+
+  d.push("Z")
+  return d.join(" ")
 }
