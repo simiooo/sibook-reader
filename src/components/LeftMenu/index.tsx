@@ -1,4 +1,4 @@
-import { Avatar, Button, Col, Divider, Menu, Popover, Row, Select, Space } from 'antd'
+import { Avatar, Button, Col, Divider, Menu, Popover, Row, Select, Space, message } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import style from './index.module.css'
 import { ShopOutlined, TranslationOutlined } from '@ant-design/icons'
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useHover } from 'ahooks'
 import { useBookState } from '../../store'
+import useModal from 'antd/es/modal/useModal'
 
 const maxWidth = '4.1rem'
 const minWidth = '0rem'
@@ -17,6 +18,9 @@ export default function LeftMenu() {
   const ref = useRef<HTMLDivElement>(null)
   const { profile } = useBookState(state => state)
   const hover = useHover(ref)
+
+  const [modal, modalContext] = useModal()
+
   useEffect(() => {
     if (hover) {
       setCollapsed(false)
@@ -29,16 +33,55 @@ export default function LeftMenu() {
       className={style.container}
       ref={ref}
     >
+      {modalContext}
       <Menu
         style={{
           width: collapsed ? minWidth : maxWidth
         }}
         selectedKeys={[]}
         inlineCollapsed={true}
-        onSelect={(e) => {
+        onSelect={async (e) => {
           switch (e.key) {
             case "island":
               navigate('/island')
+              break
+            case 'language':
+              {
+                const res = modal.confirm({
+                  title: t('选择语言'),
+                  content: <Select
+                    placeholder={t('选择语言')}
+                    value={(t('选择语言'),i18n.language)}
+                    onChange={(v) => {
+                      i18n.changeLanguage(v)
+                      res.destroy()
+                    }}
+                    options={[
+                      {
+                        label: <Space><span>Chinese</span></Space>,
+                        value: 'zh',
+                      },
+                      {
+                        label: <Space><span>Japanese</span> </Space>,
+                        value: 'ja',
+                      },
+                      {
+                        label: <Space><span>English</span> </Space>,
+                        value: 'en',
+                      },
+                    ]}
+                  >
+
+                  </Select>,
+                })
+                try {
+                  await res
+                  res.destroy()
+                } catch (error) {
+                  message.error(error.message)
+                }
+                
+              }
               break
           }
         }}
@@ -56,47 +99,23 @@ export default function LeftMenu() {
             disabled: true,
           },
           {
-            label: <Select
-              size='small'
-              bordered={false}
-              placeholder={
-                t('选择语言')}
-              onChange={(e) => {
-                i18n.changeLanguage(e)
-              }}
-
-              value={i18n.language}
-              options={[
-                {
-                  label: <Space><span>Chinese</span></Space>,
-                  value: 'zh',
-                },
-                {
-                  label: <Space><span>Japanese</span> </Space>,
-                  value: 'ja',
-                },
-                {
-                  label: <Space><span>English</span> </Space>,
-                  value: 'en',
-                },
-              ]}
-            ></Select>,
+            label:  t('选择语言'),
             title: t('选择语言'),
             key: 'language',
             icon: <TranslationOutlined />
           },
           {
             label: <Avatar
-            size={'small'}
-            style={{
-              background: '#3498DB',
-              color: '#fff',
-              fontSize: '0.75rem',
-              transform: 'translateX(-.25rem)'
-            }}
-          >
-            {profile?.nickname?.[0] ?? t('我')}
-          </Avatar>,
+              size={'small'}
+              style={{
+                background: '#3498DB',
+                color: '#fff',
+                fontSize: '0.75rem',
+                transform: 'translateX(-.25rem)'
+              }}
+            >
+              {profile?.nickname?.[0] ?? t('我')}
+            </Avatar>,
             title: profile?.nickname ?? t('我'),
             key: 'profile'
           }

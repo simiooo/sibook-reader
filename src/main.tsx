@@ -31,7 +31,7 @@ i18n
     }
   });
 
-const green = '#50aa81'
+export const green = '#50aa81'
 
 Spin.setDefaultIndicator(<Indicator />)
 

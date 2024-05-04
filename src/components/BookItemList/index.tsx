@@ -7,7 +7,7 @@ import { Tooltip } from 'antd';
 import { Tag } from 'antd';
 import { BookItems, db } from '../../dbs/db';
 import { useNavigate } from 'react-router-dom';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
 import { useDebounceFn, useEventListener, useMap, useRequest, useThrottle, useThrottleFn } from 'ahooks';
@@ -42,15 +42,15 @@ interface BookItemListProps {
     contextmenuList?: any[];
     onContextmenuSelect?: (payload?: { type?: string }) => void
 }
-export default function BookItemList(p: BookItemListProps) {
+const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const {tabs, tabs_add} = useBookState(state => state)
-    const {uploadingTaskList, uploadingTaskList_update} = useBookState(state => ({
+    const { tabs, tabs_add } = useBookState(state => state)
+    const { uploadingTaskList, uploadingTaskList_update } = useBookState(state => ({
         uploadingTaskList: state.uploadingTaskList,
         uploadingTaskList_update: state.uploadingTaskList_update,
     }))
-    const container_ref = useRef()
+    const container_ref = useRef<HTMLDivElement>()
     const [intersectionContainer, {
         set: setInter,
         reset: resetInter
@@ -67,7 +67,7 @@ export default function BookItemList(p: BookItemListProps) {
 
     const { runAsync: openHandler, loading: bookBinaryLoading } = useRequest(async (ele: Book) => {
         try {
-            
+
             const cache = await db.book_blob.get(ele.objectId)
             if (cache && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
                 if (ele?.objectType === 'application/epub+zip') {
@@ -155,7 +155,7 @@ export default function BookItemList(p: BookItemListProps) {
     }, {
         manual: true,
     })
-    const {run: openDebouncedHandler} = useDebounceFn(openHandler, {
+    const { run: openDebouncedHandler } = useDebounceFn(openHandler, {
         leading: true,
     })
     const { run: sortHandler } = useThrottleFn<DraggableEventHandler>((e, data) => {
@@ -182,7 +182,7 @@ export default function BookItemList(p: BookItemListProps) {
         }
     }, {
         wait: 200,
-        
+
     })
 
     const renderList = useMemo(() => {
@@ -190,7 +190,7 @@ export default function BookItemList(p: BookItemListProps) {
 
     }, [p.data, intersectionContainer])
 
-    const {run: selectHandler} = useThrottleFn((e: any | { added: HTMLElement[], removed: HTMLElement[] }) => {
+    const { run: selectHandler } = useThrottleFn((e: any | { added: HTMLElement[], removed: HTMLElement[] }) => {
         if (e.inputEvent?.srcElement?.className === 'contexify_itemContent') {
             return
         }
@@ -204,15 +204,22 @@ export default function BookItemList(p: BookItemListProps) {
         wait: 50
     })
 
+    // useImperativeHandle(ref, () => {
+    //     return {
+    //     };
+    //   }, []);
+
     return (
-        
+        <div
+            ref={ref}
+        >
             <Row
                 gutter={[16, 20]}
                 className={style.container}
                 justify={'center'}
                 align={'top'}
                 wrap={true}
-                ref={container_ref}
+
             >
                 <CMenu
                     id="you"
@@ -235,9 +242,9 @@ export default function BookItemList(p: BookItemListProps) {
 
                 </CMenu>
                 <Selecto
-                    container={document.body}
+                    container={ref.current}
                     hitRate={5}
-                    dragContainer={window}
+                    dragContainer={ref.current}
                     selectableTargets={[".book_item"]}
                     selectByClick={true}
                     selectFromInside={false}
@@ -247,56 +254,72 @@ export default function BookItemList(p: BookItemListProps) {
                     keyContainer={window}
                     onSelect={selectHandler}
                 />
-                {
-                    (renderList.sort((pre, val) => dayjs(pre.uploadDate).isBefore(val.uploadDate) ? -1 : 1) ?? []).map((ele, index) => {
-                        if (ele.objectId === 'placeholder') {
-                            <Col
-                                key={ele?.objectId ?? ele?.objectName ?? index}
-                            >
-                                <BookPlaceholder></BookPlaceholder>
-                            </Col>
-                        } else {
-                            let title
-                            let des
+                <Col
+                    // span={24}
+                    flex={'1 1'}
+                >
+                    <Row
+                        gutter={[16, 20]}
+                    >
+                        {
+                            (renderList.sort((pre, val) => dayjs(pre.uploadDate).isBefore(val.uploadDate) ? -1 : 1) ?? []).map((ele, index) => {
+                                if (ele.objectId === 'placeholder') {
+                                    <Col
+                                        key={ele?.objectId ?? ele?.objectName ?? index}
+                                    >
+                                        <BookPlaceholder></BookPlaceholder>
+                                    </Col>
+                                } else {
+                                    let title
+                                    let des
 
-                            return <Col
-                                key={ele?.objectId}
-                            >
+                                    return <Col
+                                        key={ele?.objectId}
+                                    >
 
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{
-                                        duration: 0.34,
-                                        delay: 0.5 + Math.min(index, 4) * 0.25,
-                                        ease: [0, 0.71, 0.2, 1.01]
-                                    }}
-                                >
-                                    <Card
-                                    cover={<img></img>}
-                                        data-hash={ele?.objectId}
-                                        extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
-                                        className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
-                                        onDoubleClick={() => openDebouncedHandler(ele)}
-                                        onTouchEnd={() => openDebouncedHandler(ele)}
-                                        title={<Tooltip
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{
+                                                duration: 0.34,
+                                                delay: 0.5 + Math.min(index, 4) * 0.25,
+                                                ease: [0, 0.71, 0.2, 1.01]
+                                            }}
                                         >
-                                            <Tooltip
-                                                title={title ?? ele?.objectName}
-                                            >
-                                                {title ?? ele?.objectName}
-                                            </Tooltip>
+                                            <Card
+                                                cover={<img></img>}
+                                                data-hash={ele?.objectId}
+                                                extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
+                                                className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
+                                                onDoubleClick={() => openDebouncedHandler(ele)}
+                                                onTouchEnd={() => openDebouncedHandler(ele)}
+                                                title={<Tooltip
+                                                >
+                                                    <Tooltip
+                                                        title={title ?? ele?.objectName}
+                                                    >
+                                                        {title ?? ele?.objectName}
+                                                    </Tooltip>
 
-                                        </Tooltip>}
-                                    >{des ?? ele?.objectName}</Card>
-                                </motion.div>
+                                                </Tooltip>}
+                                            >{des ?? ele?.objectName}</Card>
+                                        </motion.div>
 
-                            </Col>
+                                    </Col>
+                                }
+
+                            })
                         }
+                    </Row>
+                </Col>
 
-                    })
-                }
+
             </Row>
+
+        </div>
+
 
     )
 }
+)
+export default BookItemList

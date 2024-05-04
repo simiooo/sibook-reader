@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as echarts from 'echarts'
-import { Button, Col, Form, Input, Modal, Row, message, Spin, Space, Select, SelectProps, Tag, Result, Avatar, Breadcrumb, Alert } from 'antd';
+import { Button, Col, Form, Input, Modal, Row, message, Spin, Space, Select, SelectProps, Tag, Result, Avatar, Breadcrumb, Alert, Tooltip } from 'antd';
 import classNames from 'classnames';
 function OptionBuilder(data: [number, number, string, number][], activeId?: number) {
 
@@ -18,7 +18,7 @@ function OptionBuilder(data: [number, number, string, number][], activeId?: numb
                 type: 'continuous',
                 dimension: 0,
                 min: 0,
-                show:false,
+                show: false,
                 max: 1,
                 inRange: {
                     symbol: [
@@ -36,9 +36,18 @@ function OptionBuilder(data: [number, number, string, number][], activeId?: numb
             position: 'top',
             formatter: function (params) {
                 return params.data?.[2]
+            },
+            borderColor: '#222222',
+            borderWidth: 2,
+            borderRadius: 10,
+            background: '#ffffff',
+            padding: [8, 12, 8, 12],
+            textStyle: {
+                color: '#222222',
+                fontSize: 14
             }
         },
-        
+
         xAxis: { show: false },
         yAxis: { show: false },
         series: [
@@ -51,7 +60,7 @@ function OptionBuilder(data: [number, number, string, number][], activeId?: numb
                     borderColor: '#222',
                     borderWidth: 2,
                     color: (params) => {
-                        return params?.data?.[3] === activeId ? '#A9DFBF' : '#F9E79F'
+                        return params?.data?.[3] === activeId ? '#99cFaF' : '#F9E79F'
                     }
                 },
             },
@@ -79,7 +88,7 @@ import { requestor } from '../../utils/requestor';
 import { useBookState } from '../../store';
 import { useTranslation } from 'react-i18next';
 import { IslandMembers, UserSimply } from '../../store/user.type';
-import { HomeOutlined, LoadingOutlined } from '@ant-design/icons';
+import { HddOutlined, HomeOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 const colors = ['#F9E79F', '#283593', '#196F3D']
 export const Component = function Island() {
@@ -145,7 +154,7 @@ export const Component = function Island() {
         manual: true,
         onSuccess: async () => {
             await getSelfIslands()
-            
+
         }
     })
 
@@ -195,7 +204,7 @@ export const Component = function Island() {
     })
 
     const renderOptions = useMemo(() => {
-        return OptionBuilder((islands ?? []).map(el => [el.x ?? Math.random(), el.y ?? Math.random(), el.name, el.id]),currentIsland)
+        return OptionBuilder((islands ?? []).map(el => [el.x ?? Math.random(), el.y ?? Math.random(), el.name, el.id]), currentIsland)
     }, [islands, currentIsland])
     useEffect(() => {
         if (echarts_instance.current) {
@@ -208,6 +217,12 @@ export const Component = function Island() {
         echarts_instance.current.on('click', function (params) {
             if (params.componentSubType === 'scatter' && params.componentType === 'series') {
                 currentIsland_update(params.data?.[3])
+                requestor({
+                    url: '/island/setLatestIsland',
+                    data: {
+                        id: params.data?.[3]
+                    }
+                })
             }
         })
         return () => {
@@ -230,38 +245,37 @@ export const Component = function Island() {
                 <Col
                     span={24}
                 >
+
                     <Row
                         justify={'space-between'}
                         align={'middle'}
                     >
                         <Col>
-                            <Breadcrumb
-                                items={[
-                                    {
-                                        href: '',
-                                        onClick: () => {
-                                            navigate('/')
-                                        },
-                                        title: <HomeOutlined />,
-                                    },
-                                    {
-                                        title: `${t("当前岛屿")}: ${(islands ?? [])?.find(el => el.id === currentIsland)?.name ?? '-'}`,
-                                    },
-                                ]}
-                            />
+                            <Space
+                            style={{
+                                fontSize: '1.5rem',
+                            }}
+                            >
+                                <HddOutlined />
+                                <strong
+                                    
+                                >{(islands ?? [])?.find(el => el.id === currentIsland)?.name}</strong>
+                            </Space>
+
 
                         </Col>
                         <Col>
                             <Space>
                                 {!currentIsland ? <Alert
-                                type='warning'
-                                message={t('请选择岛屿')}
+                                    type='warning'
+                                    message={t('请选择岛屿')}
                                 ></Alert> : undefined}
                                 <Button
-                                // disabled={!currentIsland}
+                                    // disabled={!currentIsland}
                                     onClick={() => setIslandCreateOpen(true)}
                                 >{t('新建岛屿')}</Button>
                                 <Button
+                                    type="primary"
                                     disabled={!currentIsland}
                                     onClick={() => setMemberOpen(true)}
                                 >{t('添加成员')}</Button>
@@ -285,11 +299,18 @@ export const Component = function Island() {
                             maxCount={7}
                         >
                             {(members ?? []).map((el, index) => (
-                                <Avatar
-                                    style={{
-                                        background: colors[index % 3]
-                                    }}
-                                >{el.memberName?.[0]}</Avatar>
+                                <Tooltip
+                                    title={el.memberName}
+                                    key={el.memberId}
+                                >
+                                    <Avatar
+
+                                        style={{
+                                            background: colors[index % 3]
+                                        }}
+                                    >{el.memberName?.[0]}</Avatar>
+                                </Tooltip>
+
                             ))}
 
                         </Avatar.Group>
@@ -306,9 +327,9 @@ export const Component = function Island() {
                 />}
                 spinning={getSelfIslandLoading || queryMembersLoading || createLoading || searchUserLoading || addUserToIslandLoading}
             > */}
-                <div
-                    className={classNames(style.chart_container, style.island_container)}
-                    ref={charts}></div>
+            <div
+                className={classNames(style.chart_container, style.island_container)}
+                ref={charts}></div>
             {/* </Spin> */}
 
             <Modal
@@ -375,7 +396,7 @@ export const Component = function Island() {
                                 <div
                                     className={style.noFountMember}
                                 >
-                                    {searchUserLoading ? <Spin></Spin> : <Result title={t("没有找到用户")} status={"warning"} />}
+                                    {searchUserLoading ? <Spin></Spin> : <Result title={t("没有找到用户")} icon={<Alert type="error" message="输入内容后搜索"></Alert>} status={"warning"} />}
                                 </div>}
                             onSearch={(v) => debouceSearch(v)}
                             placeholder={t('请选择')}
