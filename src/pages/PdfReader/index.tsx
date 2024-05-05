@@ -644,6 +644,7 @@ export const Component = function PdfReader() {
         <Popover
           trigger={'click'}
           // title="翻译"
+          destroyTooltipOnHide
           onOpenChange={(v) => {
             console.log(v)
             if (v) {
