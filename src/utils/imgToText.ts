@@ -26,7 +26,6 @@ export async function ImgToText(data?: string | Uint8Array, languages?: string[]
         worker = workerMap.get(JSON.stringify(languagesParam))
     } else {
         worker  = await createWorker(result_languages.join('+'), 1 , {
-            // workerPath: 'https://cdn.staticfile.net/tesseract.js/5.0.5/worker.min.js',
             workerPath: workerUrl,
             langPath: 'https://tessdata.projectnaptha.com/4.0.0',
             corePath: '/tesseract.js-core',
