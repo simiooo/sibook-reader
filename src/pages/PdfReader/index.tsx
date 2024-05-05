@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Divider, Form, Input, Menu, Row, Select, Space, Spin, Switch, Tooltip } from 'antd'
+import { Alert, Button, Col, Divider, Form, Input, Menu, Popover, Row, Select, Space, Spin, Switch, Tooltip } from 'antd'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './index.module.css'
 import * as pdfjs from 'pdfjs-dist'
@@ -6,7 +6,7 @@ import 'pdfjs-dist/web/pdf_viewer.css'
 import { VList, VListHandle } from "virtua";
 import { useLocation, useParams } from 'react-router-dom'
 import panzoomify, { PanZoom } from 'panzoom'
-import { useDebounceFn, useDrag, useLocalStorageState, useLongPress, useMap, useRequest, useSize } from 'ahooks'
+import { useDebounceFn, useDrag, useEventListener, useLocalStorageState, useLongPress, useMap, useRequest, useSize, useTextSelection } from 'ahooks'
 import { useBookState } from '../../store'
 export const ANIMATION_STATIC = {
   whileTap: { scale: 0.75 },
@@ -28,6 +28,9 @@ import { ImgToText } from '../../utils/imgToText'
 import { readFileAsArrayBuffer } from '../../dbs/createBook'
 import { CloseOutlined, FontColorsOutlined, TranslationOutlined } from '@ant-design/icons'
 import { tesseractLuanguages } from '../../utils/tesseractLanguages'
+import { createPortal } from 'react-dom'
+import { languages } from '../../utils/locale'
+import { useTranslate } from '../../utils/useTranslate'
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id }] = usePdfBook()
   const [dividerLeft, setDividerLeft] = useState<number>(300)
@@ -75,6 +78,7 @@ export const Component = function PdfReader() {
     pdfPageRenderHandler(0, (pages ?? []).length ?? 0, pages, { canvasScale, clearDpr: true })
   }, [canvasScale])
 
+
   const { run: canvasScaleHandler } = useDebounceFn((e) => {
     const scale = e?.getTransform?.()?.scale
     setCanvasScale(scale ?? 1)
@@ -103,7 +107,7 @@ export const Component = function PdfReader() {
   //   const thisPoint = points.pop() ?? []
   //   setPoints([...points, [...thisPoint, [e.pageX, e.pageY, e.pressure]]])
   // }, [points])
-  
+
 
   // ocr 文字识别层
   const ocrTextLayerBuilder = (canvas: HTMLCanvasElement, index: number) => {
@@ -275,10 +279,13 @@ export const Component = function PdfReader() {
       // })
 
 
+
+
       // 避免潜在的竞态情况
       pageRenderTask.current.set(ctx, { renderTask: task })
     }
   }
+
 
   // const renderPathData = useMemo(() => {
   //   return points.map(point => {
@@ -302,10 +309,29 @@ export const Component = function PdfReader() {
   //     const pathData = getSvgPathFromStroke(stroke)
   //     return pathData
   //   })
-    
+
   // }, [
   //   points
   // ])
+
+  const [selectedText, setSelectedText] = useState<string>()
+  const [targetLaugange, setTargetLanguage] = useState<string>('zh_CN')
+  const selectedState = useTextSelection(listRef)
+  const [translatedText, { runAsync: translate, loading: translating }] = useTranslate(selectedText, {
+    target: targetLaugange
+  })
+  // useRequest(async () => {
+  //   if (selectedText?.length > 0 && !Number.isNaN(selectedState.top) && targetLaugange) {
+  //     console.log('asd')
+  //     translate()
+  //   }
+  // }, {
+  //   refreshDeps: [
+  //     selectedText,
+  //     selectedState,
+  //     targetLaugange
+  //   ]
+  // })
 
 
   return (
@@ -329,7 +355,7 @@ export const Component = function PdfReader() {
                 items={pdfToMenuItemHandler(meta?.outline as any)}
                 onSelect={async (v) => {
                   const keyIndex = v.key.indexOf('[')
-                  if(keyIndex > -1) {
+                  if (keyIndex > -1) {
                     const key = v.key.slice(keyIndex)
                     const destRef = JSON.parse(key || "{}")
                     const pageRef = destRef.find(el => el?.num)
@@ -436,6 +462,10 @@ export const Component = function PdfReader() {
               </div>
               <div
                 ref={listRef}
+                onMouseUp={(e) => {
+                  console.log(window.getSelection().toString())
+                  setSelectedText(window.getSelection().toString())
+                }}
                 style={{
                   height: '100%',
                   width: '100%',
@@ -596,7 +626,94 @@ export const Component = function PdfReader() {
           </Col>
         </Row>
       </div>
+      {createPortal(<div
+        className={styles.transalate_tooltip}
+        onMouseUp={(e) => {
+          e.stopPropagation()
+          e.preventDefault()
+        }}
+
+        style={{
+          position: 'absolute',
+          display: selectedText?.length > 0 ? 'block' : 'none',
+          left: selectedState?.left ?? -100,
+          top: selectedState?.bottom ?? -100,
+
+        }}
+      >
+        <Popover
+          trigger={'click'}
+          // title="翻译"
+          onOpenChange={(v) => {
+            console.log(v)
+            if (v) {
+              translate()
+            }
+          }}
+          content={<div
+            className={styles.transalate_container}
+          >
+            <Row
+              gutter={[12, 10]}
+            >
+              <Col span={24}>
+                <div
+                  className={styles.translate_target}
+                >
+                  <Select
+                    // bordered={false}
+                    value={targetLaugange}
+                    onChange={v => {
+                      setTargetLanguage(v)
+                    }}
+                    placeholder={'请选择语言'}
+                    style={{
+                      width: '12rem'
+                    }}
+                    defaultValue={'zh_CN'}
+                    options={languages.map(el => ({
+                      label: el.language,
+                      value: el.code,
+                    }))}
+                  ></Select>
+                </div>
+
+              </Col>
+              <Col span={24}>
+                <Row
+                gutter={[12, 24]}
+                  wrap={false}
+                >
+                  <Col span={12}>
+                    <div>{selectedText}</div>
+                  </Col>
+                  <Col span={12}>
+                    <Spin
+                      spinning={translating}
+                    >
+                      <div>
+                        <div>{translatedText}</div>
+                      </div>
+                    </Spin>
+                  </Col>
+                </Row>
+
+              </Col>
+            </Row>
+
+
+          </div>}
+        >
+          <Button
+            type="primary"
+            size='small'
+            icon={<TranslationOutlined />}
+          ></Button>
+        </Popover>
+
+      </div>, document.documentElement)}
       <div
+
         ref={trashRef}
         style={{ position: 'absolute', top: 0, transform: `translateY(-100%)` }}
         className="trash"></div>

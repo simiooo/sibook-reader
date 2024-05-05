@@ -96,4 +96,14 @@
       
     }
   }
+  
+}
+.transalate_tooltip{
+  
+}
+.transalate_container{
+  width: 36rem;
+  padding: .5rem .8rem;
+  height: 10rem;
+  overflow: auto;
 }
