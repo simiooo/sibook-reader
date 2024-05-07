@@ -9,6 +9,7 @@ import { UploadTask } from "../components/UploadContainer";
 import { User } from "./user.type";
 import { LoginType } from "../pages/Login";
 import { HistoryTab } from "../utils/useCacheBookTab";
+import { AxiosError } from "axios";
 const OPENAI_BASE_URL = 'https://api.openai.com'
 export const OPENAI_PATHNAME = '/ai/openai/v1/chat/completions'
 export const OPENAI_HEADERS = new Headers()
@@ -96,15 +97,16 @@ export const useBookState = create<BookStateType>((set, get) => {
         isUserOnline: async () => {
             try {
                 const authorization = JSON.parse(localStorage.getItem('authorization') ?? "{}") as Partial<LoginType> 
-                if(!authorization.token) {
-                    throw Error('token 不存在')
-                }
+                // if(!authorization?.token) {
+                //     throw Error('token 不存在')
+                // }
                 const res = await requestor({
                     url: '/profile/v/isUserOnline'
                 })
                 return res.status === 200
             } catch (error) {
-                return false
+                console.log(error)
+                return error instanceof AxiosError ? error.response.status === 401 ? false : true : true
             }
             
         },

@@ -22,6 +22,7 @@ import { useBookState } from '../../store';
 import { HttpTask } from '../UploadContainer';
 import { AxiosProgressEvent } from 'axios';
 import { readFileAsArrayBuffer } from '../../dbs/createBook';
+import { cos } from '../../utils/coClient';
 
 export const tagMap = {
     'application/pdf': {
@@ -114,39 +115,89 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                 })()
                 uploadingTaskList.unshift(httpUploadTask)
                 uploadingTaskList_update(uploadingTaskList)
-                const res = await requestor<Blob>({
-                    url: "/island/getBookBinaryFromIsland",
-                    responseType: 'blob',
-                    onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress,
+                const exitInCos = await requestor<{ data: string }>({
+                    url: "/cos/isExitedInCos",
                     data: {
                         bookId: ele.objectId
                     }
                 })
-                db.book_blob.add({
-                    id: ele.objectId,
-                    blob: await readFileAsArrayBuffer(new File([res.data], ele.objectName)),
-                    updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                }).then(() => {
-                    if (ele?.objectType === 'application/epub+zip') {
-                        const pathname = `/reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
+                if (exitInCos.data.data === '0') {
+                    cos.getObject({
+                        Bucket: import.meta.env.VITE_COS_BUCKET, /* 填入您自己的存储桶，必须字段 */
+                        Region: import.meta.env.VITE_COS_REGION,  /* 存储桶所在地域，例如 ap-beijing，必须字段 */
+                        Key: ele.objectId,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
+                        onProgress: function (progressData) {
+                            // console.log(JSON.stringify(progressData));
+                            httpUploadTask.httpMeta.onDownloadProgress({
+                                ...progressData,
+                                bytes: progressData.total
+                            })
+                        }
+
+                    }, async function (err, data) {
+                        console.log(err || data.Body);
+                        db.book_blob.add({
+                            id: ele.objectId,
+                            blob: await readFileAsArrayBuffer(new File([data.Body], ele.objectName)),
+                            updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                        }).then(() => {
+                            if (ele?.objectType === 'application/epub+zip') {
+                                const pathname = `/reader/${ele.objectId}`
+                                tabs_add({
+                                    url: pathname,
+                                    label: ele.objectName,
+                                    closable: true
+                                })
+                                navigate(pathname)
+                            } else if (ele?.objectType === 'application/pdf') {
+                                const pathname = `/pdf_reader/${ele.objectId}`
+                                tabs_add({
+                                    url: pathname,
+                                    label: ele.objectName,
+                                    closable: true
+                                })
+                                navigate(pathname)
+                            } else {
+                                message.error(t('暂不支持'))
+                            }
                         })
-                        navigate(pathname)
-                    } else if (ele?.objectType === 'application/pdf') {
-                        const pathname = `/pdf_reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
-                        })
-                        navigate(pathname)
-                    } else {
-                        message.error(t('暂不支持'))
-                    }
-                })
+                    })
+                } else {
+                    const res = await requestor<Blob>({
+                        url: "/island/getBookBinaryFromIsland",
+                        responseType: 'blob',
+                        onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress,
+                        data: {
+                            bookId: ele.objectId
+                        }
+                    })
+                    db.book_blob.add({
+                        id: ele.objectId,
+                        blob: await readFileAsArrayBuffer(new File([res.data], ele.objectName)),
+                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    }).then(() => {
+                        if (ele?.objectType === 'application/epub+zip') {
+                            const pathname = `/reader/${ele.objectId}`
+                            tabs_add({
+                                url: pathname,
+                                label: ele.objectName,
+                                closable: true
+                            })
+                            navigate(pathname)
+                        } else if (ele?.objectType === 'application/pdf') {
+                            const pathname = `/pdf_reader/${ele.objectId}`
+                            tabs_add({
+                                url: pathname,
+                                label: ele.objectName,
+                                closable: true
+                            })
+                            navigate(pathname)
+                        } else {
+                            message.error(t('暂不支持'))
+                        }
+                    })
+                }
+
             }
         } catch (error) {
             message.error(error.message)

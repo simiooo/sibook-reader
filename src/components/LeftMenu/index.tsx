@@ -5,9 +5,10 @@ import { ShopOutlined, TranslationOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useHover } from 'ahooks'
+import { useHover, useRequest } from 'ahooks'
 import { useBookState } from '../../store'
 import useModal from 'antd/es/modal/useModal'
+import { requestor } from '../../utils/requestor'
 
 const maxWidth = '4.1rem'
 const minWidth = '0rem'
@@ -20,6 +21,22 @@ export default function LeftMenu() {
   const hover = useHover(ref)
 
   const [modal, modalContext] = useModal()
+
+  const {runAsync: logout, loading: logouting} = useRequest(async () => {
+    try {
+      const res = await requestor({
+        url: "/auth/logout",
+        method : 'get'
+      })
+      localStorage.removeItem('authorization')
+      navigate('/login')
+    } catch (error) {
+      
+    }
+   
+  }, {
+    manual: true
+  })
 
   useEffect(() => {
     if (hover) {
@@ -51,7 +68,7 @@ export default function LeftMenu() {
                   title: t('选择语言'),
                   content: <Select
                     placeholder={t('选择语言')}
-                    value={(t('选择语言'),i18n.language)}
+                    value={(t('选择语言'), i18n.language)}
                     onChange={(v) => {
                       i18n.changeLanguage(v)
                       res.destroy()
@@ -80,7 +97,7 @@ export default function LeftMenu() {
                 } catch (error) {
                   message.error(error.message)
                 }
-                
+
               }
               break
           }
@@ -99,23 +116,48 @@ export default function LeftMenu() {
             disabled: true,
           },
           {
-            label:  t('选择语言'),
+            label: t('选择语言'),
             title: t('选择语言'),
             key: 'language',
             icon: <TranslationOutlined />
           },
           {
-            label: <Avatar
-              size={'small'}
-              style={{
-                background: '#3498DB',
-                color: '#fff',
-                fontSize: '0.75rem',
-                transform: 'translateX(-.25rem)'
-              }}
+            label: <Popover
+            // trigger={'click'}
+            zIndex={1}
+            placement='bottomRight'
+              content={<div>
+                <Space
+                  direction='vertical'
+                >
+                  <Button
+                  danger
+                  type="link"
+                  loading={logouting}
+                  onClick={() => {
+                    logout()
+                  }}
+                  >注销</Button>
+                  {/* <Divider
+                    type="vertical"
+                  ></Divider> */}
+                  {/* <div></div> */}
+                </Space>
+
+              </div>}
             >
-              {profile?.nickname?.[0] ?? t('我')}
-            </Avatar>,
+              <Avatar
+                size={'small'}
+                style={{
+                  background: '#3498DB',
+                  color: '#fff',
+                  fontSize: '0.75rem',
+                  transform: 'translateX(-.25rem)'
+                }}
+              >
+                {profile?.nickname?.[0] ?? t('我')}
+              </Avatar>
+            </Popover>,
             title: profile?.nickname ?? t('我'),
             key: 'profile'
           }

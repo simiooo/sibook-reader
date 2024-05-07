@@ -23,7 +23,7 @@ export type HttpTask = Omit<WsTask, 'ws'> & {
         current: number;
         error: boolean;
         onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void;
-        onUploadProgress?: () => void;
+        onUploadProgress?: (type: string, others: any[]) => void;
     }
 }
 
