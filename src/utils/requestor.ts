@@ -4,6 +4,7 @@ console.log(import.meta.env.VITE_API_URL)
 export const requestor = Axios.create({
     baseURL: `${import.meta.env.VITE_API_URL}`,
     method: 'post',
+    timeout: 30 * 1000,
 })
 
 requestor.interceptors.request.use(config => {

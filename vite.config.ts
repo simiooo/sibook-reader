@@ -22,11 +22,6 @@ export default defineConfig({
         target: "https://squirrelsi.top:8080",
         // target: "http://localhost:8080",
         rewrite: (path) => path.replace(/^\/api/, ""),
-        bypass: (req, res) => {
-          console.log(req)
-          // delete req.headers.host;
-          // delete req.headers.referer;
-        }
       },
     }
   },
@@ -41,7 +36,7 @@ export default defineConfig({
         name: 'Si Reader',
         short_name: 'Si Reader',
         description: 'Si Reader application',
-        theme_color: 'rgba(101, 170, 12, 1)',
+        theme_color: '#50aa81',
         background_color: '#ffffff',
         icons: [
           {

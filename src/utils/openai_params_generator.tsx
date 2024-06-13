@@ -16,10 +16,10 @@ export function translator(params: {
         "messages": [
             {
                 "role": "user",
-                "content": `下面我让你来充当翻译家，回答中只需要有翻译产物，不要带有无关内容。你的目标是把${params?.source ?? '任意'}语言翻译成${params?.target ?? '英语'}，请使用亚里士多德古典主义式的、禅院僧侣式的严谨学术态度进行翻译。请翻译下面这句话：${params?.message ?? '这是一条测试消息。当您看到该消息时，说明翻译失败'}`
+                "content": `下面我让你来充当翻译家，回答中只需要有翻译产物，不要带有无关内容。你的目标是把${params?.source ?? '任意'}语言(语言配置可能以unix 风格的 locale 文件告诉你)翻译成${params?.target ?? '英语'}，请使用亚里士多德古典主义式的、禅院僧侣式的严谨学术态度进行翻译。请翻译下面这句话：${params?.message ?? '这是一条测试消息。当您看到该消息时，说明翻译失败'}`
             },
         ],
-        "model": options?.model ?? "gpt-3.5-turbo-1106",
+        "model": "gpt-3.5-turbo",
         "temperature": options?.temperature ?? 0.5,
         "presence_penalty": options?.presence_penalty ?? 0,
         "frequency_penalty": options?.frequency_penalty ?? 0,

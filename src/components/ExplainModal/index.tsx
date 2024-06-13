@@ -15,7 +15,7 @@ export interface ExplainModalProps extends ModalProps {
 export default function ExplainModal(p: ExplainModalProps) {
     const { text, ...modalProps } = p
     const [res, setRes] = useState<string[]>([])
-    const {t} = useTranslation()
+    const { t } = useTranslation()
     const [error, setError] = useState<Error>()
     const request = useBookState(state => state.openaiRequest)
     const [form] = Form.useForm()
@@ -44,7 +44,7 @@ export default function ExplainModal(p: ExplainModalProps) {
                 if (line.startsWith('data:')) {
                     const data = line.replace('data: ', '');
                     if (data === '[DONE]') {
-
+                        undefined
                     } else {
                         const json_data = JSON.parse(data)
                         res.push(json_data?.choices?.[0]?.delta?.content)
@@ -99,7 +99,7 @@ export default function ExplainModal(p: ExplainModalProps) {
                                 showCount
                                 value={renderRes}
                             ></Input.TextArea> */}
-                            <div className={style.answer_container} dangerouslySetInnerHTML={{__html: renderRes}}>
+                            <div className={style.answer_container} dangerouslySetInnerHTML={{ __html: renderRes }}>
 
                             </div>
                         </Spin>

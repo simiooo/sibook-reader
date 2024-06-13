@@ -78,6 +78,26 @@ export const Component = function App() {
         ]
     })
     const { state } = useNavigation()
+
+    const {currentIsland_update, profile} = useBookState(state => ({
+        profile: state.profile,
+        currentIsland_update: state.currentIsland_update
+    }))
+    useRequest(async () => {
+        if(!profile?.id) {
+            return
+        }
+        const res = await requestor({
+            url: '/island/getLatestIsland',
+        })
+        console.log(res.data)
+        if(res.data.data.islandId) {
+            currentIsland_update(Number(res.data.data.islandId))
+        }
+    }, {
+        refreshDeps: [profile],
+    })
+
     return (
 
         <div>

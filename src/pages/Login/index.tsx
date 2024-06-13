@@ -46,6 +46,7 @@ export const Component = function Login() {
 
     }, {
         manual: true,
+        debounceWait: 1000,
     })
 
    

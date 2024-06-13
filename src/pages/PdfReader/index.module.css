@@ -46,6 +46,7 @@
     justify-content: center;
     align-items: flex-start;
     overflow: hidden;
+    position: relative;
     .pageContainer{
       width: 100%;
       display: flex;
@@ -83,7 +84,7 @@
     .reader_tooltip{
       display: inline-flex;
       position: absolute;
-      right: 2rem;
+      right: 11.85rem;
       top: 1rem;
       .page{
         /* background-color: #fff; */
@@ -91,5 +92,30 @@
         width: 5.6rem;
       }
     }
+    .toolbar{
+      display: flex;
+      justify-content: flex-end;
+    }
+    .tips{
+      position: absolute;
+      left: 1rem;
+      z-index: 1;
+      top: 0.75rem;
+      color: #a2a2a2;
+      font-size: 1rem;
+    }
+    .ocrLayer{
+      
+    }
   }
+  
+}
+.transalate_tooltip{
+  
+}
+.transalate_container{
+  width: 36rem;
+  padding: .5rem .8rem;
+  height: 20rem;
+  overflow: auto;
 }

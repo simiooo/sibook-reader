@@ -198,6 +198,7 @@ export const Component = function Bookshelf() {
                                             {renderList?.length > 0 ? <BookItemList
                                                 data={renderList}
                                                 selected={selected}
+                                                ref={containerRef}
                                                 onAdd={add}
                                                 onRemove={remove}
                                                 contextmenuList={contextmenuList}

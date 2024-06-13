@@ -18,13 +18,15 @@ type WsTask = {
     des: string;
 }
 export type HttpTask = Omit<WsTask, 'ws'> & {
-    httpMeta: {
+    httpMeta?: {
         size: number;
         current: number;
         error: boolean;
-        onDownloadProgress: (progressEvent: AxiosProgressEvent) => void;
+        onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void;
+        onUploadProgress?: (type: string, others: any[]) => void;
     }
 }
+
 const container = {
     hidden: {
         height: '1rem',
