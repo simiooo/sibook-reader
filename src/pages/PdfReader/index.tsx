@@ -19,12 +19,15 @@ import { usePdfBook } from './usePdfBook'
 import { ItemType } from 'antd/es/menu/hooks/useItems'
 import { RenderTask } from 'pdfjs-dist';
 export const Component = function PdfReader() {
-    const [book, pdfDocument, meta, loading, {book_id}] = usePdfBook()
+    const [book, pdfDocument, meta, loading, { book_id }] = usePdfBook()
     const [dividerLeft, setDividerLeft] = useState<number>(300)
     const zoomInstance = useRef<PanZoom>(null)
     const params = useParams()
     const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
-    
+
+    // 用于渲染期间显示的缓存的图片
+    const cacheImage = useRef<Map<number, Blob>>(new Map())
+
     const dividerRef = useRef<HTMLDivElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
     const VlistRef = useRef<VListHandle>(null)
@@ -46,7 +49,7 @@ export const Component = function PdfReader() {
     })
     useEffect(() => {
         listRef.current.style.setProperty('--scale-factor', String(1))
-        pdfPageRenderHandler(0, (pages ??[]).length ?? 0, pages, {canvasScale, clearDpr: true})
+        pdfPageRenderHandler(0, (pages ?? []).length ?? 0, pages, { canvasScale, clearDpr: true })
     }, [canvasScale])
 
     const { run: canvasScaleHandler } = useDebounceFn((e) => {
@@ -101,7 +104,7 @@ export const Component = function PdfReader() {
 
     const size = useSize(listRef)
 
-    const pdfPageRenderHandler = (startIndex: number, endIndex: number, pages: pdfjs.PDFPageProxy[],options?:{pageIndicator?: number, canvasScale?: number, clearDpr?: boolean}) => {
+    const pdfPageRenderHandler = (startIndex: number, endIndex: number, pages: pdfjs.PDFPageProxy[], options?: { pageIndicator?: number, canvasScale?: number, clearDpr?: boolean }) => {
         // 该方法在缩放时不被调用，需要让它被调用；
 
         const start = Math.max(0, startIndex)
@@ -118,6 +121,7 @@ export const Component = function PdfReader() {
             const dpr = window.devicePixelRatio || 1;
             const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
             const textLayer = [...document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
+            const cacheImageLayer = [...document.querySelectorAll<HTMLImageElement>(`.${styles.pageCacheImage}`)]?.find?.(el => Number(el.dataset?.pageindex) === i)?.firstChild as (HTMLImageElement | undefined)
             const ctx = canvas?.getContext('2d')
             if (!ctx) {
                 continue
@@ -127,26 +131,50 @@ export const Component = function PdfReader() {
             pageRenderTask.current.get(ctx)?.renderTask?.cancel?.()
 
             // 只缩放没有被缩放的元素
-            if (options?.clearDpr ||!pageRenderTask.current.get(ctx)) {
+            if (options?.clearDpr || !pageRenderTask.current.get(ctx)) {
                 ctx.scale(dpr, dpr)
             }
             const viewport = page.getViewport({ scale: options?.canvasScale ?? canvasScale })
             const textViewport = page.getViewport({ scale: 1 })
+            const blob = cacheImage.current.get(i)
+            let url: string
+            if (blob) {
+                url = URL.createObjectURL(blob)
+            }
+
+            if (cacheImageLayer && cacheImage.current.has(i)) {
+                cacheImageLayer.src = url
+                cacheImageLayer.style.display = 'flex'
+            }
             const task = page.render({
                 viewport,
                 canvasContext: ctx
             })
+
             pdfjs.renderTextLayer({
                 textContentSource: page.streamTextContent(),
                 viewport: textViewport,
                 container: textLayer,
             })
-            task.promise.catch(err => {
+
+            task.promise.then(() => {
+                canvas.toBlob((data) => {
+                    cacheImage.current.set(i, data)
+                }, 'image/png', 1)
+            }).catch(err => {
                 // 屏蔽这个异常，因为这个异常是故意的
                 if (err instanceof pdfjs.RenderingCancelledException) {
                     return
                 }
                 console.error(err)
+            }).finally(() => {
+                if (!url) {
+                    return
+                }
+                URL.revokeObjectURL(url)
+                url = null
+                cacheImageLayer.src = ''
+                cacheImageLayer.style.display = 'none'
             })
 
             // 避免潜在的竞态情况
@@ -257,9 +285,21 @@ export const Component = function PdfReader() {
                                             <div
                                                 className={styles.pageDivider}
                                             ></div>
+                                            <div
+                                                data-pageindex={index}
+                                                style={{
+                                                    height: viewport.height,
+                                                    width: viewport.width,
+                                                    background: 'white',
+                                                    left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
+                                                    top: 12,
+                                                }}
+                                                className={styles.pageCacheImage}>
+                                                <img src="" alt="" />
+                                            </div>
                                             <canvas
                                                 className={styles.canvasContainer}
-                                                width={viewport.width *canvasScale * dpr}
+                                                width={viewport.width * canvasScale * dpr}
                                                 data-pageindex={index}
                                                 height={viewport.height * canvasScale * dpr}
                                                 style={{
