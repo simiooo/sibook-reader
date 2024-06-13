@@ -84,7 +84,7 @@ export const useBookState = create<BookStateType>((set, get) => {
             openai_api_model,
         })),
         openaiRequest: async (body, customUrl?: string) => {
-            const baseurl = import.meta.env.VITE_API_URL
+            const baseurl = `${import.meta.env.VITE_API_URL}/${import.meta.env.VITE_API_PREFIX}`
             const url = `${/^https?:\/\//.test(baseurl) ? baseurl : location.origin + baseurl }${OPENAI_PATHNAME}`
             const authorization = JSON.parse(localStorage.getItem("authorization") ?? "{}") as LoginType 
             OPENAI_HEADERS.set('Authorization', `Bearer ${authorization?.token}`)
