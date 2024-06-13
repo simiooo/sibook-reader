@@ -166,6 +166,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                     const res = await requestor<Blob>({
                         url: "/island/getBookBinaryFromIsland",
                         responseType: 'blob',
+                        timeout: 1000 * 60 * 5,
                         onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress,
                         data: {
                             bookId: ele.objectId
