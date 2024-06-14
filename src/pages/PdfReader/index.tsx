@@ -40,7 +40,7 @@ export const Component = function PdfReader() {
   const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
   const trashRef = useRef<HTMLDivElement>()
   const [ocrTaskMap, { set, remove, reset }] = useMap<number, OcrTask>()
-
+  const maxViewPortWidth= useRef<number>(0)
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
 
   const destroy = () => {
@@ -360,7 +360,6 @@ export const Component = function PdfReader() {
                     const destRef = JSON.parse(key || "{}")
                     const pageRef = destRef.find(el => el?.num)
                     const page = pages.find(el => JSON.stringify(el.ref) === JSON.stringify(pageRef ?? "{}"))
-                    console.log(page.pageNumber);
                     form.setFieldValue(['page'], page.pageNumber)
                     VlistRef.current.scrollToIndex(page.pageNumber - 1)
                   }
@@ -463,12 +462,11 @@ export const Component = function PdfReader() {
               <div
                 ref={listRef}
                 onMouseUp={(e) => {
-                  console.log(window.getSelection().toString())
                   setSelectedText(window.getSelection().toString())
                 }}
                 style={{
                   height: '100%',
-                  width: '100%',
+                  width: `${maxViewPortWidth.current + 16}px`,
                 }}
               >
                 <VList
@@ -476,7 +474,7 @@ export const Component = function PdfReader() {
                   count={pages?.length ?? 0}
                   style={{
                     height: '100%',
-                    width: '100%',
+                    width: `100%`,
                   }}
 
                   overscan={4}
@@ -493,7 +491,7 @@ export const Component = function PdfReader() {
                     const viewport = page.getViewport({
                       scale: 1
                     })
-
+                    maxViewPortWidth.current = (Math.max(viewport.width, maxViewPortWidth.current))
                     const dpr = window.devicePixelRatio || 1;
                     return <div
                       className={styles.pageContainer}
@@ -646,7 +644,6 @@ export const Component = function PdfReader() {
           // title="翻译"
           destroyTooltipOnHide
           onOpenChange={(v) => {
-            console.log(v)
             if (v) {
               translate()
             }
