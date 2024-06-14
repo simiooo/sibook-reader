@@ -24,7 +24,7 @@ export function translator(params: {
         "presence_penalty": options?.presence_penalty ?? 0,
         "frequency_penalty": options?.frequency_penalty ?? 0,
         "top_p": options?.top_p ?? 1,
-        "max_tokens": options?.max_tokens ?? 4096,
+        "max_tokens": options?.max_tokens ?? 4096 * 4,
         stream: true,
     }
 }
@@ -45,7 +45,7 @@ export function explainer(params: {
         "presence_penalty": options?.presence_penalty ?? 0,
         "frequency_penalty": options?.frequency_penalty ?? 0,
         "top_p": options?.top_p ?? 1,
-        "max_tokens": options?.max_tokens ?? 4096,
+        "max_tokens": options?.max_tokens ?? 4096 * 4,
         stream: true,
 
     }
