@@ -11,7 +11,7 @@ import { LoginType } from "../pages/Login";
 import { HistoryTab } from "../utils/useCacheBookTab";
 import { AxiosError } from "axios";
 const OPENAI_BASE_URL = 'https://api.openai.com'
-export const OPENAI_PATHNAME = '/ai/openai/v1/chat/completions'
+export const OPENAI_PATHNAME = '/ai/openai/chat/completions'
 export const OPENAI_HEADERS = new Headers()
 OPENAI_HEADERS.append('Content-Type', 'application/json')
 
