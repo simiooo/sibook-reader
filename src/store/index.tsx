@@ -103,10 +103,11 @@ export const useBookState = create<BookStateType>((set, get) => {
                 const res = await requestor({
                     url: '/profile/v/isUserOnline'
                 })
+                console.log(res)
                 return res.status === 200
             } catch (error) {
                 console.log(error)
-                return error instanceof AxiosError ? error.response.status === 401 ? false : true : true
+                return error instanceof AxiosError ? [401, 403].includes(error.response.status) ? false : true : true
             }
             
         },
