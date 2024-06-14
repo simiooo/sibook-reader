@@ -1,4 +1,4 @@
-import { Flex, Layout, Result, Spin, message } from 'antd'
+import { Button, Flex, Layout, Result, Space, Spin, message } from 'antd'
 import { Content, Footer, Header } from 'antd/es/layout/layout'
 import { Outlet, useLocation, useNavigate, useNavigation } from 'react-router-dom'
 import BookTabs from '../components/BookTabs'
@@ -25,7 +25,16 @@ export const ErrorBoundary = () => <div
     <Result
         status={'error'}
         title="错误，请联系开发者"
-    ></Result>
+    >
+        <Space>
+            <Button
+            onClick={() => {
+                location.reload()
+            }}
+            type='primary'
+            >重新加载</Button>
+        </Space>
+    </Result>
 </div>
 
 export const Component = function App() {

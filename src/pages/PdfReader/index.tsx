@@ -148,6 +148,7 @@ export const Component = function PdfReader() {
           dom.style.letterSpacing = `${(width - domWidth) / (dom?.innerText ?? '').length / factor}px`
           dom.style.fontSize = `${height / factor}px`
           dom.style.color = 'transparent'
+          dom.style.transformOrigin = 'center'
         }
         if (result?.rotate && 'style' in dom) {
           dom.style.transform = `rotate(${result?.rotate})`
