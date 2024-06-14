@@ -13,14 +13,14 @@ export interface LoginType {
 }
 
 export const Component = function Login() {
-    const {loading: imgLoading, data: backgroundImg} = useRequest(async () =>{
+    const { loading: imgLoading, data: backgroundImg } = useRequest(async () => {
         const res = await requestor<Blob>({
             baseURL: '/',
             url: '/login_back.png',
             method: 'get',
             responseType: 'blob'
         })
-        
+
         return URL.createObjectURL(res.data)
     })
     const navigate = useNavigate()
@@ -35,7 +35,7 @@ export const Component = function Login() {
                 }
             })
             if (res.status !== 200) {
-                
+
                 throw Error('登录失败')
             }
             localStorage.setItem('authorization', JSON.stringify(res.data))
@@ -47,9 +47,10 @@ export const Component = function Login() {
     }, {
         manual: true,
         debounceWait: 1000,
+        debounceLeading: true,
     })
 
-   
+
 
     return (
         backgroundImg ? <Row
@@ -64,10 +65,17 @@ export const Component = function Login() {
                         align={'middle'}
                         className={style.login_internal_container}
                     >
-                        <Col span={12}>
+                        <Col
+                            sm={24}
+                            xs={24}
+                            md={12}
+                            span={12}>
                             <img className={style.background} src={backgroundImg} alt="" />
                         </Col>
                         <Col
+                            sm={24}
+                            xs={24}
+                            md={12}
                             className={style.login_form_container}
                             span={12}>
                             <Row>
@@ -144,7 +152,7 @@ export const Component = function Login() {
                 </div>
             </Col>
         </Row> : <Spin>
-            
+
         </Spin>
 
     )
