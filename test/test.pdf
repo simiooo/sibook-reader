@@ -1,0 +1,56 @@
+%PDF-1.7
+%����
+1 0 obj
+<</Type/Catalog/Outlines 2 0 R/Pages 3 0 R/ViewerPreferences<</FitWindow true>>>>
+endobj
+2 0 obj
+<</Type/Outlines/Count 0>>
+endobj
+3 0 obj
+<</Type/Pages/Kids[4 0 R]/Count 1>>
+endobj
+4 0 obj
+<</Type/Page/Parent 3 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1<</BaseFont/Arial/Subtype/Type1>>>>/ProcSet[/PDF/Text]>>/Contents 5 0 R>>
+endobj
+5 0 obj
+<</Length 65>>stream
+BT
+/F1 24 Tf
+100 100 Td
+(测试PDF文件，用于阅读器测试。) Tj
+ET
+endstream
+endobj
+6 0 obj
+<</Filter/Standard/V 1/R 4/P 7 0 R/O(输入密码)>>
+endobj
+7 0 obj
+<</Type/Catalog/Pages 3 0 R/OpenAction 8 0 R/AcroForm 9 0 R>>
+endobj
+8 0 obj
+<</Type/Action/S/JavaScript/JS(this.passwordDialog(this.getPageBox(1)))>>
+endobj
+9 0 obj
+<</Type/AcroForm/DA(/Helv 0 Tf 0 g )/DR<</Font<</F1<</BaseFont/Arial/Subtype/Type1>>>>/Fields[10 0 R]>>
+endobj
+10 0 obj
+<</Type/Widget/Rect[144 648 451 684]/FT/Password/T(password)/V(输入密码)>>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000018 00000 n 
+0000000078 00000 n 
+0000000138 00000 n 
+0000000206 00000 n 
+0000000300 00000 n 
+0000000404 00000 n 
+0000000508 00000 n 
+0000000612 00000 n 
+0000000716 00000 n 
+0000000820 00000 n 
+trailer
+<</Size 11/Root 7 0 R/Info 1 0 R/ID[<00000000000000000000000000000000><00000000000000000000000000000000>]/Encrypt 6 0 R>>
+startxref
+1000
+%%EOF

@@ -6,19 +6,21 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker?url'
 import { BookBlob, BookItems } from "../../dbs/db"
 import { useCallback, useEffect, useRef } from "react"
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api"
+import { Form, Input, Modal, message } from "antd"
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
 
 export function usePdfBook() {
+    const [modal, contextHolder] = Modal.useModal()
     const db_instance = useBookState(state => state.db_instance)
     const { book_id } = useParams()
 
     useEffect(() => {
-        if(pdfDocument) {
+        if (pdfDocument) {
             pdfDocument.destroy()
         }
     }, [book_id])
 
-    const cacheRef = useRef<{document:PDFDocumentProxy}>({document: undefined})
+    const cacheRef = useRef<{ document: PDFDocumentProxy }>({ document: undefined })
 
     const { runAsync: getBook, data: book, loading: bookLoading } = useRequest(async () => {
         const book = await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
@@ -35,15 +37,51 @@ export function usePdfBook() {
             book_id
         ]
     })
+    const [pdfPaswordForm] = Form.useForm()
     const { runAsync: getPdfDocument, data: pdfDocument, loading: pdfDocumentLoading } = useRequest(async () => {
+
         if (book?.blob) {
-            if(cacheRef.current?.document) {
+            if (cacheRef.current?.document) {
                 cacheRef.current.document.destroy()
             }
-            const document = await pdfjs.getDocument(book?.blob.blob).promise
-            cacheRef.current.document = document
-            return document
+            try {
+                const document = await pdfjs.getDocument(book?.blob.blob).promise
+                cacheRef.current.document = document
+                return document
+            } catch (error) {
+                if (error.name === 'MissingPDFPasswordError') {
+                    const passwordModal = await modal.confirm({
+                        title: '请输入密码',
+                        onOk: async () => {
+                            return pdfPaswordForm.validateFields()
+                        },
+                        content: <Form
+                        form={pdfPaswordForm}
+                        >
+                            <Form.Item
+                            label="密码"
+                            name="password"
+                            >
+                                <Input
+                                type="password"
+                                ></Input>
+                            </Form.Item>
+                        </Form> 
+                    })
+                    const document = await pdfjs.getDocument({
+                        data: book?.blob.blob,
+                        password: pdfPaswordForm.getFieldValue(['password']),
+                    }).promise
+                    cacheRef.current.document = document
+                    return document
+                } else {
+                    modal.error({title: '打开 PDF 失败'})
+                }
+            }
+
         }
+
+
     }, {
         refreshDeps: [
             book
@@ -80,13 +118,18 @@ export function usePdfBook() {
         ]
     })
 
-    const destroy = useCallback(() =>{
+    const destroy = useCallback(() => {
         pdfDocument.destroy()
     }, [pdfDocument])
 
     return [book, pdfDocument, meta, {
         pdfDocumentLoading,
-        metaLoading, bookLoading,
-        
-    }, {destroy, book_id,}] as const
+        metaLoading, 
+        bookLoading,
+
+    }, { 
+        destroy, 
+        book_id, 
+        contextHolder,
+    }] as const
 }

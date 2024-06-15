@@ -32,7 +32,7 @@ import { createPortal } from 'react-dom'
 import { languages } from '../../utils/locale'
 import { useTranslate } from '../../utils/useTranslate'
 export const Component = function PdfReader() {
-  const [book, pdfDocument, meta, loading, { book_id }] = usePdfBook()
+  const [book, pdfDocument, meta, loading, { book_id, contextHolder }] = usePdfBook()
   const [dividerLeft, setDividerLeft] = useState<number>(300)
   const zoomInstance = useRef<PanZoom>(null)
   const params = useParams()
@@ -93,19 +93,6 @@ export const Component = function PdfReader() {
     ocrContaienr.append(cache?.fragment)
     return
   }
-
-  // const [points, setPoints] = useState<[number, number, number][][]>([])
-  // const handlePointerDown = useCallback(async function handlePointerDown(e) {
-  //   e.target.setPointerCapture(e.pointerId)
-  //   setPoints([...points,[[e.pageX, e.pageY, e.pressure]]])
-  // }, [points])
-
-  // const handlePointerMove = useCallback(async function (e) {
-  //   if (e.buttons !== 1) return
-  //   console.log(points)
-  //   const thisPoint = points.pop() ?? []
-  //   setPoints([...points, [...thisPoint, [e.pageX, e.pageY, e.pressure]]])
-  // }, [points])
 
 
   // ocr 文字识别层
@@ -201,7 +188,6 @@ export const Component = function PdfReader() {
   const {data: maxWidthViewPort} = useRequest(async () => {
     return pages.reduce((pre, page) => {
       const viewport = page.getViewport()
-      console.log(viewport)
       return Math.max(pre, viewport.viewBox[2] ?? Number.isNaN(viewport.width) ? 500 : viewport.width)
     }, 0)
   }, {
@@ -332,24 +318,12 @@ export const Component = function PdfReader() {
   const [translatedText, { runAsync: translate, loading: translating }] = useTranslate(selectedText, {
     target: targetLaugange
   })
-  // useRequest(async () => {
-  //   if (selectedText?.length > 0 && !Number.isNaN(selectedState.top) && targetLaugange) {
-  //     console.log('asd')
-  //     translate()
-  //   }
-  // }, {
-  //   refreshDeps: [
-  //     selectedText,
-  //     selectedState,
-  //     targetLaugange
-  //   ]
-  // })
-
 
   return (
     <Spin
       spinning={Object?.values(loading ?? {})?.some?.(loading => loading)}
     >
+      {contextHolder}
       <div
         className={styles.container}
       >
@@ -471,6 +445,7 @@ export const Component = function PdfReader() {
 
                 </div>
               </div>
+              
               <div
                 ref={listRef}
                 onMouseUp={(e) => {
