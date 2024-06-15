@@ -492,9 +492,9 @@ export const Component = function PdfReader() {
                     const viewport = page.getViewport({
                       scale: 1
                     })
-                    if(maxViewPortWidth.current === 0) {
+                    // if(maxViewPortWidth.current === 0) {
                       maxViewPortWidth.current = (Math.max(viewport.width, maxViewPortWidth.current))
-                    }
+                    // }
                     const dpr = window.devicePixelRatio || 1;
                     return <div
                       className={styles.pageContainer}
