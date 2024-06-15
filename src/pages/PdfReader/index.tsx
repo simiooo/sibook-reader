@@ -40,7 +40,6 @@ export const Component = function PdfReader() {
   const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
   const trashRef = useRef<HTMLDivElement>()
   const [ocrTaskMap, { set, remove, reset }] = useMap<number, OcrTask>()
-  const maxViewPortWidth= useRef<number>(0)
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
 
   const destroy = () => {
@@ -197,6 +196,18 @@ export const Component = function PdfReader() {
     return pages
   }, {
     refreshDeps: [meta?.numPages]
+  })
+
+  const {data: maxWidthViewPort} = useRequest(async () => {
+    return pages.reduce((pre, page) => {
+      const viewport = page.getViewport()
+      console.log(viewport)
+      return Math.max(pre, viewport.viewBox[2] ?? Number.isNaN(viewport.width) ? 500 : viewport.width)
+    }, 0)
+  }, {
+    refreshDeps: [
+      pages
+    ]
   })
 
   // 初始化页码
@@ -467,7 +478,7 @@ export const Component = function PdfReader() {
                 }}
                 style={{
                   height: '100%',
-                  width: `${maxViewPortWidth.current + 16}px`,
+                  width: `${maxWidthViewPort + 16 + 46}px`,
                 }}
               >
                 <VList
@@ -492,9 +503,7 @@ export const Component = function PdfReader() {
                     const viewport = page.getViewport({
                       scale: 1
                     })
-                    // if(maxViewPortWidth.current === 0) {
-                      maxViewPortWidth.current = (Math.max(viewport.width, maxViewPortWidth.current))
-                    // }
+
                     const dpr = window.devicePixelRatio || 1;
                     return <div
                       className={styles.pageContainer}
@@ -542,6 +551,7 @@ export const Component = function PdfReader() {
                         className={styles.toolbar}
                         style={{
                           position: 'absolute',
+                          overflow: 'visible',
                           left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
                           top: 12 / window.devicePixelRatio,
                           zIndex: 2,
