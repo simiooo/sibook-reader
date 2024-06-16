@@ -8,4 +8,5 @@ export type Book = Partial<{
     objectType: string;
     thumbnailUrl: string;
     islandId: string;
+    ownerId: string;
 }>

@@ -54,7 +54,8 @@ export const Component = function Bookshelf() {
     const { t, i18n } = useTranslation()
     const [dropModalOpen, setDropModalOpen] = useState<boolean>()
     const containerRef = useRef<HTMLElement>(null)
-    useDrop(() => containerRef.current, {
+    const mainRef = useRef<HTMLElement>(null)
+    useDrop(() => mainRef.current, {
         onFiles(e) {
             Promise.allSettled(e.map(file => upload({
                 file, onError: (err => {
@@ -77,7 +78,7 @@ export const Component = function Bookshelf() {
         return listLoading || uploadLoading
     }, [listLoading, uploadLoading])
 
-    const [selected, { add, remove }] = useSet<string | undefined>([])
+    const [selected, { add, remove, reset }] = useSet<string | undefined>([])
     const { exportFile } = useExport()
     const { drop } = useDropBook()
 
@@ -85,7 +86,8 @@ export const Component = function Bookshelf() {
         switch (type) {
             case 'drop':
                 await drop(Array.from(selected))
-                runAsync()
+                await runAsync()
+                await reset()
                 break;
             case 'export':
                 await exportFile(list.filter(el => selected.has(el.objectId)))
@@ -140,18 +142,9 @@ export const Component = function Bookshelf() {
             </Col>
             <Col flex={'1 1'}>
                 <Layout
-                    ref={containerRef}
+                    ref={mainRef}
                     className={style.main}
                 >
-
-                    {/* <SyncModal
-            open={islandOpen}
-            onOk={() => {
-                runAsync()
-                setIslandOpen(false)
-            }}
-            onCancel={() => setIslandOpen(false)}
-            ></SyncModal> */}
                     <Spin spinning={loading}>
                         <div
                        className={style.content}  

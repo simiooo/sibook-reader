@@ -1,6 +1,6 @@
 .main{
   padding: 0rem 1.5rem;
-  
+  min-height: 80vh;
 }
 .container{
     overflow: auto;

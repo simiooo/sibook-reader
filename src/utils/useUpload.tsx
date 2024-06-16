@@ -11,7 +11,8 @@ import { LoginType } from "../pages/Login";
 import { db } from "../dbs/db";
 import { cos } from "./coClient";
 import pify from 'pify';
-import {XMLParser} from 'fast-xml-parser'
+import { XMLParser } from 'fast-xml-parser'
+import { requestor } from "./requestor";
 const parser = new XMLParser();
 
 
@@ -40,10 +41,10 @@ export function useUpload(
             if (!info?.file) {
                 throw Error(t('请传入文件'))
             }
-            if(!profile?.id) {
+            if (!profile?.id) {
                 throw Error(t('上传失败，请重试'))
             }
-            if(uploadingTaskList.some(task => task.name === info.file.name)) {
+            if (uploadingTaskList.some(task => task.name === info.file.name)) {
                 throw Error(t('文件已存在'))
             }
             if (!['application/epub+zip', 'application/pdf'].includes(info.file.type)) {
@@ -61,71 +62,81 @@ export function useUpload(
             } else if (info.file.type === 'application/epub+zip') {
                 meta = await epubMetaParser(file)
             }
-            // const token = JSON.parse(localStorage.getItem('authorization') ?? "{}") as LoginType
-            // const ws = new SiWs(`${import.meta.env.VITE_WS_PROTOCOL}://${import.meta.env.VITE_WS_HOST}/island/addBookToIsland?token=${token.token}`)
-            // ws.onchange((e: WsChangeEvent) => {
-            //     if (e.status === 'end') {
-            //         options?.onFinish?.(e)
-            //         db.book_blob.add({
-            //             id: hash,
-            //             blob: file,
-            //             updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-            //         })
-            //     }
-            // })
 
             const httpMeta = {
                 size: info.file.size,
                 current: 0,
                 error: false,
-                onUploadProgress: function(type, ...others) {
-                    if(type === 'ready') {
-                        console.log(this)
-                    } else if( type === 'progress')  {
+                onUploadProgress: function (type, ...others) {
+                    if (type === 'ready') {
+                    } else if (type === 'progress') {
                         others[0].current
-                        console.log(others[0])
                         this.current = others?.[0]?.loaded
-                    } else if( type === 'finish') {
+                    } else if (type === 'finish') {
                         this.current
+                    } else if(type === 'error') {
+                        this.error = true
                     }
-                    console.log(uploadingTaskList)
                     uploadingTaskList_update([...uploadingTaskList])
                 },
             }
             const eventListender = {
-                onTaskReady: function(taskId) {              
+                onTaskReady: function (taskId) {
                     httpMeta.onUploadProgress('ready', taskId)
                 },
-                onProgress: function (progressData) {       
+                onProgress: function (progressData) {
                     httpMeta.onUploadProgress('progress', progressData)
                 },
-                onFileFinish: function (err, data, options) { 
-                   httpMeta.onUploadProgress('finish', data, options)
+                onFileFinish: function (err, data, options) {
+                    httpMeta.onUploadProgress('finish', data, options)
                 },
             }
+            const task = new Promise((resolve, reject) =>{
+                cos.uploadFile({
+                    ContentType:`application/octet-stream`,
+                    Bucket: import.meta.env.VITE_COS_BUCKET, /* 填入您自己的存储桶，必须字段 */
+                    Region: import.meta.env.VITE_COS_REGION,  /* 存储桶所在地域，例如ap-beijing，必须字段 */
+                    Key: `${profile.id}/${hash}`,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
+                    Body: info.file, /* 必须，上传文件对象，可以是input[type="file"]标签选择本地文件后得到的file对象 */
+                    SliceSize: 1024 * 1024 * 5,     /* 触发分块上传的阈值，超过5MB使用分块上传，非必须 */
+                    onTaskReady: eventListender.onTaskReady,
+                    onProgress: eventListender.onProgress,
+                    onFileFinish: eventListender.onFileFinish,
+                    // 支持自定义headers 非必须
+                    Headers: {
+                        "x-cos-meta-filename": encodeURIComponent(info.file.name),
+                        "x-cos-meta-mimetype": encodeURIComponent(info.file.type),
+                        // "size": info.file.size,
+                    },
+                }, async function (err, data: CosResponseData) {
+                    try {
+                        const payload: FileUploadPayload = {
+                            hash: hash,
+                            name: info.file.name,
+                            size: info.file.size,
+                            islandId: currentIsland,
+                        }
+                        if (err) {
+                            throw Error(err.toString())
+                        }
+                        const res = await requestor<{ status: number, message: string }>({
+                            url: '/cos/uploadSave',
+                            data: payload
+                        })
+                        if(res.data.status !== 200) {
+                            throw Error(res.data?.message)
+                        }
+                        resolve(data)
+                    } catch (error) {
+                        console.error(error)
+                        httpMeta.onUploadProgress('error',error)
+                        // message.error('上传失败')
+                        reject(error)
+                    }
+    
+                })
+            }) 
 
-            cos.uploadFile({
-                Bucket: import.meta.env.VITE_COS_BUCKET, /* 填入您自己的存储桶，必须字段 */
-                Region: import.meta.env.VITE_COS_REGION,  /* 存储桶所在地域，例如ap-beijing，必须字段 */
-                Key: `${profile.id}/${hash}`,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
-                Body: info.file, /* 必须，上传文件对象，可以是input[type="file"]标签选择本地文件后得到的file对象 */
-                SliceSize: 1024 * 1024 * 5,     /* 触发分块上传的阈值，超过5MB使用分块上传，非必须 */
-                onTaskReady: eventListender.onTaskReady,
-                onProgress: eventListender.onProgress,
-                onFileFinish: eventListender.onFileFinish,
-                // 支持自定义headers 非必须
-                Headers: {
-                 "X-Filename": encodeURIComponent(info.file.name) ,
-                 "X-Mimetype": encodeURIComponent (info.file.type),
-                },
-            }, function(err, data) {
-                console.log(err || data);
-            })
-            
-
-            
-
-            // ws.init(info.file, { ...(meta ?? {}), id: hash }, currentIsland)
             uploadingTaskList.unshift({
                 httpMeta: httpMeta,
                 type: 'upload',
@@ -134,6 +145,7 @@ export function useUpload(
                 des: meta?.creator ?? meta?.Author ?? info.file.name,
             })
             uploadingTaskList_update(uploadingTaskList)
+            await task
         } catch (error) {
             console.log(error)
             message.error(error instanceof Error ? error.message : error)
@@ -149,4 +161,25 @@ export function useUpload(
         upload,
     }
 
+}
+
+export interface FileUploadPayload {
+    hash: string;
+    name: string;
+    size: number;
+    islandId: number;
+}
+
+interface CosResponseHeaders {
+    'content-length': string;
+    'etag': string;
+    'x-cos-request-id': string;
+}
+
+interface CosResponseData {
+    statusCode: number;
+    headers: CosResponseHeaders;
+    Location: string;
+    ETag: string;
+    RequestId: string;
 }

@@ -71,7 +71,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
 
             const cache = await db.book_blob.get(ele.objectId)
             if (cache && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
-                if (ele?.objectType === 'application/epub+zip') {
+                if (ele?.objectType.startsWith('application/epub+zip')) {
                     const pathname = `/reader/${ele.objectId}`
                     tabs_add({
                         url: pathname,
@@ -79,7 +79,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         closable: true
                     })
                     navigate(pathname)
-                } else if (ele?.objectType === 'application/pdf') {
+                } else if (ele?.objectType.startsWith('application/pdf')) {
                     const pathname = `/pdf_reader/${ele.objectId}`
                     tabs_add({
                         url: pathname,
@@ -123,9 +123,10 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                 })
                 if (exitInCos.data.data === '0') {
                     cos.getObject({
+                        DataType: 'blob',
                         Bucket: import.meta.env.VITE_COS_BUCKET, /* 填入您自己的存储桶，必须字段 */
                         Region: import.meta.env.VITE_COS_REGION,  /* 存储桶所在地域，例如 ap-beijing，必须字段 */
-                        Key: ele.objectId,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
+                        Key: `/${ele.ownerId}/${ele.objectId}`,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
                         onProgress: function (progressData) {
                             // console.log(JSON.stringify(progressData));
                             httpUploadTask.httpMeta.onDownloadProgress({
@@ -135,7 +136,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         }
 
                     }, async function (err, data) {
-                        console.log(err || data.Body);
+                        
                         db.book_blob.add({
                             id: ele.objectId,
                             blob: await readFileAsArrayBuffer(new File([data.Body], ele.objectName)),

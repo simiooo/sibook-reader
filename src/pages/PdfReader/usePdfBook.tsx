@@ -7,6 +7,7 @@ import { BookBlob, BookItems } from "../../dbs/db"
 import { useCallback, useEffect, useRef } from "react"
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api"
 import { Form, Input, Modal, message } from "antd"
+// import { PasswordException } from "pdfjs-dist"
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
 
 export function usePdfBook() {
@@ -44,16 +45,18 @@ export function usePdfBook() {
             if (cacheRef.current?.document) {
                 cacheRef.current.document.destroy()
             }
+            let copied = new Uint8Array(book?.blob.blob)
             try {
                 const document = await pdfjs.getDocument(book?.blob.blob).promise
                 cacheRef.current.document = document
+                copied = null
                 return document
             } catch (error) {
-                if (error.name === 'MissingPDFPasswordError') {
+                if (error?.constructor?.name === 'PasswordException') {
                     const passwordModal = await modal.confirm({
                         title: '请输入密码',
                         onOk: async () => {
-                            return pdfPaswordForm.validateFields()
+                            return await pdfPaswordForm.validateFields()
                         },
                         content: <Form
                         form={pdfPaswordForm}
@@ -63,18 +66,26 @@ export function usePdfBook() {
                             name="password"
                             >
                                 <Input
+                                
                                 type="password"
                                 ></Input>
                             </Form.Item>
                         </Form> 
                     })
-                    const document = await pdfjs.getDocument({
-                        data: book?.blob.blob,
-                        password: pdfPaswordForm.getFieldValue(['password']),
-                    }).promise
-                    cacheRef.current.document = document
-                    return document
+                    try {
+                        const document = await pdfjs.getDocument({
+                            data: copied,
+                            password: pdfPaswordForm.getFieldValue(['password']),
+                        }).promise
+                        cacheRef.current.document = document
+                        return document
+                    } catch (error) {
+                        message.error(error.message)
+                        throw error
+                    }
+                    
                 } else {
+                    console.error(error)
                     modal.error({title: '打开 PDF 失败'})
                 }
             }
