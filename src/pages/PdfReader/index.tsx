@@ -186,7 +186,7 @@ export const Component = function PdfReader() {
   })
 
   const {data: maxWidthViewPort} = useRequest(async () => {
-    return pages.reduce((pre, page) => {
+    return (pages ?? []).reduce((pre, page) => {
       const viewport = page.getViewport()
       return Math.max(pre, viewport.viewBox[2] ?? Number.isNaN(viewport.width) ? 500 : viewport.width)
     }, 0)
@@ -733,7 +733,7 @@ export function traversalDom(dom?: Element | HTMLElement | DocumentFragment, cb?
 export function getSvgPathFromStroke(stroke) {
   if (!stroke.length) return ""
 
-  const d = stroke.reduce(
+  const d = (stroke ?? []).reduce(
     (acc, [x0, y0], i, arr) => {
       const [x1, y1] = arr[(i + 1) % arr.length]
       acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2)

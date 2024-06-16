@@ -158,6 +158,10 @@ useBookState.subscribe((state) => {
         localStorage.setItem('currentIsland', state.currentIsland.toString())
     }
     if(state.tabs && state.tabs.toString() !== localStorage.getItem('tabs')) {
+        // requestor({
+        //     url:'',
+        //     data:''
+        // })
         localStorage.setItem('tabs', JSON.stringify(state.tabs))
     }
 })

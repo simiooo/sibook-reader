@@ -99,7 +99,6 @@ export const Component = function App() {
         const res = await requestor({
             url: '/island/getLatestIsland',
         })
-        console.log(res.data)
         if(res.data.data.islandId) {
             currentIsland_update(Number(res.data.data.islandId))
         }
