@@ -103,7 +103,6 @@ export const useBookState = create<BookStateType>((set, get) => {
                 const res = await requestor({
                     url: '/profile/v/isUserOnline'
                 })
-                console.log(res)
                 return res.status === 200
             } catch (error) {
                 console.log(error)

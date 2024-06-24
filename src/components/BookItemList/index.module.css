@@ -1,8 +1,9 @@
 :global(.book_item) {
-  --var-book-width: 18rem;
+  /* --var-book-width: 18rem; */
   border: 2px solid transparent;
-  height: calc(var(--var-book-width) * 1.41);
-  width: var(--var-book-width);
+  height: 100%;
+  width: 100%;
+  /* width: var(--var-book-width); */
   overflow: hidden;
   &:hover {
     border: 2px solid #222;
@@ -15,7 +16,8 @@
 .container {
   overflow: auto;
   overflow-x: hidden;
-  height: 82vh;
+  height: calc(100vh - 160px);
+  padding: 1rem 1rem;
   &::-webkit-scrollbar {
     width: 0.5rem;
     height: 0.5rem;

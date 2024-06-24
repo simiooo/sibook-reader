@@ -1,7 +1,7 @@
-import { Button, Col, Result, Space, Divider, Select, Input, Avatar, Popover } from 'antd';
+import { Button, Col, Result, Space, Divider, Select, Input, Avatar, Popover, Switch, Form, Popconfirm, Tooltip } from 'antd';
 import { Row } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { CopyOutlined, DragOutlined, FileTextTwoTone, ShopOutlined, SmileOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CopyOutlined, DragOutlined, FileTextTwoTone, ShopOutlined, SmileOutlined, SortAscendingOutlined, SortDescendingOutlined, TranslationOutlined } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { requestor } from '../../utils/requestor';
 import { Book } from '../../store/book.type';
 import LeftMenu from '../../components/LeftMenu';
+import dayjs from 'dayjs';
 
 
 export const Component = function Bookshelf() {
@@ -125,17 +126,21 @@ export const Component = function Bookshelf() {
         }
         return result
     }, [selected])
-
+    const [cacheFormValue, setCacheFormValue] = useState()
+    const [form] = Form.useForm()
     // const [islandOpen, setIslandOpen] = useState<boolean>(false)
     const navigate = useNavigate()
     const [filterValue, setFilterValue] = useState<string>()
     const renderList = useMemo(() => {
-        return (list ?? []).filter(val => filterValue ? Object.values(val ?? {})?.join('')?.includes?.(filterValue) : true)
-    }, [list, filterValue])
+        console.log(cacheFormValue)
+        return (list ?? []).filter(val => filterValue ? Object.values(val ?? {})?.join('')?.includes?.(filterValue) : true).sort((pre, val) => (dayjs(pre.uploadDate)[(form.getFieldsValue() ?? {sort: false}).sort === true ? 'isAfter' : 'isBefore'](val.uploadDate)) ? -1 : 1)
+    }, [list, filterValue, cacheFormValue])
+
+
 
     return (
         <Row
-        className={style.container}
+            className={style.container}
         >
             <Col>
                 <LeftMenu></LeftMenu>
@@ -147,96 +152,125 @@ export const Component = function Bookshelf() {
                 >
                     <Spin spinning={loading}>
                         <div
-                       className={style.content}  
+                            className={style.content}
                         >
-                        <Content>
-                            <Row 
-                            
-                            gutter={[20, 32]}>
-                                <Col>
-                                </Col>
-                                <Col span={24}>
-                                    <Row justify={'space-between'}>
-                                        <Col>
-                                            <Input
-                                                bordered={false}
-                                                size='large'
-                                                placeholder={t('搜索书籍')}
-                                                value={filterValue}
-                                                onChange={(e) => setFilterValue(e.target.value)}
-                                            ></Input>
-                                        </Col>
-                                        <Col >
-                                            <Space
-                                                wrap={true}
-                                            >
-                                                <BookNewButton
-                                                    onChange={async () => {
-                                                        runAsync()
-                                                    }}
+                            <Content>
+                                <Row
 
-                                                ></BookNewButton>
-
-                                                
-
-                                            </Space>
-
-                                        </Col>
-
-                                    </Row>
-                                </Col>
-                                <Col span={24}>
-                                    <Row justify={'center'} gutter={[20, 20]}>
-                                        <Col span={24}>
-                                            {renderList?.length > 0 ? <BookItemList
-                                                data={renderList}
-                                                selected={selected}
-                                                ref={containerRef}
-                                                onAdd={add}
-                                                onRemove={remove}
-                                                contextmenuList={contextmenuList}
-                                                onContextmenuSelect={(e) => {
-                                                    contextmenuSelectedHandler(e?.type)
-                                                }}
-                                            ></BookItemList> : <div>
-                                                <Divider></Divider>
-                                                <Result
-                                                    icon={<SmileOutlined
-                                                        style={{ color: '#283593' }}
-                                                    />}
-                                                    title={
-                                                        <Space
-                                                            direction='vertical'
-                                                            align='start'
+                                    gutter={[20, 32]}>
+                                    <Col>
+                                    </Col>
+                                    <Col span={24}>
+                                        <Row justify={'space-between'}>
+                                            <Col>
+                                                <Form
+                                                    initialValues={{sort: true}}
+                                                    form={form}
+                                                    onFinish={setCacheFormValue}
+                                                >
+                                                    <Space>
+                                                        <Tooltip
+                                                            title={'按上传时间排序'}
                                                         >
-                                                            <h2>{t("请上传书籍")}</h2>
-                                                            <div>
-                                                                <Space
-                                                                    direction='vertical'
-                                                                    align="start"
-                                                                    className={style.empty_content}
-                                                                >
-                                                                    <span><DragOutlined /> {t('可拖拽到此处')}</span>
-                                                                    <span><CopyOutlined /> {t('可粘贴文件在此处')}</span>
-                                                                </Space>
-                                                            </div>
-                                                        </Space>
+                                                            <Form.Item
+                                                            noStyle
+                                                            name="sort"
+                                                            valuePropName='checked'
+                                                            >
+                                                                <Switch
+                                                                    onChange={form.submit}
+                                                                    checkedChildren={
+                                                                        <Space><span>由新到旧</span><SortDescendingOutlined /></Space>
+                                                                    }
+                                                                    unCheckedChildren={<Space><span>由旧到新</span><SortAscendingOutlined /></Space>}
+                                                                ></Switch>
+                                                            </Form.Item>
 
-                                                    }
-                                                />
-                                            </div>}
-                                        </Col>
-                                    </Row>
-                                </Col>
-                                <Col span={24}>
-                                    <Row>
-                                        <Col></Col>
-                                    </Row>
-                                </Col>
-                            </Row>
-                        </Content>
+                                                        </Tooltip>
+
+                                                        <Input
+                                                            bordered={false}
+                                                            size='large'
+                                                            placeholder={t('搜索书籍')}
+                                                            value={filterValue}
+                                                            onChange={(e) => setFilterValue(e.target.value)}
+                                                        ></Input>
+                                                    </Space>
+                                                </Form>
+
+
+                                            </Col>
+                                            <Col >
+                                                <Space
+                                                    wrap={true}
+                                                >
+                                                    <BookNewButton
+                                                        onChange={async () => {
+                                                            runAsync()
+                                                        }}
+
+                                                    ></BookNewButton>
+
+
+
+                                                </Space>
+
+                                            </Col>
+
+                                        </Row>
+                                    </Col>
+                                    <Col span={24}>
+                                        <Row justify={'center'} gutter={[20, 20]}>
+                                            <Col span={24}>
+                                                {renderList?.length > 0 ? <BookItemList
+                                                    data={renderList}
+                                                    selected={selected}
+                                                    ref={containerRef}
+                                                    onAdd={add}
+                                                    onRemove={remove}
+                                                    contextmenuList={contextmenuList}
+                                                    onContextmenuSelect={(e) => {
+                                                        contextmenuSelectedHandler(e?.type)
+                                                    }}
+                                                ></BookItemList> : <div>
+                                                    <Divider></Divider>
+                                                    <Result
+                                                        icon={<SmileOutlined
+                                                            style={{ color: '#283593' }}
+                                                        />}
+                                                        title={
+                                                            <Space
+                                                                direction='vertical'
+                                                                align='start'
+                                                            >
+                                                                <h2>{t("请上传书籍")}</h2>
+                                                                <div>
+                                                                    <Space
+                                                                        direction='vertical'
+                                                                        align="start"
+                                                                        className={style.empty_content}
+                                                                    >
+                                                                        <span><DragOutlined /> {t('可拖拽到此处')}</span>
+                                                                        <span><CopyOutlined /> {t('可粘贴文件在此处')}</span>
+                                                                    </Space>
+                                                                </div>
+                                                            </Space>
+
+                                                        }
+                                                    />
+                                                </div>}
+                                            </Col>
+                                        </Row>
+                                    </Col>
+                                    <Col span={24}>
+                                        <Row>
+                                            <Col></Col>
+                                        </Row>
+                                    </Col>
+                                </Row>
+                            </Content>
                         </div>
-                        
+
 
                     </Spin>
 

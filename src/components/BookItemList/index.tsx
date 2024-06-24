@@ -70,7 +70,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
         try {
 
             const cache = await db.book_blob.get(ele.objectId)
-            if (cache && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
+            if (cache?.blob?.byteLength > 0 && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
                 if (ele?.objectType.startsWith('application/epub+zip')) {
                     const pathname = `/reader/${ele.objectId}`
                     tabs_add({
@@ -136,7 +136,10 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         }
 
                     }, async function (err, data) {
-                        
+                        if (err) {
+                            message.error(err?.message)
+                            return
+                        }
                         db.book_blob.add({
                             id: ele.objectId,
                             blob: await readFileAsArrayBuffer(new File([data.Body], ele.objectName)),
@@ -266,13 +269,8 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
         <div
             ref={ref}
         >
-            <Row
-                gutter={[16, 20]}
+            <div
                 className={style.container}
-                justify={'center'}
-                align={'top'}
-                wrap={true}
-
             >
                 <CMenu
                     id="you"
@@ -307,67 +305,77 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                     keyContainer={window}
                     onSelect={selectHandler}
                 />
-                <Col
-                    // span={24}
-                    flex={'1 1'}
+
+                <Row
+                    justify={'start'}
+                    gutter={[32, 26]}
                 >
-                    <Row
-                        gutter={[16, 20]}
-                    >
-                        {
-                            (renderList.sort((pre, val) => dayjs(pre.uploadDate).isBefore(val.uploadDate) ? -1 : 1) ?? []).map((ele, index) => {
-                                if (ele.objectId === 'placeholder') {
-                                    <Col
-                                        key={ele?.objectId ?? ele?.objectName ?? index}
-                                    >
-                                        <BookPlaceholder></BookPlaceholder>
-                                    </Col>
-                                } else {
-                                    let title
-                                    let des
+                    {
+                        (renderList ?? []).map((ele, index) => {
+                            if (ele.objectId === 'placeholder') {
+                                <Col
+                                    span={8}
+                                    key={ele?.objectId ?? ele?.objectName ?? index}
+                                >
+                                    <BookPlaceholder></BookPlaceholder>
+                                </Col>
+                            } else {
+                                let title
+                                let des
 
-                                    return <Col
-                                        key={ele?.objectId}
-                                    >
+                                return <Col
+                                    span={6}
+                                    sm={12}
+                                    xs={24}
+                                    md={8}
+                                    xl={6}
+                                    xxl={6}
+                                    key={ele?.objectId ?? ele?.objectName ?? index}
+                                >
 
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.5 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{
-                                                duration: 0.34,
-                                                delay: 0.5 + Math.min(index, 4) * 0.25,
-                                                ease: [0, 0.71, 0.2, 1.01]
-                                            }}
-                                        >
-                                            <Card
-                                                cover={<img></img>}
-                                                data-hash={ele?.objectId}
-                                                extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
-                                                className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
-                                                onDoubleClick={() => openDebouncedHandler(ele)}
-                                                onTouchEnd={() => openDebouncedHandler(ele)}
-                                                title={<Tooltip
+                                    <motion.div
+                                        style={{
+                                            height: '100%',
+                                            width: '100%',
+                                            minHeight: '16rem',
+                                        }}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{
+                                            duration: 0.34,
+                                            delay: 0.5 + Math.pow(Math.min(index, 16) * 0.04, 0.9) ,
+                                            ease: [0, 0.71, 0.2, 1.01]
+                                        }}
+                                    >
+                                        <Card
+                                            cover={<img></img>}
+                                            data-hash={ele?.objectId}
+                                            extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
+                                            className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
+                                            onDoubleClick={() => openDebouncedHandler(ele)}
+                                            onTouchEnd={() => openDebouncedHandler(ele)}
+                                            title={<Tooltip
+                                            >
+                                                <Tooltip
+                                                    title={title ?? ele?.objectName}
                                                 >
-                                                    <Tooltip
-                                                        title={title ?? ele?.objectName}
-                                                    >
-                                                        {title ?? ele?.objectName}
-                                                    </Tooltip>
+                                                    {title ?? ele?.objectName}
+                                                </Tooltip>
 
-                                                </Tooltip>}
-                                            >{des ?? ele?.objectName}</Card>
-                                        </motion.div>
+                                            </Tooltip>}
+                                        >{des ?? ele?.objectName}</Card>
+                                    </motion.div>
 
-                                    </Col>
-                                }
+                                </Col>
+                            }
 
-                            })
-                        }
-                    </Row>
-                </Col>
+                        })
+                    }
+                </Row>
 
 
-            </Row>
+
+            </div>
 
         </div>
 
