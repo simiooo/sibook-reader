@@ -102,6 +102,7 @@ export function useUpload(
                     onTaskReady: eventListender.onTaskReady,
                     onProgress: eventListender.onProgress,
                     onFileFinish: eventListender.onFileFinish,
+                    
                     // 支持自定义headers 非必须
                     Headers: {
                         "x-cos-meta-filename": encodeURIComponent(info.file.name),

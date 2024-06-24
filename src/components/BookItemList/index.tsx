@@ -121,7 +121,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         bookId: ele.objectId
                     }
                 })
-                if (exitInCos.data.data === '0') {
+                if (exitInCos.data.data === '1') {
                     cos.getObject({
                         DataType: 'blob',
                         Bucket: import.meta.env.VITE_COS_BUCKET, /* 填入您自己的存储桶，必须字段 */
