@@ -166,7 +166,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                             }
                         })
                     })
-                } else {
+                } else if(exitInCos.data.data === '0'){
                     const res = await requestor<Blob>({
                         url: "/island/getBookBinaryFromIsland",
                         responseType: 'blob',
@@ -201,6 +201,8 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                             message.error(t('暂不支持'))
                         }
                     })
+                } else {
+                    message.error('发生未知错误')
                 }
 
             }
