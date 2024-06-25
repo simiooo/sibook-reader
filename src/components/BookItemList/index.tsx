@@ -23,6 +23,7 @@ import { HttpTask } from '../UploadContainer';
 import { AxiosProgressEvent } from 'axios';
 import { readFileAsArrayBuffer } from '../../dbs/createBook';
 import { cos } from '../../utils/coClient';
+import { LoadingOutlined } from '@ant-design/icons';
 
 export const tagMap = {
     'application/pdf': {
@@ -40,6 +41,7 @@ interface BookItemListProps {
     selected?: Set<string | undefined>;
     onAdd?: (key?: string) => void;
     onRemove?: (key?: string) => void;
+    loading?: boolean;
     contextmenuList?: any[];
     onContextmenuSelect?: (payload?: { type?: string }) => void
 }
@@ -166,7 +168,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                             }
                         })
                     })
-                } else if(exitInCos.data.data === '0'){
+                } else if (exitInCos.data.data === '0') {
                     const res = await requestor<Blob>({
                         url: "/island/getBookBinaryFromIsland",
                         responseType: 'blob',
@@ -345,7 +347,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{
                                             duration: 0.34,
-                                            delay: 0.5 + Math.pow(Math.min(index, 16) * 0.04, 0.9) ,
+                                            delay: 0.5 + Math.pow(Math.min(index, 16) * 0.04, 0.9),
                                             ease: [0, 0.71, 0.2, 1.01]
                                         }}
                                     >
@@ -373,6 +375,16 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
 
                         })
                     }
+                    {p?.loading && <LoadingOutlined style={{fontSize: '48px'}} />}
+                    
+                        <div
+                            style={{
+                                height: '10px',
+                                width: '10px',
+                            }}
+                            className="visibleChecker"
+                        ></div>
+
                 </Row>
 
 

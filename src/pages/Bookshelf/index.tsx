@@ -1,13 +1,13 @@
 import { Button, Col, Result, Space, Divider, Select, Input, Avatar, Popover, Switch, Form, Popconfirm, Tooltip } from 'antd';
 import { Row } from "antd";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CopyOutlined, DragOutlined, FileTextTwoTone, ShopOutlined, SmileOutlined, SortAscendingOutlined, SortDescendingOutlined, TranslationOutlined } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
 import { useBookState } from "../../store";
 import BookItemList from "../../components/BookItemList";
-import { useRequest } from "ahooks";
+import { useInViewport, useRequest } from "ahooks";
 import style from './index.module.css'
 import { Spin } from "antd";
 import { useDrop } from "ahooks";
@@ -29,32 +29,72 @@ import dayjs from 'dayjs';
 
 export const Component = function Bookshelf() {
     const { currentIsland, profile, isUserOnline } = useBookState(state => ({ currentIsland: state.currentIsland, profile: state.profile, isUserOnline: state.isUserOnline }))
-    const { runAsync, loading: listLoading, data: list } = useRequest(async () => {
+    const containerRef = useRef<HTMLElement>(null)
+    const [inViewport] = useInViewport(containerRef.current?.querySelector<HTMLElement>('.visibleChecker'), {
+
+    })
+    const { runAsync, loading: listLoading, data: listInfo } = useRequest(async (isInit: boolean = true) => {
         // const res = await db_instance?.book_items?.toArray()
         try {
             if (!currentIsland) {
                 throw Error('请先登录')
             }
-            const res = await requestor<{ data?: Book[] }>({
+            const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
                 url: '/island/getBookListFromIsland',
                 data: {
                     islandId: currentIsland,
+                    current: listInfo?.current ?? 1,
+                    pageSize: 20,
+                    searchString: form.getFieldValue(['searchString']),
+                    sortValue: form.getFieldValue(['sort']) ? '1' : '0',
                 }
             })
             // console.log(res)
-            return res.data?.data ?? []
+            const map = new Map<string, boolean>()
+            return isInit ? { 
+                total: res?.data?.data?.total,
+                current: 1, list: res.data?.data?.rows ?? [] } : {
+                current: listInfo?.current + 1,
+                total: res?.data?.data?.total,
+                list: [...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? [])].filter((val) => {
+                    if (map.has(val?.objectId)) {
+                        return false
+                    } else {
+                        map.set(val?.objectId, true)
+                        return true
+                    }
+                })
+            }
         } catch (error) {
-            return []
+            console.log(error.response)
+            message.error(error?.response?.data?.message ?? error?.message)
+            return {
+                current: listInfo?.current ?? 1,
+                total: listInfo?.total??0,
+                list: listInfo?.list ?? [],
+            }
         }
 
     }, {
         refreshDeps: [currentIsland],
+        debounceWait: 500,
+        onSuccess: () => {
+            console.log(listInfo)
+            if(listInfo?.list.length < listInfo?.total && inViewport) {
+                runAsync(false) 
+            } else if(!listInfo){
+                runAsync(false) 
+            }
+        }
     })
     const { upload, loading: uploadLoading } = useUpload({ onFinish: () => runAsync() })
 
     const { t, i18n } = useTranslation()
+    
+    // const visibleCheckerRef = useRef()
+    
     const [dropModalOpen, setDropModalOpen] = useState<boolean>()
-    const containerRef = useRef<HTMLElement>(null)
+
     const mainRef = useRef<HTMLElement>(null)
     useDrop(() => mainRef.current, {
         onFiles(e) {
@@ -76,8 +116,8 @@ export const Component = function Bookshelf() {
     })
 
     const loading = useMemo(() => {
-        return listLoading || uploadLoading
-    }, [listLoading, uploadLoading])
+        return false || uploadLoading
+    }, [ uploadLoading])
 
     const [selected, { add, remove, reset }] = useSet<string | undefined>([])
     const { exportFile } = useExport()
@@ -91,7 +131,7 @@ export const Component = function Bookshelf() {
                 await reset()
                 break;
             case 'export':
-                await exportFile(list.filter(el => selected.has(el.objectId)))
+                await exportFile(listInfo?.list.filter(el => selected.has(el.objectId)))
                 runAsync()
                 break;
         }
@@ -126,15 +166,12 @@ export const Component = function Bookshelf() {
         }
         return result
     }, [selected])
-    const [cacheFormValue, setCacheFormValue] = useState()
     const [form] = Form.useForm()
     // const [islandOpen, setIslandOpen] = useState<boolean>(false)
     const navigate = useNavigate()
-    const [filterValue, setFilterValue] = useState<string>()
     const renderList = useMemo(() => {
-        console.log(cacheFormValue)
-        return (list ?? []).filter(val => filterValue ? Object.values(val ?? {})?.join('')?.includes?.(filterValue) : true).sort((pre, val) => (dayjs(pre.uploadDate)[(form.getFieldsValue() ?? {sort: false}).sort === true ? 'isAfter' : 'isBefore'](val.uploadDate)) ? -1 : 1)
-    }, [list, filterValue, cacheFormValue])
+        return listInfo?.list ?? []
+    }, [listInfo?.list])
 
 
 
@@ -164,18 +201,20 @@ export const Component = function Bookshelf() {
                                         <Row justify={'space-between'}>
                                             <Col>
                                                 <Form
-                                                    initialValues={{sort: true}}
+                                                    initialValues={{ sort: true }}
                                                     form={form}
-                                                    onFinish={setCacheFormValue}
+                                                    onFinish={() => {
+                                                        runAsync()
+                                                    }}
                                                 >
                                                     <Space>
                                                         <Tooltip
                                                             title={'按上传时间排序'}
                                                         >
                                                             <Form.Item
-                                                            noStyle
-                                                            name="sort"
-                                                            valuePropName='checked'
+                                                                noStyle
+                                                                name="sort"
+                                                                valuePropName='checked'
                                                             >
                                                                 <Switch
                                                                     onChange={form.submit}
@@ -187,14 +226,19 @@ export const Component = function Bookshelf() {
                                                             </Form.Item>
 
                                                         </Tooltip>
+                                                        <Form.Item
+                                                        noStyle
+                                                            name="searchString"
+                                                        >
+                                                            <Input
+                                                                onChange={form.submit}
+                                                                bordered={false}
+                                                                size='large'
+                                                                placeholder={t('搜索书籍')}
 
-                                                        <Input
-                                                            bordered={false}
-                                                            size='large'
-                                                            placeholder={t('搜索书籍')}
-                                                            value={filterValue}
-                                                            onChange={(e) => setFilterValue(e.target.value)}
-                                                        ></Input>
+                                                            ></Input>
+                                                        </Form.Item>
+
                                                     </Space>
                                                 </Form>
 
@@ -208,7 +252,7 @@ export const Component = function Bookshelf() {
                                                         onChange={async () => {
                                                             runAsync()
                                                         }}
-
+                                                        
                                                     ></BookNewButton>
 
 
@@ -223,6 +267,7 @@ export const Component = function Bookshelf() {
                                         <Row justify={'center'} gutter={[20, 20]}>
                                             <Col span={24}>
                                                 {renderList?.length > 0 ? <BookItemList
+                                                    loading={listLoading}
                                                     data={renderList}
                                                     selected={selected}
                                                     ref={containerRef}
@@ -258,7 +303,7 @@ export const Component = function Bookshelf() {
 
                                                         }
                                                     />
-                                                </div>}
+                                                </div>} 
                                             </Col>
                                         </Row>
                                     </Col>

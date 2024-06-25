@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 
 interface IndexProp  extends ButtonProps{
-    onChange?: () => void
+    onChange?: () => void;
 }
 
 export default function index(p: IndexProp) {
