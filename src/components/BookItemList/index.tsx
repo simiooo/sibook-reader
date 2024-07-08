@@ -7,7 +7,7 @@ import { Tooltip } from 'antd';
 import { Tag } from 'antd';
 import { BookItems, db } from '../../dbs/db';
 import { useNavigate } from 'react-router-dom';
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { MutableRefObject, forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
 import { useDebounceFn, useEventListener, useMap, useRequest, useThrottle, useThrottleFn } from 'ahooks';
@@ -43,6 +43,7 @@ interface BookItemListProps {
     onRemove?: (key?: string) => void;
     loading?: boolean;
     contextmenuList?: any[];
+    checkRef?: MutableRefObject<HTMLDivElement>;
     onContextmenuSelect?: (payload?: { type?: string }) => void
 }
 const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
@@ -53,6 +54,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
         uploadingTaskList: state.uploadingTaskList,
         uploadingTaskList_update: state.uploadingTaskList_update,
     }))
+    
     const container_ref = useRef<HTMLDivElement>()
     const [intersectionContainer, {
         set: setInter,
@@ -130,7 +132,6 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         Region: import.meta.env.VITE_COS_REGION,  /* 存储桶所在地域，例如 ap-beijing，必须字段 */
                         Key: `/${ele.objectId}`,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
                         onProgress: function (progressData) {
-                            // console.log(JSON.stringify(progressData));
                             httpUploadTask.httpMeta.onDownloadProgress({
                                 ...progressData,
                                 bytes: progressData.total
@@ -375,13 +376,14 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
 
                         })
                     }
-                    {p?.loading && <LoadingOutlined style={{fontSize: '48px'}} />}
+                    {p?.loading && <LoadingOutlined style={{fontSize: '24px'}} />}
                     
                         <div
                             style={{
-                                height: '10px',
-                                width: '10px',
+                                height: '24px',
+                                width: '24px',
                             }}
+                            ref={p?.checkRef}
                             className="visibleChecker"
                         ></div>
 

@@ -1,7 +1,5 @@
 
-.textLayer ::selection{
-  color: #80aa51 !important;
-}
+
 .container {
   --content-max-height: calc(100vh - 38px);
   height:  calc(100vh - 38px);

@@ -14,6 +14,7 @@ export function usePdfBook() {
     const [modal, contextHolder] = Modal.useModal()
     const db_instance = useBookState(state => state.db_instance)
     const { book_id } = useParams()
+    
 
     useEffect(() => {
         if (pdfDocument) {
@@ -58,6 +59,7 @@ export function usePdfBook() {
                         onOk: async () => {
                             return await pdfPaswordForm.validateFields()
                         },
+                        
                         content: <Form
                         form={pdfPaswordForm}
                         >
@@ -86,7 +88,20 @@ export function usePdfBook() {
                     
                 } else {
                     console.error(error)
-                    modal.error({title: '打开 PDF 失败'})
+                    modal.error({
+                        title: '打开 PDF 失败',
+                        async onOk() {
+                            await modal.info({
+                                title: '刷新页面吗?',
+                                onOk: () =>{
+                                    location.reload()
+                                },
+                                onCancel: () =>{
+                                    // history
+                                }
+                            })
+                        }
+                    })
                 }
             }
 

@@ -6,7 +6,7 @@ import 'pdfjs-dist/web/pdf_viewer.css'
 import { VList, VListHandle } from "virtua";
 import { useLocation, useParams } from 'react-router-dom'
 import panzoomify, { PanZoom } from 'panzoom'
-import { useDebounceFn, useDrag, useEventListener, useLocalStorageState, useLongPress, useMap, useRequest, useSize, useTextSelection } from 'ahooks'
+import { useDebounce, useDebounceFn, useDrag, useEventListener, useLocalStorageState, useLongPress, useMap, useRequest, useSize, useTextSelection, useThrottle } from 'ahooks'
 import { useBookState } from '../../store'
 export const ANIMATION_STATIC = {
   whileTap: { scale: 0.75 },
@@ -26,7 +26,7 @@ import { ItemType } from 'antd/es/menu/hooks/useItems'
 import { RenderTask } from 'pdfjs-dist';
 import { ImgToText } from '../../utils/imgToText'
 import { readFileAsArrayBuffer } from '../../dbs/createBook'
-import { CloseOutlined, FontColorsOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CloseOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
 import { tesseractLuanguages } from '../../utils/tesseractLanguages'
 import { createPortal } from 'react-dom'
 import { languages } from '../../utils/locale'
@@ -39,6 +39,7 @@ export const Component = function PdfReader() {
   const [init, setInit] = useState<boolean>(false)
   const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
   const trashRef = useRef<HTMLDivElement>()
+  
   const [ocrTaskMap, { set, remove, reset }] = useMap<number, OcrTask>()
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
 
@@ -185,7 +186,7 @@ export const Component = function PdfReader() {
     refreshDeps: [meta?.numPages]
   })
 
-  const {data: maxWidthViewPort} = useRequest(async () => {
+  const { data: maxWidthViewPort } = useRequest(async () => {
     return (pages ?? []).reduce((pre, page) => {
       const viewport = page.getViewport()
       return Math.max(pre, viewport.viewBox[2] ?? Number.isNaN(viewport.width) ? 500 : viewport.width)
@@ -313,6 +314,7 @@ export const Component = function PdfReader() {
   // ])
 
   const [selectedText, setSelectedText] = useState<string>()
+  const throttleText = useThrottle(selectedText, {leading: true})
   const [targetLaugange, setTargetLanguage] = useState<string>('zh_CN')
   const selectedState = useTextSelection(listRef)
   const [translatedText, { runAsync: translate, loading: translating }] = useTranslate(selectedText, {
@@ -445,7 +447,7 @@ export const Component = function PdfReader() {
 
                 </div>
               </div>
-              
+
               <div
                 ref={listRef}
                 onMouseUp={(e) => {
@@ -453,7 +455,7 @@ export const Component = function PdfReader() {
                 }}
                 style={{
                   height: '100%',
-                  width: `${maxWidthViewPort + 16 + 46}px`,
+                  width: `${maxWidthViewPort * canvasScale * (window.devicePixelRatio ?? 1) + 26}px`,
                 }}
               >
                 <VList
@@ -634,6 +636,8 @@ export const Component = function PdfReader() {
           onOpenChange={(v) => {
             if (v) {
               translate()
+            } else {
+              setSelectedText('')
             }
           }}
           content={<div
@@ -646,32 +650,45 @@ export const Component = function PdfReader() {
                 <div
                   className={styles.translate_target}
                 >
-                  <Select
-                    // bordered={false}
-                    value={targetLaugange}
-                    onChange={v => {
-                      setTargetLanguage(v)
+                  <Space>
+                    <Select
+                      // bordered={false}
+                      value={targetLaugange}
+                      onChange={v => {
+                        setTargetLanguage(v)
+                      }}
+                      placeholder={'请选择语言'}
+                      style={{
+                        width: '12rem'
+                      }}
+                      showSearch
+                      defaultValue={'zh_CN'}
+                      options={languages.map(el => ({
+                        label: el.language,
+                        value: el.code,
+                      }))}
+                    ></Select>
+                    <Button
+                    // type="link"
+                    icon={<RedoOutlined />}
+                    loading={translating}
+                    onClick={() => {
+                        translate()
                     }}
-                    placeholder={'请选择语言'}
-                    style={{
-                      width: '12rem'
-                    }}
-                    defaultValue={'zh_CN'}
-                    options={languages.map(el => ({
-                      label: el.language,
-                      value: el.code,
-                    }))}
-                  ></Select>
+                    ></Button>
+                  </Space>
+
+
                 </div>
 
               </Col>
               <Col span={24}>
                 <Row
-                gutter={[12, 24]}
+                  gutter={[12, 24]}
                   wrap={false}
                 >
                   <Col span={12}>
-                    <div>{selectedText}</div>
+                    <div>{throttleText}</div>
                   </Col>
                   <Col span={12}>
                     <Spin

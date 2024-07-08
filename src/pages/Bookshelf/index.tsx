@@ -1,7 +1,7 @@
 import { Button, Col, Result, Space, Divider, Select, Input, Avatar, Popover, Switch, Form, Popconfirm, Tooltip } from 'antd';
 import { Row } from "antd";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CopyOutlined, DragOutlined, FileTextTwoTone, ShopOutlined, SmileOutlined, SortAscendingOutlined, SortDescendingOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CopyOutlined, DragOutlined, FileTextTwoTone, RedoOutlined, ShopOutlined, SmileOutlined, SortAscendingOutlined, SortDescendingOutlined, TranslationOutlined } from '@ant-design/icons'
 import BookNewButton from "../../components/BookNewButton";
 import { Content } from "antd/es/layout/layout";
 import { Layout } from "antd";
@@ -30,7 +30,8 @@ import dayjs from 'dayjs';
 export const Component = function Bookshelf() {
     const { currentIsland, profile, isUserOnline } = useBookState(state => ({ currentIsland: state.currentIsland, profile: state.profile, isUserOnline: state.isUserOnline }))
     const containerRef = useRef<HTMLElement>(null)
-    const [inViewport] = useInViewport(containerRef.current?.querySelector<HTMLElement>('.visibleChecker'), {
+    const visible_checker_ref = useRef<HTMLDivElement>()
+    const [inViewport] = useInViewport(visible_checker_ref, {
 
     })
     const { runAsync, loading: listLoading, data: listInfo } = useRequest(async (isInit: boolean = true) => {
@@ -39,22 +40,24 @@ export const Component = function Bookshelf() {
             if (!currentIsland) {
                 throw Error('请先登录')
             }
+            const current = isInit ? 1 : listInfo?.current + 1 ?? 1
             const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
                 url: '/island/getBookListFromIsland',
                 data: {
                     islandId: currentIsland,
-                    current: listInfo?.current ?? 1,
+                    current,
                     pageSize: 20,
                     searchString: form.getFieldValue(['searchString']),
                     sortValue: form.getFieldValue(['sort']) ? '1' : '0',
                 }
             })
-            // console.log(res)
             const map = new Map<string, boolean>()
             return isInit ? { 
                 total: res?.data?.data?.total,
-                current: 1, list: res.data?.data?.rows ?? [] } : {
-                current: listInfo?.current + 1,
+                current, 
+                list: res.data?.data?.rows ?? [] } 
+                : {
+                current,
                 total: res?.data?.data?.total,
                 list: [...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? [])].filter((val) => {
                     if (map.has(val?.objectId)) {
@@ -66,7 +69,6 @@ export const Component = function Bookshelf() {
                 })
             }
         } catch (error) {
-            console.log(error.response)
             message.error(error?.response?.data?.message ?? error?.message)
             return {
                 current: listInfo?.current ?? 1,
@@ -78,15 +80,12 @@ export const Component = function Bookshelf() {
     }, {
         refreshDeps: [currentIsland],
         debounceWait: 500,
-        onSuccess: () => {
-            console.log(listInfo)
-            if(listInfo?.list.length < listInfo?.total && inViewport) {
-                runAsync(false) 
-            } else if(!listInfo){
-                runAsync(false) 
-            }
-        }
     })
+    useEffect(() => {
+        if(inViewport && listInfo?.current >= 1 && listInfo?.list.length < listInfo?.total && !listLoading) {
+            runAsync(false)
+        }
+    }, [inViewport, listInfo])
     const { upload, loading: uploadLoading } = useUpload({ onFinish: () => runAsync() })
 
     const { t, i18n } = useTranslation()
@@ -248,6 +247,14 @@ export const Component = function Bookshelf() {
                                                 <Space
                                                     wrap={true}
                                                 >
+                                                    <Button
+                                                    type="link"
+                                                    icon={<RedoOutlined />}
+                                                    loading={listLoading}
+                                                    onClick={() => {
+                                                        runAsync()
+                                                    }}
+                                                    ></Button>
                                                     <BookNewButton
                                                         onChange={async () => {
                                                             runAsync()
@@ -271,6 +278,7 @@ export const Component = function Bookshelf() {
                                                     data={renderList}
                                                     selected={selected}
                                                     ref={containerRef}
+                                                    checkRef={visible_checker_ref}
                                                     onAdd={add}
                                                     onRemove={remove}
                                                     contextmenuList={contextmenuList}

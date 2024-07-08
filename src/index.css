@@ -1,3 +1,6 @@
+.textLayer ::selection{
+  background: #80aa51 !important;
+}
 body{
     &::-webkit-scrollbar{
         display: none;
