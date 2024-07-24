@@ -342,14 +342,19 @@ export const Component = function PdfReader() {
               <Menu
                 items={pdfToMenuItemHandler(meta?.outline as any)}
                 onSelect={async (v) => {
-                  const keyIndex = v.key.indexOf('[')
-                  if (keyIndex > -1) {
-                    const key = v.key.slice(keyIndex)
-                    const destRef = JSON.parse(key || "{}")
+                  const keyInfo = JSON.parse(v.key)
+                  if (keyInfo?.value && keyInfo?.value instanceof Object) {
+                    const key = keyInfo.value
+                    const destRef = key
                     const pageRef = destRef.find(el => el?.num)
                     const page = pages.find(el => JSON.stringify(el.ref) === JSON.stringify(pageRef ?? "{}"))
                     form.setFieldValue(['page'], page.pageNumber)
                     VlistRef.current.scrollToIndex(page.pageNumber - 1)
+                  } else if(keyInfo?.value && typeof keyInfo.value === 'string') {
+                    const des = await pdfDocument.getDestination(keyInfo?.value)
+                    const pageNumber = await pdfDocument.getPageIndex(des?.[0])
+                    form.setFieldValue(['page'], pageNumber)
+                    VlistRef.current.scrollToIndex(pageNumber - 1)
                   }
                   setSelectedMenuKey(v.keyPath ?? [])
                 }}
@@ -730,7 +735,10 @@ const pdfToMenuItemHandler = (item?: OutlineType[]): ItemType[] => {
     return {
       label: el.title,
       origininfo: el,
-      key: el.title + JSON.stringify(el?.dest ?? []),
+      key: JSON.stringify({
+        title: el?.title,
+        value: el?.dest ?? [],
+      }),
       children: el.items?.length > 0 ? pdfToMenuItemHandler(el.items) : undefined
     }
   })
