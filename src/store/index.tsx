@@ -28,7 +28,7 @@ export interface BookStateType {
         openai_api_key?: string,
         openai_api_model?: string,
     }) => void;
-    openaiRequest?: <T extends Object>(body: {
+    openaiRequest?: <T extends object>(body: {
         type: 'translator' | 'explainer';
         message: T;
     }) => Promise<Response>;

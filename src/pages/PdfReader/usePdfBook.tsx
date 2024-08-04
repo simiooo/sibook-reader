@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { useBookState } from "../../store"
 import { useRequest } from "ahooks"
 import * as pdfjs from 'pdfjs-dist'
@@ -6,7 +6,7 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker?url'
 import { BookBlob, BookItems } from "../../dbs/db"
 import { useCallback, useEffect, useRef } from "react"
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api"
-import { Form, Input, Modal, message } from "antd"
+import { Button, Form, Input, Modal, Space, message } from "antd"
 // import { PasswordException } from "pdfjs-dist"
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
 
@@ -23,7 +23,7 @@ export function usePdfBook() {
     }, [book_id])
 
     const cacheRef = useRef<{ document: PDFDocumentProxy }>({ document: undefined })
-
+    const navigate = useNavigate()
     const { runAsync: getBook, data: book, loading: bookLoading } = useRequest(async () => {
         const book = await db_instance?.transaction('rw', 'book_items', 'book_blob', async () => {
             const book_info = await db_instance.book_items.where('hash').equals(book_id).first()
@@ -93,9 +93,25 @@ export function usePdfBook() {
                         async onOk() {
                             await modal.info({
                                 title: '刷新页面吗?',
-                                onOk: () =>{
+                                content: <div>
+                                    
+                                </div>,
+                                footer: <Space>
+                                <span></span>
+                                <Button 
+                                onClick={() => {
                                     location.reload()
-                                },
+                                }}
+                                type="primary">Ok</Button>
+                                <Button 
+                                danger 
+                                type="link"
+                                onClick={async () => {
+                                    await db_instance.book_blob.where('id').equals(book_id).delete()
+                                    navigate('/')
+                                }}
+                                >清理并回到首页</Button>
+                            </Space>,
                                 onCancel: () =>{
                                     // history
                                 }
