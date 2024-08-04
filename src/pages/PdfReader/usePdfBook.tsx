@@ -105,7 +105,7 @@ export function usePdfBook() {
                                 type="primary">Ok</Button>
                                 <Button 
                                 danger 
-                                type="link"
+                                // type="link"
                                 onClick={async () => {
                                     await db_instance.book_blob.where('id').equals(book_id).delete()
                                     navigate('/')
