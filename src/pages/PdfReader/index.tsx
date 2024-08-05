@@ -1,13 +1,12 @@
-import { Alert, Button, Col, Divider, Form, Input, Menu, Popover, Row, Select, Space, Spin, Switch, Tooltip } from 'antd'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Alert, Button, Col, Form, Input, Menu, Popover, Row, Select, Space, Spin, Tooltip } from 'antd'
+import { useEffect, useRef, useState } from 'react'
 import styles from './index.module.css'
 import * as pdfjs from 'pdfjs-dist'
 import 'pdfjs-dist/web/pdf_viewer.css'
 import { VList, VListHandle } from "virtua";
-import { useLocation, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import panzoomify, { PanZoom } from 'panzoom'
-import { useDebounce, useDebounceFn, useDrag, useEventListener, useLocalStorageState, useLongPress, useMap, useRequest, useSize, useTextSelection, useThrottle } from 'ahooks'
-import { useBookState } from '../../store'
+import { useDebounceFn, useDrag, useLocalStorageState, useMap, useRequest, useSize, useTextSelection, useThrottle } from 'ahooks'
 export const ANIMATION_STATIC = {
   whileTap: { scale: 0.75 },
   whileHover: { scale: 1.35 },
@@ -60,14 +59,14 @@ export const Component = function PdfReader() {
   const [canvasScale, setCanvasScale] = useState(1)
   const panzoomifyFactory = () => panzoomify(listRef.current, {
     beforeWheel: function (e) {
-      const shouldIgnore = !e.ctrlKey;
+      const shouldIgnore = !(e.ctrlKey || e.metaKey);
       return shouldIgnore;
     },
     onDoubleClick() {
       return false
     },
     beforeMouseDown: function (e) {
-      const shouldIgnore = !e.ctrlKey;
+      const shouldIgnore = !(e.ctrlKey || e.metaKey);
       return shouldIgnore;
 
     },
@@ -265,53 +264,12 @@ export const Component = function PdfReader() {
         console.error(err)
       })
 
-      // 目录的定位
-      // page.getAnnotations().then(annotations => {
-      //   for(const annotation of annotations) { 
-      //     const pageId = annotation.dest?.find(el => el?.['name'])?.name
-      //     const outline = meta?.outline?.find?.(el => {
-      //       const name = el.dest?.find(el => el?.name)?.name
-      //       return name && name === pageId             
-      //     })
-      //     setSelectedMenuKey([outline?.title + JSON.stringify(outline?.dest ?? [])])
-      //   }
-      // })
-
-
-
 
       // 避免潜在的竞态情况
       pageRenderTask.current.set(ctx, { renderTask: task })
     }
   }
 
-
-  // const renderPathData = useMemo(() => {
-  //   return points.map(point => {
-  //     const stroke = getStroke(point, {
-  //       size: 32,
-  //       thinning: 0.5,
-  //       smoothing: 0.5,
-  //       streamline: 0.5,
-  //       easing: (t) => t,
-  //       start: {
-  //         taper: 0,
-  //         easing: (t) => t,
-  //         cap: true
-  //       },
-  //       end: {
-  //         taper: 100,
-  //         easing: (t) => t,
-  //         cap: true
-  //       }
-  //     })
-  //     const pathData = getSvgPathFromStroke(stroke)
-  //     return pathData
-  //   })
-
-  // }, [
-  //   points
-  // ])
 
   const [selectedText, setSelectedText] = useState<string>()
   const throttleText = useThrottle(selectedText, {leading: true})
@@ -583,32 +541,6 @@ export const Component = function PdfReader() {
                           </Tooltip>
                         </Space>
                       </div>
-                      {/* <div
-                      className={styles.anontation}
-                      style={{
-                        position: 'absolute',
-                        height: viewport.height,
-                          width: viewport.width,
-                        left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
-                        top: 12 / window.devicePixelRatio,
-                        zIndex: 2,
-                      }}
-                      >
-                        <svg
-                        onPointerDown={handlePointerDown}
-                        onPointerMove={handlePointerMove}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          touchAction: 'none',
-                          
-                        }}
-                        >
-                          {renderPathData.map((point) => {
-                            return <path d={point}></path>
-                          })}
-                        </svg>
-                      </div> */}
                     </div>
                   })}
                 </VList>
