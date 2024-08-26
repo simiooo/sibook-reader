@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Form, Input, Menu, Popover, Row, Select, Space, Spin, Tooltip } from 'antd'
+import { Alert, Button, Col, Form, Input, Menu, Modal, Popover, Row, Select, Space, Spin, Tooltip } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import styles from './index.module.css'
 import * as pdfjs from 'pdfjs-dist'
@@ -6,7 +6,7 @@ import 'pdfjs-dist/web/pdf_viewer.css'
 import { VList, VListHandle } from "virtua";
 import { useParams } from 'react-router-dom'
 import panzoomify, { PanZoom } from 'panzoom'
-import { useDebounceFn, useDrag, useLocalStorageState, useMap, useRequest, useSize, useTextSelection, useThrottle } from 'ahooks'
+import { useDebounceFn, useDrag, useLocalStorageState, useMap, useRequest, useSize, useTextSelection, useThrottle, useThrottleFn } from 'ahooks'
 export const ANIMATION_STATIC = {
   whileTap: { scale: 0.75 },
   whileHover: { scale: 1.35 },
@@ -30,6 +30,8 @@ import { tesseractLuanguages } from '../../utils/tesseractLanguages'
 import { createPortal } from 'react-dom'
 import { languages } from '../../utils/locale'
 import { useTranslate } from '../../utils/useTranslate'
+import TranslatePortal from '../../components/TranslatePortal'
+import { useReadingProgress } from '../../utils/useReadingProgress'
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id, contextHolder }] = usePdfBook()
   const [dividerLeft, setDividerLeft] = useState<number>(300)
@@ -41,6 +43,23 @@ export const Component = function PdfReader() {
   
   const [ocrTaskMap, { set, remove, reset }] = useMap<number, OcrTask>()
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
+  const [remoteProgress, setRemoteProgress] = useReadingProgress(book_id)
+  const {run: setRemoteProgressThrottle} = useThrottleFn(setRemoteProgress, {
+    wait: 1000 * 30
+  })
+  const [modalHook, progressHolder] = Modal.useModal()
+  useEffect(() => {
+    if(!(remoteProgress > 0)) {
+      return
+    }
+    modalHook.confirm({
+      title: '云端同步',
+      content: '远端已有阅读进度，是否使用云端进度',
+      onOk() {
+        form.setFieldValue('page', remoteProgress)
+      }
+    })
+  }, [remoteProgress])
 
   const destroy = () => {
     setSelectedMenuKey([])
@@ -215,6 +234,7 @@ export const Component = function PdfReader() {
     const end = Math.min(endIndex, pages?.length) //这里有问题
     if (options?.pageIndicator && init) {
       form.setFieldValue(['page'], options?.pageIndicator)
+      setRemoteProgressThrottle(options?.pageIndicator)
       setPagination(options?.pageIndicator)
     }
     for (let i = start; i <= end; i++) {
@@ -270,19 +290,14 @@ export const Component = function PdfReader() {
     }
   }
 
+  
 
-  const [selectedText, setSelectedText] = useState<string>()
-  const throttleText = useThrottle(selectedText, {leading: true})
-  const [targetLaugange, setTargetLanguage] = useState<string>('zh_CN')
-  const selectedState = useTextSelection(listRef)
-  const [translatedText, { runAsync: translate, loading: translating }] = useTranslate(selectedText, {
-    target: targetLaugange
-  })
 
   return (
     <Spin
       spinning={Object?.values(loading ?? {})?.some?.(loading => loading)}
     >
+      {progressHolder}
       {contextHolder}
       <div
         className={styles.container}
@@ -356,6 +371,7 @@ export const Component = function PdfReader() {
                 className={styles.reader_tooltip}
               >
                 <div className={styles.page}>
+                {/* 阅读器控制区 */}
                   <Form
                     form={form}
                     initialValues={{
@@ -413,9 +429,6 @@ export const Component = function PdfReader() {
 
               <div
                 ref={listRef}
-                onMouseUp={(e) => {
-                  setSelectedText(window.getSelection().toString())
-                }}
                 style={{
                   height: '100%',
                   width: `${maxWidthViewPort * canvasScale * (window.devicePixelRatio ?? 1) + 26}px`,
@@ -551,107 +564,8 @@ export const Component = function PdfReader() {
           </Col>
         </Row>
       </div>
-      {createPortal(<div
-        className={styles.transalate_tooltip}
-        onMouseUp={(e) => {
-          e.stopPropagation()
-          e.preventDefault()
-        }}
-
-        style={{
-          position: 'absolute',
-          display: selectedText?.length > 0 ? 'block' : 'none',
-          left: selectedState?.left ?? -100,
-          top: selectedState?.bottom ?? -100,
-
-        }}
-      >
-        <Popover
-          trigger={'click'}
-          // title="翻译"
-          destroyTooltipOnHide
-          onOpenChange={(v) => {
-            if (v) {
-              translate()
-            } else {
-              setSelectedText('')
-            }
-          }}
-          content={<div
-            className={styles.transalate_container}
-          >
-            <Row
-              gutter={[12, 10]}
-            >
-              <Col span={24}>
-                <div
-                  className={styles.translate_target}
-                >
-                  <Space>
-                    <Select
-                      // bordered={false}
-                      value={targetLaugange}
-                      onChange={v => {
-                        setTargetLanguage(v)
-                      }}
-                      placeholder={'请选择语言'}
-                      style={{
-                        width: '12rem'
-                      }}
-                      showSearch
-                      defaultValue={'zh_CN'}
-                      options={languages.map(el => ({
-                        label: el.language,
-                        value: el.code,
-                      }))}
-                    ></Select>
-                    <Button
-                    // type="link"
-                    icon={<RedoOutlined />}
-                    loading={translating}
-                    onClick={() => {
-                        translate()
-                    }}
-                    ></Button>
-                  </Space>
-
-
-                </div>
-
-              </Col>
-              <Col span={24}>
-                <Row
-                  gutter={[12, 24]}
-                  wrap={false}
-                >
-                  <Col span={12}>
-                    <div>{throttleText}</div>
-                  </Col>
-                  <Col span={12}>
-                    <Spin
-                      spinning={translating}
-                    >
-                      <div>
-                        <div>{translatedText}</div>
-                      </div>
-                    </Spin>
-                  </Col>
-                </Row>
-
-              </Col>
-            </Row>
-
-
-          </div>}
-        >
-          <Button
-            type="primary"
-            size='small'
-            icon={<TranslationOutlined />}
-          ></Button>
-        </Popover>
-
-      </div>, document.documentElement)}
+      <TranslatePortal    
+      ></TranslatePortal>
       <div
 
         ref={trashRef}

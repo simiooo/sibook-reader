@@ -1,0 +1,14 @@
+.transalate_tooltip{
+  
+}
+.transalate_container{
+    width: 36rem;
+    padding: .5rem .8rem;
+    height: 20rem;
+    /* overflow: auto; */
+  }
+  .transalate_container_body{
+    height: 18rem;
+    overflow: auto;
+    overflow-x: hidden;
+  }
