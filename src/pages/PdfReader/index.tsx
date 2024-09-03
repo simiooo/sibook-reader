@@ -40,16 +40,16 @@ export const Component = function PdfReader() {
   const [init, setInit] = useState<boolean>(false)
   const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
   const trashRef = useRef<HTMLDivElement>()
-  
+
   const [ocrTaskMap, { set, remove, reset }] = useMap<number, OcrTask>()
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
   const [remoteProgress, setRemoteProgress] = useReadingProgress(book_id)
-  const {run: setRemoteProgressThrottle} = useThrottleFn(setRemoteProgress, {
+  const { run: setRemoteProgressThrottle } = useThrottleFn(setRemoteProgress, {
     wait: 1000 * 30
   })
   const [modalHook, progressHolder] = Modal.useModal()
   useEffect(() => {
-    if(!(remoteProgress > 0)) {
+    if (!(remoteProgress > 0)) {
       return
     }
     modalHook.confirm({
@@ -61,10 +61,14 @@ export const Component = function PdfReader() {
     })
   }, [remoteProgress])
 
+  const cachePageImageMap = useRef<Map<number, ImageBitmap>>(new Map())
+
   const destroy = () => {
+    cachePageImageMap.current.clear()
     setSelectedMenuKey([])
     reset()
     setInit(false)
+
   }
 
   useEffect(() => {
@@ -74,6 +78,8 @@ export const Component = function PdfReader() {
   const dividerRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const VlistRef = useRef<VListHandle>(null)
+
+
 
   const [canvasScale, setCanvasScale] = useState(1)
   const panzoomifyFactory = () => panzoomify(listRef.current, {
@@ -253,9 +259,15 @@ export const Component = function PdfReader() {
       const dpr = window.devicePixelRatio || 1;
       const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
       const textLayer = [...document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
+      let imageUrl: string | undefined
+      
       const ctx = canvas?.getContext('2d')
       if (!ctx) {
         continue
+      }
+      if (cachePageImageMap.current.has(i)) {
+        const data = cachePageImageMap.current.get(i)
+        ctx.drawImage(data , 0, 0, canvas.width, canvas.height)
       }
 
       // 取消相同引用未完成的渲染任务
@@ -265,11 +277,20 @@ export const Component = function PdfReader() {
       if (options?.clearDpr || !pageRenderTask.current.get(ctx)) {
         ctx.scale(dpr, dpr)
       }
+
       const viewport = page.getViewport({ scale: options?.canvasScale ?? canvasScale })
       const textViewport = page.getViewport({ scale: 1 })
+      console.log('rendering start', i)
       const task = page.render({
         viewport,
         canvasContext: ctx
+      })
+      task.promise.then(() => {
+        if (!cachePageImageMap.current.has(i)) {
+          canvas.toBlob(async (data) => {
+            cachePageImageMap.current.set(i, await createImageBitmap(data))
+          }, 'image/png', 1)
+        }
       })
       pdfjs.renderTextLayer({
         textContentSource: page.streamTextContent(),
@@ -290,7 +311,7 @@ export const Component = function PdfReader() {
     }
   }
 
-  
+
 
 
   return (
@@ -323,7 +344,7 @@ export const Component = function PdfReader() {
                     const page = pages.find(el => JSON.stringify(el.ref) === JSON.stringify(pageRef ?? "{}"))
                     form.setFieldValue(['page'], page.pageNumber)
                     VlistRef.current.scrollToIndex(page.pageNumber - 1)
-                  } else if(keyInfo?.value && typeof keyInfo.value === 'string') {
+                  } else if (keyInfo?.value && typeof keyInfo.value === 'string') {
                     const des = await pdfDocument.getDestination(keyInfo?.value)
                     const pageNumber = await pdfDocument.getPageIndex(des?.[0])
                     form.setFieldValue(['page'], pageNumber)
@@ -371,7 +392,7 @@ export const Component = function PdfReader() {
                 className={styles.reader_tooltip}
               >
                 <div className={styles.page}>
-                {/* 阅读器控制区 */}
+                  {/* 阅读器控制区 */}
                   <Form
                     form={form}
                     initialValues={{
@@ -431,7 +452,7 @@ export const Component = function PdfReader() {
                 ref={listRef}
                 style={{
                   height: '100%',
-                  width: `${maxWidthViewPort * canvasScale * (window.devicePixelRatio ?? 1) + 26}px`,
+                  width: `${(maxWidthViewPort + 186)}px`,
                 }}
               >
                 <VList
@@ -442,7 +463,7 @@ export const Component = function PdfReader() {
                     width: `100%`,
                   }}
 
-                  overscan={4}
+                  overscan={2}
                   onRangeChange={(startIndex, endIndex) => {
                     // 该方法在缩放时不被调用，需要让它被调用；
                     pdfPageRenderHandler(startIndex, endIndex, pages, {
@@ -476,6 +497,7 @@ export const Component = function PdfReader() {
                           background: 'white',
                         }}
                       ></canvas>
+                      
                       <div
                         data-pageindex={index}
                         className={`textLayer ${styles.textLayerContainer}`}
@@ -564,7 +586,7 @@ export const Component = function PdfReader() {
           </Col>
         </Row>
       </div>
-      <TranslatePortal    
+      <TranslatePortal
       ></TranslatePortal>
       <div
 

@@ -13,34 +13,35 @@ import { requestor } from '../utils/requestor'
 import { User } from '../store/user.type'
 import { useRefresh } from '../utils/useRefresh'
 
-export const ErrorBoundary = () => <div
-    style={{
-        display: 'flex',
-        height: '90vh',
-        width: '100vw',
-        justifyContent: 'center',
-        alignItems: 'center',
-    }}
->
-    <Result
-        status={'error'}
-        title="错误，请联系开发者"
-    >
-        <Row justify={'center'}>
-            <Col>
-            <Space>
-            <Button
-            onClick={() => {
-                location.reload()
-            }}
-            type='primary'
-            >重新加载</Button>
-        </Space>
-            </Col>
-        </Row>
+// export const ErrorBoundary = (props) => <div
+
+//     style={{
+//         display: 'flex',
+//         height: '90vh',
+//         width: '100vw',
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//     }}
+// >
+//     <Result
+//         status={'error'}
+//         title="错误，请联系开发者"
+//     >
+//         <Row justify={'center'}>
+//             <Col>
+//             <Space>
+//             <Button
+//             onClick={() => {
+//                 location.reload()
+//             }}
+//             type='primary'
+//             >重新加载</Button>
+//         </Space>
+//             </Col>
+//         </Row>
         
-    </Result>
-</div>
+//     </Result>
+// </div>
 
 export const Component = function App() {
     const location = useLocation()
