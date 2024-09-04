@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Form, Input, Menu, Modal, Popover, Row, Select, Space, Spin, Tooltip } from 'antd'
+import { Alert, Button, Col, Form, Input, Menu, message, Modal, Popconfirm, Popover, Row, Select, Space, Spin, Tooltip } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import styles from './index.module.css'
 import * as pdfjs from 'pdfjs-dist'
@@ -19,19 +19,22 @@ type OcrTask = Partial<{
 }>
 type ElementType<T> = T extends (infer U)[] ? U : T;
 type OutlineType = ElementType<Awaited<ReturnType<pdfjs.PDFDocumentProxy["getOutline"]>>>
-// import { getStroke } from 'perfect-freehand'
+
 import { usePdfBook } from './usePdfBook'
 import { ItemType } from 'antd/es/menu/hooks/useItems'
 import { RenderTask } from 'pdfjs-dist';
 import { ImgToText } from '../../utils/imgToText'
 import { readFileAsArrayBuffer } from '../../dbs/createBook'
-import { CloseOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CloseOutlined, DeleteOutlined, EditOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
 import { tesseractLuanguages } from '../../utils/tesseractLanguages'
 import { createPortal } from 'react-dom'
 import { languages } from '../../utils/locale'
 import { useTranslate } from '../../utils/useTranslate'
 import TranslatePortal from '../../components/TranslatePortal'
 import { useReadingProgress } from '../../utils/useReadingProgress'
+import { useAnnotation } from '../../utils/useAnnotation'
+import { green } from '../../main'
+const OVERSCAN = 4
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id, contextHolder }] = usePdfBook()
   const [dividerLeft, setDividerLeft] = useState<number>(300)
@@ -41,12 +44,19 @@ export const Component = function PdfReader() {
   const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
   const trashRef = useRef<HTMLDivElement>()
 
-  const [ocrTaskMap, { set, remove, reset }] = useMap<number, OcrTask>()
+  const [messageIns, messageContextHolder] = message.useMessage()
+
+  const [ocrTaskMap, { set, remove, reset }] = useMap<string, OcrTask>()
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
   const [remoteProgress, setRemoteProgress] = useReadingProgress(book_id)
   const { run: setRemoteProgressThrottle } = useThrottleFn(setRemoteProgress, {
     wait: 1000 * 30
   })
+
+  const [isRendering, setIsRendering] = useState<boolean>(false)
+
+  const [isEditing, setIsEditing] = useState<boolean>(false)
+
   const [modalHook, progressHolder] = Modal.useModal()
   useEffect(() => {
     if (!(remoteProgress > 0)) {
@@ -61,7 +71,7 @@ export const Component = function PdfReader() {
     })
   }, [remoteProgress])
 
-  const cachePageImageMap = useRef<Map<number, ImageBitmap>>(new Map())
+  const cachePageImageMap = useRef<Map<number, OffscreenCanvas>>(new Map())
 
   const destroy = () => {
     cachePageImageMap.current.clear()
@@ -82,6 +92,7 @@ export const Component = function PdfReader() {
 
 
   const [canvasScale, setCanvasScale] = useState(1)
+  const { handlePointerDown, handlePointerMove, linesMap, get: LinesGet, remove: linesRemove } = useAnnotation(book_id, canvasScale)
   const panzoomifyFactory = () => panzoomify(listRef.current, {
     beforeWheel: function (e) {
       const shouldIgnore = !(e.ctrlKey || e.metaKey);
@@ -99,12 +110,13 @@ export const Component = function PdfReader() {
   })
   useEffect(() => {
     listRef.current.style.setProperty('--scale-factor', String(1))
-    pdfPageRenderHandler(0, (pages ?? []).length ?? 0, pages, { canvasScale, clearDpr: true })
+    pdfPageRenderHandler(0, (pages ?? []).length ?? 0, pages, { canvasScale, clearDpr: true, cacheRerenderDisable: true })
   }, [canvasScale])
 
 
   const { run: canvasScaleHandler } = useDebounceFn((e) => {
     const scale = e?.getTransform?.()?.scale
+    setIsRendering(true)
     setCanvasScale(scale ?? 1)
   }, {
     wait: 200,
@@ -166,8 +178,8 @@ export const Component = function PdfReader() {
         }
 
       })
-
-      set(index, { status: 'done', fragment: trashRef.current?.children?.[0].cloneNode(true) as Element })
+      const languagesSetting = JSON.stringify(form.getFieldValue('ocr') ?? [])
+      set(index + languagesSetting, { status: 'done', fragment: trashRef.current?.children?.[0].cloneNode(true) as Element })
       containeDom.append(trashRef.current?.children?.[0].cloneNode(true))
     })
   }
@@ -233,41 +245,43 @@ export const Component = function PdfReader() {
   const size = useSize(listRef)
 
   // pdf 渲染处理
-  const pdfPageRenderHandler = async (startIndex: number, endIndex: number, pages: pdfjs.PDFPageProxy[], options?: { pageIndicator?: number, canvasScale?: number, clearDpr?: boolean }) => {
+  const { run: pdfPageRenderHandler } = useThrottleFn(async (startIndex: number, endIndex: number, pages: pdfjs.PDFPageProxy[], options?: { pageIndicator?: number, canvasScale?: number, clearDpr?: boolean, cacheRerenderDisable?: boolean }) => {
     // 该方法在缩放时不被调用，需要让它被调用；
 
-    const start = Math.max(0, startIndex)
-    const end = Math.min(endIndex, pages?.length) //这里有问题
+    const start = Math.max(pagination - OVERSCAN / 2, startIndex, 0)
+    const end = Math.min(pagination + OVERSCAN / 2, Number.isNaN(pages?.length) ? 0 : pages?.length) //这里有问题
     if (options?.pageIndicator && init) {
       form.setFieldValue(['page'], options?.pageIndicator)
       setRemoteProgressThrottle(options?.pageIndicator)
       setPagination(options?.pageIndicator)
     }
+    const renderTaskQueue = []
     for (let i = start; i <= end; i++) {
       const page = pages[i]
 
-
-      const cache = ocrTaskMap.get(i)
+      const languagesSetting = JSON.stringify(form.getFieldValue('ocr') ?? [])
+      const cache = ocrTaskMap.get(i + languagesSetting)
       if (cache && ['hidden', 'done'].includes(cache.status)) {
+
         getCacheOcrFragment(i, cache)
         cache.status = 'done'
-        set(i, cache)
+        set(i + languagesSetting, cache)
       }
       if (!page) {
         continue
       }
       const dpr = window.devicePixelRatio || 1;
-      const canvas = [...document.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
-      const textLayer = [...document.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
-      let imageUrl: string | undefined
-      
+      const canvas = [...listRef.current.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
+      const canvasSub = [...listRef.current.querySelectorAll<HTMLCanvasElement>(`.${styles.canvasSubContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
+      const textLayer = [...listRef.current.querySelectorAll<HTMLDivElement>(`.${styles.textLayerContainer}`)].find(el => Number(el.dataset?.pageindex) === i)
       const ctx = canvas?.getContext('2d')
+      const subCtx = canvasSub?.getContext('2d')
       if (!ctx) {
         continue
       }
       if (cachePageImageMap.current.has(i)) {
         const data = cachePageImageMap.current.get(i)
-        ctx.drawImage(data , 0, 0, canvas.width, canvas.height)
+        subCtx.drawImage(data, 0, 0, canvasSub.width, canvasSub.height)
       }
 
       // 取消相同引用未完成的渲染任务
@@ -280,15 +294,18 @@ export const Component = function PdfReader() {
 
       const viewport = page.getViewport({ scale: options?.canvasScale ?? canvasScale })
       const textViewport = page.getViewport({ scale: 1 })
-      console.log('rendering start', i)
       const task = page.render({
         viewport,
         canvasContext: ctx
       })
+      renderTaskQueue.push(task.promise)
       task.promise.then(() => {
         if (!cachePageImageMap.current.has(i)) {
           canvas.toBlob(async (data) => {
-            cachePageImageMap.current.set(i, await createImageBitmap(data))
+            const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height)
+            const offCtx = offscreenCanvas.getContext('2d')
+            offCtx.drawImage(await createImageBitmap(data), 0, 0, canvas.width, canvas.height)
+            cachePageImageMap.current.set(i, offscreenCanvas)
           }, 'image/png', 1)
         }
       })
@@ -309,7 +326,13 @@ export const Component = function PdfReader() {
       // 避免潜在的竞态情况
       pageRenderTask.current.set(ctx, { renderTask: task })
     }
-  }
+    Promise.allSettled(renderTaskQueue).finally(() => {
+      setIsRendering(false)
+    })
+  }, {
+    wait: 200,
+    leading: true,
+  })
 
 
 
@@ -318,7 +341,12 @@ export const Component = function PdfReader() {
     <Spin
       spinning={Object?.values(loading ?? {})?.some?.(loading => loading)}
     >
-      {progressHolder}
+      <div
+        key={1}
+      >{progressHolder}</div>
+      <div key={2}>
+        {messageContextHolder}
+      </div>
       {contextHolder}
       <div
         className={styles.container}
@@ -375,6 +403,28 @@ export const Component = function PdfReader() {
                 <Space
                   direction='vertical'
                 >
+                  <Space>
+                    <Tooltip
+                    placement='rightBottom'
+                    title={`是否编辑(当前状态：${isEditing ? '是' : '否'})`}
+                    >
+                      <Button
+                        type={isEditing ? "primary" : 'default'}
+                        icon={<EditOutlined />}
+                      // type={'primary'}
+                      onClick={() => {
+                        setIsEditing(!isEditing)
+                        if(!isEditing) {
+                          messageIns.success('在 pdf 文档上 长按鼠标左键后拖动 进行标记')
+                        }
+                        
+                      }}
+                      >
+
+                      </Button>
+                    </Tooltip>
+
+                  </Space>
                   <Alert
                     closable
                     type='warning'
@@ -463,8 +513,9 @@ export const Component = function PdfReader() {
                     width: `100%`,
                   }}
 
-                  overscan={2}
+                  overscan={OVERSCAN}
                   onRangeChange={(startIndex, endIndex) => {
+                    setIsRendering(true)
                     // 该方法在缩放时不被调用，需要让它被调用；
                     pdfPageRenderHandler(startIndex, endIndex, pages, {
                       canvasScale,
@@ -477,11 +528,14 @@ export const Component = function PdfReader() {
                     const viewport = page.getViewport({
                       scale: 1
                     })
-
+                    const languagesSetting = JSON.stringify(form.getFieldValue('ocr') ?? [])
                     const dpr = window.devicePixelRatio || 1;
                     return <div
                       className={styles.pageContainer}
                       key={index}
+                      style={{
+                        position: 'relative'
+                      }}
                     >
                       <div
                         className={styles.pageDivider}
@@ -492,12 +546,28 @@ export const Component = function PdfReader() {
                         data-pageindex={index}
                         height={viewport.height * canvasScale * dpr}
                         style={{
-                          height: viewport.height,
-                          width: viewport.width,
+                          height: viewport?.height ?? 1000,
+                          width: viewport?.width,
                           background: 'white',
+
                         }}
                       ></canvas>
-                      
+                      <canvas
+                        className={styles.canvasSubContainer}
+                        width={viewport.width}
+                        height={viewport.height}
+                        data-pageindex={index}
+                        style={{
+                          height: viewport.height,
+                          width: viewport.width,
+                          background: 'transparent',
+                          position: 'absolute',
+                          left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
+                          top: 12,
+                          opacity: isRendering ? 1 : 0,
+                        }}
+                      >
+                      </canvas>
                       <div
                         data-pageindex={index}
                         className={`textLayer ${styles.textLayerContainer}`}
@@ -507,6 +577,7 @@ export const Component = function PdfReader() {
                           top: 12,
                         }}
                       ></div>
+
                       <div
                         className={styles.ocrLayer}
                         data-ocrpageindex={index}
@@ -517,11 +588,30 @@ export const Component = function PdfReader() {
                           zIndex: 2,
                           height: viewport.height,
                           width: viewport.width,
-                          display: ocrTaskMap.get(index)?.status !== 'done' ? 'none' : 'block',
+                          display: ocrTaskMap.get(index + languagesSetting)?.status !== 'done' ? 'none' : 'block',
                         }}
                       >
 
                       </div>
+                      <svg
+                        data-pageindex={index}
+                        onPointerDown={(e: any) => handlePointerDown(e as PointerEvent, index.toString())}
+                        onPointerMove={(e: any) => handlePointerMove(e as PointerEvent, index.toString())}
+                        className={`annotationCusTom ${styles.annotationCusTom}`}
+                        style={{
+                          zIndex: 3,
+                          height: viewport.height,
+                          width: viewport.width,
+                          position: 'absolute',
+                          left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
+                          top: 12,
+                          pointerEvents:isEditing ? undefined : 'none'
+                        }}
+                      >
+                        {LinesGet(String(index)).map(line => (
+                          <path d={line}></path>
+                        ))}
+                      </svg>
                       <div
                         className={styles.toolbar}
                         style={{
@@ -533,31 +623,34 @@ export const Component = function PdfReader() {
                           transform: 'translateX(calc(-100% - 0.25rem))'
                         }}
                       >
-                        <Space>
+                        <Space
+                          direction='vertical'
+                        >
                           <Tooltip
                             title={'提取图片文字'}
 
                           >
-                            {ocrTaskMap.get(index)?.status !== 'done' ? <Button
+                            {ocrTaskMap.get(index + languagesSetting)?.status !== 'done' ? <Button
                               type="primary"
                               size='small'
-                              loading={ocrTaskMap.get(index)?.status === 'loading'}
+                              loading={ocrTaskMap.get(index + languagesSetting)?.status === 'loading'}
                               icon={<FontColorsOutlined />}
                               onClick={() => {
+                                const languagesSetting = JSON.stringify(form.getFieldValue('ocr') ?? [])
                                 try {
-                                  const cache = ocrTaskMap.get(index)
+                                  const cache = ocrTaskMap.get(index + languagesSetting)
                                   if (cache && ['hidden', 'done'].includes(cache.status)) {
                                     getCacheOcrFragment(index, cache)
                                     cache.status = 'done'
-                                    set(index, cache)
+                                    set(index + languagesSetting, cache)
                                     return
                                   }
-                                  set(index, { status: 'loading' })
-                                  const canvas = document.querySelector<HTMLCanvasElement>(`canvas[data-pageindex="${index}"]`)
+                                  set(index + languagesSetting, { status: 'loading' })
+                                  const canvas = listRef.current.querySelector<HTMLCanvasElement>(`canvas[data-pageindex="${index}"]`)
                                   ocrTextLayerBuilder(canvas, index)
                                 } catch (error) {
                                   console.error(error)
-                                  set(index, { status: 'error', error })
+                                  set(index + languagesSetting, { status: 'error', error })
                                 }
 
 
@@ -567,12 +660,32 @@ export const Component = function PdfReader() {
                               size='small'
                               icon={<CloseOutlined />}
                               onClick={() => {
-                                const cache = ocrTaskMap.get(index)
+                                const languagesSetting = JSON.stringify(form.getFieldValue('ocr') ?? [])
+                                const cache = ocrTaskMap.get(index + languagesSetting)
                                 cache.status = 'hidden'
-                                set(index, cache)
-                                document.querySelector(`[data-ocrpageindex="${index}"]`).innerHTML = ''
+                                set(index + languagesSetting, cache)
+                                listRef.current.querySelector(`[data-ocrpageindex="${index}"]`).innerHTML = ''
                               }}
                             ></Button>}
+                          </Tooltip>
+                          <Tooltip
+                            title="删除笔记"
+                          >
+                            <Popconfirm
+                              title="确定删除吗"
+                              okType='danger'
+                              onConfirm={() => {
+                                linesRemove(String(index))
+                              }}
+                            >
+                              <Button
+                                type="primary"
+                                danger
+                                icon={<DeleteOutlined />}
+                                size='small'
+                              ></Button>
+                            </Popconfirm>
+
                           </Tooltip>
                         </Space>
                       </div>
