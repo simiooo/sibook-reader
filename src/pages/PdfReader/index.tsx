@@ -674,6 +674,9 @@ export const Component = function PdfReader() {
                             <Popconfirm
                               title="确定删除吗"
                               okType='danger'
+                              okButtonProps={{
+                                disabled: !isEditing
+                              }}
                               onConfirm={() => {
                                 linesRemove(String(index))
                               }}
@@ -681,6 +684,7 @@ export const Component = function PdfReader() {
                               <Button
                                 type="primary"
                                 danger
+                                disabled={!isEditing}
                                 icon={<DeleteOutlined />}
                                 size='small'
                               ></Button>
