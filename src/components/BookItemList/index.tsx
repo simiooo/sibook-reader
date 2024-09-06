@@ -22,8 +22,9 @@ import { useBookState } from '../../store';
 import { HttpTask } from '../UploadContainer';
 import { AxiosProgressEvent } from 'axios';
 import { readFileAsArrayBuffer } from '../../dbs/createBook';
-import { cos } from '../../utils/coClient';
 import { LoadingOutlined } from '@ant-design/icons';
+import { backblazeIns } from '../../utils/backblaze';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 
 export const tagMap = {
     'application/pdf': {
@@ -54,7 +55,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
         uploadingTaskList: state.uploadingTaskList,
         uploadingTaskList_update: state.uploadingTaskList_update,
     }))
-    
+
     const container_ref = useRef<HTMLDivElement>()
     const [intersectionContainer, {
         set: setInter,
@@ -120,55 +121,45 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                 uploadingTaskList.unshift(httpUploadTask)
                 uploadingTaskList_update(uploadingTaskList)
                 const exitInCos = await requestor<{ data: string }>({
-                    url: "/cos/isExitedInCos",
+                    url: "/backblaze/isExitedInStorage",
                     data: {
                         bookId: ele.objectId
                     }
                 })
                 if (exitInCos.data.data === '1') {
-                    cos.getObject({
-                        DataType: 'blob',
-                        Bucket: import.meta.env.VITE_COS_BUCKET, /* 填入您自己的存储桶，必须字段 */
-                        Region: import.meta.env.VITE_COS_REGION,  /* 存储桶所在地域，例如 ap-beijing，必须字段 */
-                        Key: `/${ele.objectId}`,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
-                        onProgress: function (progressData) {
-                            httpUploadTask.httpMeta.onDownloadProgress({
-                                ...progressData,
-                                bytes: progressData.total
-                            })
-                        }
 
-                    }, async function (err, data) {
-                        if (err) {
-                            message.error(err?.message)
-                            return
-                        }
-                        db.book_blob.add({
-                            id: ele.objectId,
-                            blob: await readFileAsArrayBuffer(new File([data.Body], ele.objectName)),
-                            updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                        }).then(() => {
-                            if (ele?.objectType === 'application/epub+zip') {
-                                const pathname = `/reader/${ele.objectId}`
-                                tabs_add({
-                                    url: pathname,
-                                    label: ele.objectName,
-                                    closable: true
-                                })
-                                navigate(pathname)
-                            } else if (ele?.objectType === 'application/pdf') {
-                                const pathname = `/pdf_reader/${ele.objectId}`
-                                tabs_add({
-                                    url: pathname,
-                                    label: ele.objectName,
-                                    closable: true
-                                })
-                                navigate(pathname)
-                            } else {
-                                message.error(t('暂不支持'))
-                            }
+                    const fileRes = await backblazeIns.send(new GetObjectCommand({
+                        Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET,
+                        Key: `/${ele.objectId}`,
+
+                    }))
+                    
+                    const fileStream = await fileRes.Body.transformToWebStream()
+                    let file = new Blob()
+                    const progressData = {
+                        loaded: 0,
+                        total: ele.objectSize,
+                    }
+                    const reader = fileStream.getReader()
+                    httpUploadTask.httpMeta.cancel = reader.cancel
+                    reader.read().then(async info => {
+                        const bytes = info.value as Uint8Array 
+                        file = new Blob([file,bytes])
+                        progressData.loaded += bytes.length
+                        
+                        httpUploadTask.httpMeta.onDownloadProgress({
+                            ...progressData,
+                            bytes: progressData.total
                         })
+                        if(info.done) {
+                            db.book_blob.add({
+                                id: ele.objectId,
+                                blob: await readFileAsArrayBuffer(new File([file], ele.objectName)),
+                                updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                            })
+                        }   
                     })
+                    
                 } else if (exitInCos.data.data === '0') {
                     const res = await requestor<Blob>({
                         url: "/island/getBookBinaryFromIsland",
@@ -376,16 +367,16 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
 
                         })
                     }
-                    {p?.loading && <LoadingOutlined style={{fontSize: '24px'}} />}
-                    
-                        <div
-                            style={{
-                                height: '24px',
-                                width: '24px',
-                            }}
-                            ref={p?.checkRef}
-                            className="visibleChecker"
-                        ></div>
+                    {p?.loading && <LoadingOutlined style={{ fontSize: '24px' }} />}
+
+                    <div
+                        style={{
+                            height: '24px',
+                            width: '24px',
+                        }}
+                        ref={p?.checkRef}
+                        className="visibleChecker"
+                    ></div>
 
                 </Row>
 

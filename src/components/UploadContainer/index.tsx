@@ -11,9 +11,10 @@ import { AxiosProgressEvent } from 'axios';
 
 export type UploadTask = WsTask | HttpTask
 type WsTask = {
-    ws: SiWs;
+    ws?: SiWs;
     name: string;
     unread?: boolean;
+    error?: boolean;
     type?: 'upload' | 'download'
     des: string;
 }
@@ -22,8 +23,9 @@ export type HttpTask = Omit<WsTask, 'ws'> & {
         size: number;
         current: number;
         error: boolean;
+        cancel?: (reason?: any) => void;
         onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void;
-        onUploadProgress?: (type: string, others: any[]) => void;
+        onUploadProgress?: (type: string, ...others: any[]) => void;
     }
 }
 
@@ -181,8 +183,8 @@ export default function UploadContainer() {
                                             format={(percent) => <div>
                                                 <div>{`${percent}%`}</div>
                                                 <CloudDownloadOutlined /></div>}
-                                            status={item.httpMeta?.error ? 'exception' : undefined}
-                                            percent={Math.round(item.httpMeta?.current / item.httpMeta?.size * 10000) / 100}
+                                            status={('httpMeta' in item && item.httpMeta?.error) ? 'exception' : undefined}
+                                            percent={'httpMeta' in item ? Math.round(item.httpMeta?.current / item.httpMeta?.size * 10000) / 100 : 0}
                                         />}
                                     ></List.Item.Meta>
                                 </List.Item>

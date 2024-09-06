@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
+    "@aws-sdk/client-s3": "^3.645.0",
+    "@aws-sdk/credential-providers": "^3.645.0",
     "@types/node": "^20.9.3",
     "@types/react-i18next": "^8.1.0",
     "@types/react-virtualized": "^9.21.30",

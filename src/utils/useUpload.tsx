@@ -9,10 +9,12 @@ import { epubMetaParser, pdfMetaParser } from "./getBookMeta";
 import { SiWs, WsChangeEvent } from "./jsClient";
 import { LoginType } from "../pages/Login";
 import { db } from "../dbs/db";
-import { cos } from "./coClient";
 import pify from 'pify';
 import { XMLParser } from 'fast-xml-parser'
 import { requestor } from "./requestor";
+import { backblazeIns } from "./backblaze";
+import { AbortMultipartUploadCommand, CompleteMultipartUploadCommand, CreateMultipartUploadCommand, UploadPartCommand } from "@aws-sdk/client-s3";
+import { HttpTask, UploadTask } from "../components/UploadContainer";
 const parser = new XMLParser();
 
 
@@ -63,80 +65,90 @@ export function useUpload(
                 meta = await epubMetaParser(file)
             }
 
-            const httpMeta = {
+            const httpMeta: HttpTask["httpMeta"]  = {
                 size: info.file.size,
                 current: 0,
                 error: false,
                 onUploadProgress: function (type, ...others) {
                     if (type === 'ready') {
+                        undefined
                     } else if (type === 'progress') {
                         others[0].current
                         this.current = others?.[0]?.loaded
                     } else if (type === 'finish') {
                         this.current
-                    } else if(type === 'error') {
+                    } else if (type === 'error') {
                         this.error = true
                     }
                     uploadingTaskList_update([...uploadingTaskList])
                 },
             }
-            const eventListender = {
-                onTaskReady: function (taskId) {
-                    httpMeta.onUploadProgress('ready', taskId)
-                },
-                onProgress: function (progressData) {
-                    httpMeta.onUploadProgress('progress', progressData)
-                },
-                onFileFinish: function (err, data, options) {
-                    httpMeta.onUploadProgress('finish', data, options)
-                },
-            }
-            const task = new Promise((resolve, reject) =>{
-                cos.uploadFile({
-                    ContentType:`application/octet-stream`,
-                    Bucket: import.meta.env.VITE_COS_BUCKET, /* 填入您自己的存储桶，必须字段 */
-                    Region: import.meta.env.VITE_COS_REGION,  /* 存储桶所在地域，例如ap-beijing，必须字段 */
-                    Key: `/${hash}`,  /* 存储在桶里的对象键（例如1.jpg，a/b/test.txt），必须字段 */
-                    Body: info.file, /* 必须，上传文件对象，可以是input[type="file"]标签选择本地文件后得到的file对象 */
-                    SliceSize: 1024 * 1024 * 5,     /* 触发分块上传的阈值，超过5MB使用分块上传，非必须 */
-                    onTaskReady: eventListender.onTaskReady,
-                    onProgress: eventListender.onProgress,
-                    onFileFinish: eventListender.onFileFinish,
-                    
-                    // 支持自定义headers 非必须
-                    Headers: {
-                        "x-cos-meta-filename": encodeURIComponent(info.file.name),
-                        "x-cos-meta-mimetype": encodeURIComponent(info.file.type),
-                        // "size": info.file.size,
-                    },
-                }, async function (err, data: CosResponseData) {
-                    try {
-                        const payload: FileUploadPayload = {
-                            hash: hash,
-                            name: info.file.name,
-                            size: info.file.size,
-                            islandId: currentIsland,
-                        }
-                        if (err) {
-                            throw Error(err.toString())
-                        }
-                        const res = await requestor<{ status: number, message: string }>({
-                            url: '/cos/uploadSave',
-                            data: payload
-                        })
-                        if(res.data.status !== 200) {
-                            throw Error(res.data?.message)
-                        }
-                        resolve(data)
-                    } catch (error) {
-                        console.error(error)
-                        httpMeta.onUploadProgress('error',error)
-                        // message.error('上传失败')
-                        reject(error)
-                    }
-    
+
+            const res = await backblazeIns.send(new CreateMultipartUploadCommand({
+                Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET,
+                Key: `/${hash}`,
+                Metadata: {
+                    "filename": encodeURIComponent(info.file.name),
+                    "mimetype": encodeURIComponent(info.file.type),
+                }
+            }))
+            const byes = await readFileAsArrayBuffer(info.file)
+            const SLICE_SIZE = 1024 * 1024 * 5
+            const partTotal = Math.ceil(byes.length / SLICE_SIZE)
+            let loaded = 0
+            const tasks = new Array(partTotal).fill(1).map((_, partNumber) => {
+                return backblazeIns.send(new UploadPartCommand({
+                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET,
+                    Key: `/${hash}`,
+                    UploadId: res.UploadId,
+                    PartNumber: partNumber,
+                    Body: byes.slice(partNumber * SLICE_SIZE, (partNumber + 1) * SLICE_SIZE),
+                })).then(data => {
+                    httpMeta.onUploadProgress('progress', {
+                        loaded: (loaded += SLICE_SIZE)
+                    })
+                    return data
                 })
-            }) 
+            })
+            const taskConcurrency = Promise.all(tasks)
+            taskConcurrency.then(data => {
+                const command = new CompleteMultipartUploadCommand({
+                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET, // 替换为你的 S3 桶名
+                    Key: `/${hash}`, // 替换为你要上传的文件的键
+                    UploadId: res.UploadId,
+                    MultipartUpload: {
+                        Parts: data,
+                    },
+                });
+                return backblazeIns.send(command)
+            }).then(data => {
+                const payload: FileUploadPayload = {
+                    hash: hash,
+                    name: info.file.name,
+                    size: info.file.size,
+                    islandId: currentIsland,
+                }
+                return requestor<{ status: number, message: string }>({
+                    url: '/backblaze/uploadSave',
+                    data: payload
+                })
+            }).catch(err => {
+                backblazeIns.send(new AbortMultipartUploadCommand({
+                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET, // 替换为你的 S3 桶名
+                    Key: `/${hash}`, // 替换为你要上传的文件的键
+                    UploadId: res.UploadId,
+                }));
+                httpMeta.onUploadProgress('error', {
+                    message: err
+                })
+            })
+            httpMeta.cancel = () => {
+                backblazeIns.send(new AbortMultipartUploadCommand({
+                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET, // 替换为你的 S3 桶名
+                    Key: `/${hash}`, // 替换为你要上传的文件的键
+                    UploadId: res.UploadId,
+                }));
+            }
 
             uploadingTaskList.unshift({
                 httpMeta: httpMeta,
@@ -146,7 +158,7 @@ export function useUpload(
                 des: meta?.creator ?? meta?.Author ?? info.file.name,
             })
             uploadingTaskList_update(uploadingTaskList)
-            await task
+            await taskConcurrency
         } catch (error) {
             console.log(error)
             message.error(error instanceof Error ? error.message : error)
@@ -171,16 +183,3 @@ export interface FileUploadPayload {
     islandId: number;
 }
 
-interface CosResponseHeaders {
-    'content-length': string;
-    'etag': string;
-    'x-cos-request-id': string;
-}
-
-interface CosResponseData {
-    statusCode: number;
-    headers: CosResponseHeaders;
-    Location: string;
-    ETag: string;
-    RequestId: string;
-}
