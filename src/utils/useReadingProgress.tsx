@@ -16,7 +16,7 @@ export function useReadingProgress(bookId?: string) {
                 url: "/cache/bookProgressAdd",
                 data: {
                     bookId: bookId,
-                    currentPageindex: currentPage ?? 1,
+                    currentPageindex: currentPage ?? -1,
                 }
             })
         } catch (error) {

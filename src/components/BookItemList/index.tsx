@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Dropdown, Spin, message } from 'antd'
+import { Alert, Button, Col, Dropdown, Modal, Spin, message } from 'antd'
 import { Card } from 'antd'
 import { Row } from 'antd'
 import Selecto from "react-selecto";
@@ -56,6 +56,8 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
         uploadingTaskList_update: state.uploadingTaskList_update,
     }))
 
+    const [modal, modalContextHolder] = Modal.useModal()
+
     const container_ref = useRef<HTMLDivElement>()
     const [intersectionContainer, {
         set: setInter,
@@ -76,6 +78,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
 
             const cache = await db.book_blob.get(ele.objectId)
             if (cache?.blob?.byteLength > 0 && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
+                // 本地获取
                 if (ele?.objectType.startsWith('application/epub+zip')) {
                     const pathname = `/reader/${ele.objectId}`
                     tabs_add({
@@ -96,6 +99,17 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                     message.error(t('暂不支持'))
                 }
             } else {
+                let fileIndex: number = -1
+                // 云端获取
+                if((fileIndex = uploadingTaskList.findIndex(el => "httpMeta" in el ? el.httpMeta?.id === ele.objectId : false)) > -1 ) {
+                    const res = await modal.confirm({
+                        title: '传输列表中已有该书籍，确定要重试吗？',
+                    })
+                    if(res) {
+                        uploadingTaskList.splice(fileIndex, 1)
+                        uploadingTaskList_update(uploadingTaskList)
+                    }
+                }
                 const httpUploadTask = (() => {
                     const httpUploadTask: HttpTask = {
                         name: ele.objectName,
@@ -103,6 +117,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         type: 'download',
                         unread: true,
                         httpMeta: {
+                            id: ele.objectId,
                             size: ele.objectSize,
                             current: 0,
                             error: false,
@@ -138,11 +153,11 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress
                     })
                     // console.log(fileTask)
-                    // db.book_blob.add({
-                    //     id: ele.objectId,
-                    //     blob: await readFileAsArrayBuffer(new File([fileTask?.data], ele.objectName)),
-                    //     updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                    // })
+                    await db.book_blob.add({
+                        id: ele.objectId,
+                        blob: await readFileAsArrayBuffer(new File([fileTask?.data], ele.objectName)),
+                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    })
                     // const fileStream = await fileRes.Body.transformToWebStream()
                     // let file = new Blob()
                     // const progressData = {
@@ -293,6 +308,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
         <div
             ref={ref}
         >
+            {modalContextHolder}
             <div
                 className={style.container}
             >

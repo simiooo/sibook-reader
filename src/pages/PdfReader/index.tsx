@@ -21,7 +21,6 @@ type ElementType<T> = T extends (infer U)[] ? U : T;
 type OutlineType = ElementType<Awaited<ReturnType<pdfjs.PDFDocumentProxy["getOutline"]>>>
 
 import { usePdfBook } from './usePdfBook'
-import { ItemType } from 'antd/es/menu/hooks/useItems'
 import { RenderTask } from 'pdfjs-dist';
 import { ImgToText } from '../../utils/imgToText'
 import { readFileAsArrayBuffer } from '../../dbs/createBook'
@@ -34,6 +33,7 @@ import TranslatePortal from '../../components/TranslatePortal'
 import { useReadingProgress } from '../../utils/useReadingProgress'
 import { useAnnotation } from '../../utils/useAnnotation'
 import { green } from '../../main'
+import { ItemType } from 'antd/es/menu/interface'
 const OVERSCAN = 4
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id, contextHolder }] = usePdfBook()
@@ -49,6 +49,7 @@ export const Component = function PdfReader() {
   const [ocrTaskMap, { set, remove, reset }] = useMap<string, OcrTask>()
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
   const [remoteProgress, setRemoteProgress] = useReadingProgress(book_id)
+  const [isProgressInit, setIsProgressInit] = useState<boolean>(false)
   const { run: setRemoteProgressThrottle } = useThrottleFn(setRemoteProgress, {
     wait: 1000 * 30
   })
@@ -59,16 +60,22 @@ export const Component = function PdfReader() {
 
   const [modalHook, progressHolder] = Modal.useModal()
   useEffect(() => {
-    if (!(remoteProgress > 0)) {
+    console.log(remoteProgress, form.getFieldValue(['page']))
+    if (isProgressInit || !(Number(remoteProgress) > 0) || remoteProgress === Number(form.getFieldValue(['page']))) {
+      return
+    }
+    if(remoteProgress === -1) {
       return
     }
     modalHook.confirm({
       title: '云端同步',
-      content: '远端已有阅读进度，是否使用云端进度',
+      content: `远端已有阅读进度，是否使用云端进度第 ${remoteProgress} 页`,
       onOk() {
         form.setFieldValue('page', remoteProgress)
+        VlistRef.current.scrollToIndex((remoteProgress ?? 1))
       }
     })
+    setIsProgressInit(true)
   }, [remoteProgress])
 
   const cachePageImageMap = useRef<Map<number, OffscreenCanvas>>(new Map())

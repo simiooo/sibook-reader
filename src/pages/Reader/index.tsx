@@ -16,7 +16,6 @@ import { Slider } from 'antd'
 import { useEventListener, useResponsive, useThrottleFn } from 'ahooks'
 import { Spin } from 'antd'
 import { useKeyPress } from 'ahooks'
-import { MenuItemType } from 'antd/es/menu/hooks/useItems'
 import FloatAiMenu from '../../components/FloatAiMenu'
 import { useTranslation } from 'react-i18next'
 import { usePhone } from '../../utils/usePhone'
@@ -26,6 +25,7 @@ import Draggable from 'react-draggable'
 import { requestor } from '../../utils/requestor'
 import type { Book as BookInfo } from '../../store/book.type'
 import AiFeatureMenu from '../../components/AiFeatureMenu'
+import { MenuItemType } from 'antd/es/menu/interface'
 
 export const Component = function Reader() {
   const db_instance = useBookState(state => state.db_instance)
@@ -40,7 +40,7 @@ export const Component = function Reader() {
   const [isUserChangingLocation, setIsUserChangingLocation] = useState(false);
   const { t } = useTranslation()
   const [error, setError] = useState<boolean>(false)
-  const [epubHooks, setEpubHooks] = useState<Function[]>([])
+  // const [epubHooks, setEpubHooks] = useState<Function[]>([])
   const [copiedText, setCopiedText] = useState<string>()
   const [floatOpen, setFloatOpen] = useState<boolean>(true)
   const [switchOpen, setSwitchOpen] = useState<boolean>(true)
@@ -202,7 +202,7 @@ export const Component = function Reader() {
         })
         setBookInfo(res.data)
       } catch (error) {
-        
+        console.error(error)
       }finally{
         setBookLoading(false)
       }

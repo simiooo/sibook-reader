@@ -90,7 +90,7 @@ class Backblaze {
             headers.set('x-amz-date', datetime)
             headers.set('amz-sdk-invocation-id', crypto.randomUUID())
             headers.set('amz-sdk-request', 'attempt=1; max=3')
-            headers.set('x-amz-content-sha256', config.data ? await sha256(config.data) : '')
+            headers.set('x-amz-content-sha256', config.data ? await sha256(config.data) : await sha256(new Uint8Array()))
             
             const h = new Headers()
             const oriHeaders = headers.toJSON()
@@ -98,8 +98,6 @@ class Backblaze {
                 h.set(key, oriHeaders[key].toString())
             }
             
-            h.set('Content-Type', 'application/octet-stream') 
-            h.set('Content-Length', (config.data as ArrayBuffer)?.byteLength?.toString() ?? '0')
             h.delete('Accept')
             const signer = new AwsV4Signer({
                 url: config.baseURL + config.url,                // required, the AWS endpoint to sign
@@ -118,7 +116,7 @@ class Backblaze {
                 allHeaders: true,         // set to true to force all headers to be signed instead of the defaults
                 singleEncode: false,       // set to true to only encode %2F once (usually only needed for testing)
             })
-            //   await signer.sign()
+
             const Authorization = await signer.authHeader()
             config.headers.set('Authorization', Authorization)
             return config
@@ -176,7 +174,7 @@ class Backblaze {
 
         onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void}) {
         const task = this._requestor({
-            url: `${objectId}`,
+            url: `/${objectId}`, // 必须加上斜杠
             method: 'get',
             signal: options?.signal,
             timeout: 1000 * 60 * 60,

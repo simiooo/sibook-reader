@@ -23,6 +23,7 @@ export type HttpTask = Omit<WsTask, 'ws'> & {
         size: number;
         current: number;
         error: boolean;
+        id?: string;
         cancel?: (reason?: any) => void;
         onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void;
         onUploadProgress?: (type: string, ...others: any[]) => void;
@@ -161,6 +162,10 @@ export default function UploadContainer() {
                                         <Popconfirm
                                             title="确认删除吗"
                                             onConfirm={() => {
+                                                const doc = uploadingTaskList.find((_, index) => index !== i)
+                                                if('httpMeta' in item) {
+                                                    item.httpMeta.cancel()
+                                                }
                                                 uploadingTaskList_update(uploadingTaskList.filter((_, index) => index !== i))
                                             }}
                                         >

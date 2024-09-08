@@ -25,6 +25,7 @@
     "ahooks": "^3.7.8",
     "antd": "^5.20.5",
     "autoprefixer": "^10.4.16",
+    "aws4": "^1.13.2",
     "aws4fetch": "^1.0.20",
     "axios": "^1.6.7",
     "classnames": "^2.3.2",

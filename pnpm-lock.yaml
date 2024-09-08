@@ -44,6 +44,9 @@ dependencies:
   autoprefixer:
     specifier: ^10.4.16
     version: 10.4.16(postcss@8.4.31)
+  aws4:
+    specifier: ^1.13.2
+    version: 1.13.2
   aws4fetch:
     specifier: ^1.0.20
     version: 1.0.20
@@ -4266,6 +4269,10 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       possible-typed-array-names: 1.0.0
+    dev: false
+
+  /aws4@1.13.2:
+    resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
     dev: false
 
   /aws4fetch@1.0.20:

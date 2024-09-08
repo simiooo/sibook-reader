@@ -1,4 +1,4 @@
-import { Button, message } from 'antd'
+import { Button, ButtonProps, message } from 'antd'
 import React from 'react'
 import { useBookState } from '../../store'
 import { useRequest } from 'ahooks'
@@ -6,7 +6,7 @@ import { Popconfirm } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { requestor } from '../../utils/requestor';
 
-interface DropButtonProps extends React.RefAttributes<HTMLElement> {
+interface DropButtonProps extends ButtonProps {
     keys: Set<string | undefined>;
 }
 
