@@ -1,7 +1,7 @@
 import Axios from 'axios'
 import { LoginType } from '../pages/Login'
 export const requestor = Axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_PREFIX}`,
+    baseURL: `${import.meta.env.VITE_API_PREFIX}`,
     method: 'post',
     timeout: 30 * 1000,
 })

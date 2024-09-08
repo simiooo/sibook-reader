@@ -127,39 +127,67 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                     }
                 })
                 if (exitInCos.data.data === '1') {
-
-                    const fileRes = await backblazeIns.send(new GetObjectCommand({
-                        Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET,
-                        Key: `/${ele.objectId}`,
-
-                    }))
-                    
-                    const fileStream = await fileRes.Body.transformToWebStream()
-                    let file = new Blob()
-                    const progressData = {
-                        loaded: 0,
-                        total: ele.objectSize,
-                    }
-                    const reader = fileStream.getReader()
-                    httpUploadTask.httpMeta.cancel = reader.cancel
-                    reader.read().then(async info => {
-                        const bytes = info.value as Uint8Array 
-                        file = new Blob([file,bytes])
-                        progressData.loaded += bytes.length
-                        
-                        httpUploadTask.httpMeta.onDownloadProgress({
-                            ...progressData,
-                            bytes: progressData.total
-                        })
-                        if(info.done) {
-                            db.book_blob.add({
-                                id: ele.objectId,
-                                blob: await readFileAsArrayBuffer(new File([file], ele.objectName)),
-                                updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                            })
-                        }   
+                    const cancel = new AbortController()
+                    // const s3 = await backblazeIns.s3
+                    // s3.send(new GetObjectCommand({
+                    //     Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET_NAME,
+                    //     Key: `${ele.objectId}`,
+                    // }))
+                    const fileTask = await backblazeIns.getObject(`${ele.objectId}`, {
+                        signal: cancel.signal,
+                        onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress
                     })
-                    
+                    // console.log(fileTask)
+                    // db.book_blob.add({
+                    //     id: ele.objectId,
+                    //     blob: await readFileAsArrayBuffer(new File([fileTask?.data], ele.objectName)),
+                    //     updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    // })
+                    // const fileStream = await fileRes.Body.transformToWebStream()
+                    // let file = new Blob()
+                    // const progressData = {
+                    //     loaded: 0,
+                    //     total: ele.objectSize,
+                    // }
+                    // const reader = fileStream.getReader()
+                    httpUploadTask.httpMeta.cancel = cancel.abort
+                    // reader.read().then(async info => {
+                    //     // const bytes = info.value as Uint8Array 
+                    //     // file = new Blob([file,bytes])
+                    //     // progressData.loaded += bytes.length
+
+                    //     // httpUploadTask.httpMeta.onDownloadProgress({
+                    //     //     ...progressData,
+                    //     //     bytes: progressData.total
+                    //     // })
+                    //     if(info.done) {
+                    //         db.book_blob.add({
+                    //             id: ele.objectId,
+                    //             blob: await readFileAsArrayBuffer(new File([file], ele.objectName)),
+                    //             updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    //         })
+                    //     }   
+                    // })
+                    if (ele?.objectType === 'application/epub+zip') {
+                        const pathname = `/reader/${ele.objectId}`
+                        tabs_add({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else if (ele?.objectType === 'application/pdf') {
+                        const pathname = `/pdf_reader/${ele.objectId}`
+                        tabs_add({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else {
+                        message.error(t('暂不支持'))
+                    }
+
                 } else if (exitInCos.data.data === '0') {
                     const res = await requestor<Blob>({
                         url: "/island/getBookBinaryFromIsland",

@@ -12,8 +12,8 @@ import { db } from "../dbs/db";
 import pify from 'pify';
 import { XMLParser } from 'fast-xml-parser'
 import { requestor } from "./requestor";
-import { backblazeIns } from "./backblaze";
-import { AbortMultipartUploadCommand, CompleteMultipartUploadCommand, CreateMultipartUploadCommand, UploadPartCommand } from "@aws-sdk/client-s3";
+import { backblazeIns, ProgressFile } from "./backblaze";
+import { AbortMultipartUploadCommand, CompleteMultipartUploadCommand, CreateMultipartUploadCommand, PutObjectCommand, UploadPartCommand } from "@aws-sdk/client-s3";
 import { HttpTask, UploadTask } from "../components/UploadContainer";
 const parser = new XMLParser();
 
@@ -65,7 +65,7 @@ export function useUpload(
                 meta = await epubMetaParser(file)
             }
 
-            const httpMeta: HttpTask["httpMeta"]  = {
+            const httpMeta: HttpTask["httpMeta"] = {
                 size: info.file.size,
                 current: 0,
                 error: false,
@@ -83,45 +83,16 @@ export function useUpload(
                     uploadingTaskList_update([...uploadingTaskList])
                 },
             }
-
-            const res = await backblazeIns.send(new CreateMultipartUploadCommand({
-                Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET,
-                Key: `/${hash}`,
-                Metadata: {
-                    "filename": encodeURIComponent(info.file.name),
-                    "mimetype": encodeURIComponent(info.file.type),
-                }
-            }))
-            const byes = await readFileAsArrayBuffer(info.file)
-            const SLICE_SIZE = 1024 * 1024 * 5
-            const partTotal = Math.ceil(byes.length / SLICE_SIZE)
-            let loaded = 0
-            const tasks = new Array(partTotal).fill(1).map((_, partNumber) => {
-                return backblazeIns.send(new UploadPartCommand({
-                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET,
-                    Key: `/${hash}`,
-                    UploadId: res.UploadId,
-                    PartNumber: partNumber,
-                    Body: byes.slice(partNumber * SLICE_SIZE, (partNumber + 1) * SLICE_SIZE),
-                })).then(data => {
-                    httpMeta.onUploadProgress('progress', {
-                        loaded: (loaded += SLICE_SIZE)
-                    })
-                    return data
-                })
+            const abortController = new AbortController();
+            const bucket = import.meta.env.VITE_BACKBLAZED_BUCKET_NAME
+            const task = backblazeIns.putObject(`${hash}`, info.file, {
+                onUploadProgress: (...arg) => httpMeta.onUploadProgress('progress', ...arg),
+                signal: abortController.signal
             })
-            const taskConcurrency = Promise.all(tasks)
-            taskConcurrency.then(data => {
-                const command = new CompleteMultipartUploadCommand({
-                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET, // 替换为你的 S3 桶名
-                    Key: `/${hash}`, // 替换为你要上传的文件的键
-                    UploadId: res.UploadId,
-                    MultipartUpload: {
-                        Parts: data,
-                    },
-                });
-                return backblazeIns.send(command)
-            }).then(data => {
+            httpMeta.cancel = abortController.abort
+
+
+            task.then(data => {
                 const payload: FileUploadPayload = {
                     hash: hash,
                     name: info.file.name,
@@ -132,24 +103,11 @@ export function useUpload(
                     url: '/backblaze/uploadSave',
                     data: payload
                 })
-            }).catch(err => {
-                backblazeIns.send(new AbortMultipartUploadCommand({
-                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET, // 替换为你的 S3 桶名
-                    Key: `/${hash}`, // 替换为你要上传的文件的键
-                    UploadId: res.UploadId,
-                }));
+            }).catch((err) => {
                 httpMeta.onUploadProgress('error', {
                     message: err
                 })
             })
-            httpMeta.cancel = () => {
-                backblazeIns.send(new AbortMultipartUploadCommand({
-                    Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET, // 替换为你的 S3 桶名
-                    Key: `/${hash}`, // 替换为你要上传的文件的键
-                    UploadId: res.UploadId,
-                }));
-            }
-
             uploadingTaskList.unshift({
                 httpMeta: httpMeta,
                 type: 'upload',
@@ -158,9 +116,70 @@ export function useUpload(
                 des: meta?.creator ?? meta?.Author ?? info.file.name,
             })
             uploadingTaskList_update(uploadingTaskList)
-            await taskConcurrency
+            await task
+
+            // return
+
+
+            // const fileStream = new ProgressFile(info.file)
+
+            // fileStream.onread((info) => {
+            //     httpMeta.onUploadProgress('progress', {
+            //         loaded: info.loadedBytes
+            //     })
+            // })
+
+
+            // console.log(hash)
+
+            // const s3 = await backblazeIns.s3
+            // // console.log(bucket)
+            // const task = s3.send(new PutObjectCommand({
+            //     Bucket: bucket,
+            //     Key: `${hash}`,
+            //     Body: await readFileAsArrayBuffer(info.file),
+            //     Metadata: {
+            //         "filename": encodeURIComponent(info.file.name),
+            //         "mimetype": encodeURIComponent(info.file.type),
+            //     }
+            // }), {
+            //     // abortSignal: abortController.signal,
+            // })
+            // abortController.abort()
+            // return
+            // task.then(data => {
+
+            //     const payload: FileUploadPayload = {
+            //         hash: hash,
+            //         name: info.file.name,
+            //         size: info.file.size,
+            //         islandId: currentIsland,
+            //     }
+            //     return requestor<{ status: number, message: string }>({
+            //         url: '/backblaze/uploadSave',
+            //         data: payload
+            //     })
+            // }).catch((err) => {
+            //     httpMeta.onUploadProgress('error', {
+            //         message: err
+            //     })
+            // })
+
+            // httpMeta.cancel = abortController.abort
+
+
+            // uploadingTaskList.unshift({
+            //     httpMeta: httpMeta,
+            //     type: 'upload',
+            //     unread: true,
+            //     name: info.file.name,
+            //     des: meta?.creator ?? meta?.Author ?? info.file.name,
+            // })
+            // uploadingTaskList_update(uploadingTaskList)
+            // await task
         } catch (error) {
             console.log(error)
+
             message.error(error instanceof Error ? error.message : error)
         } finally {
             setLoading(false)

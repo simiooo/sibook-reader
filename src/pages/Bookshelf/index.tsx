@@ -210,7 +210,7 @@ export const Component = function Bookshelf() {
                                                         <Tooltip
                                                             title={'按上传时间排序'}
                                                         >
-                                                            <Form.Item
+                                                            <><Form.Item
                                                                 noStyle
                                                                 name="sort"
                                                                 valuePropName='checked'
@@ -223,6 +223,8 @@ export const Component = function Bookshelf() {
                                                                     unCheckedChildren={<Space><span>由旧到新</span><SortAscendingOutlined /></Space>}
                                                                 ></Switch>
                                                             </Form.Item>
+                                                            </>
+                                                            
 
                                                         </Tooltip>
                                                         <Form.Item
@@ -231,7 +233,7 @@ export const Component = function Bookshelf() {
                                                         >
                                                             <Input
                                                                 onChange={form.submit}
-                                                                bordered={false}
+                                                                variant={'borderless'}
                                                                 size='large'
                                                                 placeholder={t('搜索书籍')}
 

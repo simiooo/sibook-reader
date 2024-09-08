@@ -25,7 +25,7 @@ const AiResponse = React.forwardRef(function (p: AiResponseProps, ref) {
             setError(undefined)
             setRes([])
             const res = []
-            const baseurl = `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_PREFIX}`
+            const baseurl = `${import.meta.env.VITE_API_PREFIX}`
             const url = `${/^https?:\/\//.test(baseurl) ? baseurl : location.origin + baseurl }`
             const authorization = JSON.parse(localStorage.getItem("authorization") ?? "{}") as LoginType
             OPENAI_HEADERS.set('Authorization', `Bearer ${authorization?.token}`)

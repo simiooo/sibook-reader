@@ -1,0 +1,45 @@
+[
+    {
+        "corsRuleName": "applicationUpload",
+        "allowedOrigins": [
+            "https",
+            "http://127.0.0.1:5173"
+        ],
+        "allowedHeaders": [
+            "*"
+        ],
+        "allowedOperations": [
+            
+            "b2_download_file_by_name",
+            "b2_download_file_by_id",
+            "b2_upload_file",
+            "b2_upload_part",
+            "s3_delete",
+            "s3_get",
+            "s3_head",
+            "s3_post",
+            "s3_put"
+        ],
+        "exposeHeaders": [
+            "Accept-Ranges",
+            "Last-Modified",
+            "ETag",
+            "Cache-Control",
+            "x-amz-version-id",
+            "x-bz-content-sha1",
+            "x-backblaze-live-read-enabled",
+            "x-backblaze-live-read-part-size",
+            "x-amz-meta-filename",
+            "x-amz-meta-mimetype",
+            "x-amz-request-id",
+            "x-amz-id-2",
+            "Content-Type",
+            "Content-Length",
+            "Date",
+            "Keep-Alive",
+            "Connection",
+            "Access-Control-Allow-Origin"
+        ],
+        "maxAgeSeconds": 3600
+    }
+]

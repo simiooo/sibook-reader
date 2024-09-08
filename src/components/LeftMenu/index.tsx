@@ -57,6 +57,7 @@ export default function LeftMenu() {
         }}
         selectedKeys={[]}
         inlineCollapsed={true}
+        mode="inline"
         onSelect={async (e) => {
           switch (e.key) {
             case "island":
