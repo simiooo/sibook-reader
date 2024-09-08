@@ -19,8 +19,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // target: `https://squirrelso.top`,
-        target: "http://localhost:8080",
+        target: `https://squirrelso.top`,
+        // target: "http://localhost:8080",
         // rewrite: (path) => path.replace(/^\/api/, ""),
       },
     }

@@ -232,7 +232,8 @@ export const Component = function PdfReader() {
   const { data: maxWidthViewPort } = useRequest(async () => {
     return (pages ?? []).reduce((pre, page) => {
       const viewport = page.getViewport()
-      return Math.max(pre, viewport.viewBox[2] ?? Number.isNaN(viewport.width) ? 500 : viewport.width)
+      console.log(viewport)
+      return Math.max(pre, viewport.viewBox[2] ?? (Number.isNaN(viewport.width) ? 700 : viewport.width))
     }, 0)
   }, {
     refreshDeps: [
