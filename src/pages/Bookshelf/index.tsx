@@ -40,7 +40,7 @@ export const Component = function Bookshelf() {
             if (!currentIsland) {
                 throw Error('请先登录')
             }
-            const current = isInit ? 1 : listInfo?.current + 1 ?? 1
+            const current = isInit ? 1 : (listInfo as any)?.current + 1 ?? 1
             const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
                 url: '/island/getBookListFromIsland',
                 data: {
