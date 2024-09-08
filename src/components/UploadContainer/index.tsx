@@ -1,5 +1,5 @@
 import style from './index.module.css'
-import { Badge, Button, Col, List, Popconfirm, Progress, Row, Space } from 'antd'
+import { Badge, Button, Col, List, message, Popconfirm, Progress, Row, Space } from 'antd'
 import { SiWs } from '../../utils/jsClient';
 import { useBookState } from '../../store';
 import { CloudDownloadOutlined, CloudOutlined, CloudUploadOutlined, DeleteOutlined, MinusCircleOutlined } from '@ant-design/icons';
@@ -24,7 +24,7 @@ export type HttpTask = Omit<WsTask, 'ws'> & {
         current: number;
         error: boolean;
         id?: string;
-        cancel?: (reason?: any) => void;
+        signal?: AbortController;
         onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void;
         onUploadProgress?: (type: string, ...others: any[]) => void;
     }
@@ -162,11 +162,17 @@ export default function UploadContainer() {
                                         <Popconfirm
                                             title="确认删除吗"
                                             onConfirm={() => {
-                                                const doc = uploadingTaskList.find((_, index) => index !== i)
-                                                if('httpMeta' in item) {
-                                                    item.httpMeta.cancel()
-                                                }
+                                                try {
+                                                    const doc = uploadingTaskList.find((_, index) => index !== i)
+                                                
                                                 uploadingTaskList_update(uploadingTaskList.filter((_, index) => index !== i))
+                                                if('httpMeta' in item && !item.httpMeta.signal.signal.aborted) {
+                                                    item.httpMeta?.signal?.abort?.()
+                                                }
+                                                } catch (error) {
+                                                    message.error(error?.message ?? error)
+                                                }
+                                                
                                             }}
                                         >
                                             <Button

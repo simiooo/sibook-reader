@@ -89,7 +89,7 @@ export function useUpload(
                 onUploadProgress: (...arg) => httpMeta.onUploadProgress('progress', ...arg),
                 signal: abortController.signal
             })
-            httpMeta.cancel = abortController.abort
+            httpMeta.signal = abortController
 
 
             const finaltask = task.then(data => {

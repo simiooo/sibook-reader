@@ -141,13 +141,9 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         bookId: ele.objectId
                     }
                 })
+                const cancel = new AbortController()
                 if (exitInCos.data.data === '1') {
-                    const cancel = new AbortController()
-                    // const s3 = await backblazeIns.s3
-                    // s3.send(new GetObjectCommand({
-                    //     Bucket: import.meta.env.VITE_BACKBLAZED_BUCKET_NAME,
-                    //     Key: `${ele.objectId}`,
-                    // }))
+                    httpUploadTask.httpMeta.signal = cancel
                     const fileTask = await backblazeIns.getObject(`${ele.objectId}`, {
                         signal: cancel.signal,
                         onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress
@@ -158,31 +154,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         blob: await readFileAsArrayBuffer(new File([fileTask?.data], ele.objectName)),
                         updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
                     })
-                    // const fileStream = await fileRes.Body.transformToWebStream()
-                    // let file = new Blob()
-                    // const progressData = {
-                    //     loaded: 0,
-                    //     total: ele.objectSize,
-                    // }
-                    // const reader = fileStream.getReader()
-                    httpUploadTask.httpMeta.cancel = cancel.abort
-                    // reader.read().then(async info => {
-                    //     // const bytes = info.value as Uint8Array 
-                    //     // file = new Blob([file,bytes])
-                    //     // progressData.loaded += bytes.length
-
-                    //     // httpUploadTask.httpMeta.onDownloadProgress({
-                    //     //     ...progressData,
-                    //     //     bytes: progressData.total
-                    //     // })
-                    //     if(info.done) {
-                    //         db.book_blob.add({
-                    //             id: ele.objectId,
-                    //             blob: await readFileAsArrayBuffer(new File([file], ele.objectName)),
-                    //             updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                    //         })
-                    //     }   
-                    // })
+                    
                     if (ele?.objectType === 'application/epub+zip') {
                         const pathname = `/reader/${ele.objectId}`
                         tabs_add({
@@ -204,15 +176,18 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                     }
 
                 } else if (exitInCos.data.data === '0') {
+                    httpUploadTask.httpMeta.signal = cancel
                     const res = await requestor<Blob>({
                         url: "/island/getBookBinaryFromIsland",
                         responseType: 'blob',
                         timeout: 1000 * 60 * 5,
+                        signal: cancel.signal,
                         onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress,
                         data: {
                             bookId: ele.objectId
                         }
                     })
+                    
                     db.book_blob.add({
                         id: ele.objectId,
                         blob: await readFileAsArrayBuffer(new File([res.data], ele.objectName)),
