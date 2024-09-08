@@ -52,29 +52,32 @@ export const Component = function Bookshelf() {
                 }
             })
             const map = new Map<string, boolean>()
-            return isInit ? { 
+            return isInit ? {
                 total: res?.data?.data?.total,
-                current, 
-                list: res.data?.data?.rows ?? [] } 
-                : {
                 current,
-                total: res?.data?.data?.total,
-                list: [...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? [])].filter((val) => {
-                    if (map.has(val?.objectId)) {
-                        return false
-                    } else {
-                        map.set(val?.objectId, true)
-                        return true
-                    }
-                })
-            }
+                list: res.data?.data?.rows ?? []
+            } as const
+                : {
+                    current,
+                    total: res?.data?.data?.total,
+                    list: [...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? [])]
+                    // .
+                    // filter((val) => {
+                    //     if (map.has(val?.objectId)) {
+                    //         return false
+                    //     } else {
+                    //         map.set(val?.objectId, true)
+                    //         return true
+                    //     }
+                    // })
+                } as const
         } catch (error) {
             message.error(error?.response?.data?.message ?? error?.message)
             return {
                 current: listInfo?.current ?? 1,
-                total: listInfo?.total??0,
+                total: listInfo?.total ?? 0,
                 list: listInfo?.list ?? [],
-            }
+            } as const
         }
 
     }, {
@@ -82,16 +85,16 @@ export const Component = function Bookshelf() {
         debounceWait: 500,
     })
     useEffect(() => {
-        if(inViewport && listInfo?.current >= 1 && listInfo?.list.length < listInfo?.total && !listLoading) {
+        if (inViewport && listInfo?.current >= 1 && listInfo?.list.length < listInfo?.total && !listLoading) {
             runAsync(false)
         }
     }, [inViewport, listInfo])
     const { upload, loading: uploadLoading } = useUpload({ onFinish: () => runAsync() })
 
     const { t, i18n } = useTranslation()
-    
+
     // const visibleCheckerRef = useRef()
-    
+
     const [dropModalOpen, setDropModalOpen] = useState<boolean>()
 
     const mainRef = useRef<HTMLElement>(null)
@@ -116,7 +119,7 @@ export const Component = function Bookshelf() {
 
     const loading = useMemo(() => {
         return false || uploadLoading
-    }, [ uploadLoading])
+    }, [uploadLoading])
 
     const [selected, { add, remove, reset }] = useSet<string | undefined>([])
     const { exportFile } = useExport()
@@ -224,11 +227,11 @@ export const Component = function Bookshelf() {
                                                                 ></Switch>
                                                             </Form.Item>
                                                             </>
-                                                            
+
 
                                                         </Tooltip>
                                                         <Form.Item
-                                                        noStyle
+                                                            noStyle
                                                             name="searchString"
                                                         >
                                                             <Input
@@ -250,18 +253,18 @@ export const Component = function Bookshelf() {
                                                     wrap={true}
                                                 >
                                                     <Button
-                                                    type="link"
-                                                    icon={<RedoOutlined />}
-                                                    loading={listLoading}
-                                                    onClick={() => {
-                                                        runAsync()
-                                                    }}
+                                                        type="link"
+                                                        icon={<RedoOutlined />}
+                                                        loading={listLoading}
+                                                        onClick={() => {
+                                                            runAsync()
+                                                        }}
                                                     ></Button>
                                                     <BookNewButton
                                                         onChange={async () => {
                                                             runAsync()
                                                         }}
-                                                        
+
                                                     ></BookNewButton>
 
 
@@ -313,7 +316,7 @@ export const Component = function Bookshelf() {
 
                                                         }
                                                     />
-                                                </div>} 
+                                                </div>}
                                             </Col>
                                         </Row>
                                     </Col>

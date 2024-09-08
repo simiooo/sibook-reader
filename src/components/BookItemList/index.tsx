@@ -330,7 +330,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                             if (ele.objectId === 'placeholder') {
                                 <Col
                                     span={8}
-                                    key={ele?.objectId ?? ele?.objectName ?? index}
+                                    key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
                                 >
                                     <BookPlaceholder></BookPlaceholder>
                                 </Col>
@@ -345,7 +345,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                                     md={8}
                                     xl={6}
                                     xxl={6}
-                                    key={ele?.objectId ?? ele?.objectName ?? index}
+                                    key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
                                 >
 
                                     <motion.div
