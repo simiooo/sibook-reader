@@ -4,9 +4,11 @@ import React from 'react'
 import { useBookState } from '../../store';
 import { useTranslation } from 'react-i18next';
 import { Book } from '../../store/book.type';
+import { useBookDownload } from '../BookItemList';
 
 interface ExportButtonProps extends React.RefAttributes<HTMLElement> {
-    keys: Set<string | undefined>;
+    // keys: Set<string | undefined>;
+    books?: Book[];
 }
 
 const download = async (obj: {
@@ -25,6 +27,12 @@ const download = async (obj: {
 }
 
 export function useExport() {
+    const {
+        modal,
+        modalContextHolder,
+        openHandler,
+        bookBinaryLoading
+    } = useBookDownload()
     const db_instance = useBookState(state => state.db_instance)
     const {t} = useTranslation()
     const { runAsync: exportFile, loading } = useRequest(async (record?: Book[]) => {
@@ -32,14 +40,16 @@ export function useExport() {
             return
         }
         try {
+            for await (const book of record ?? []) {
+                await openHandler(book, {openDisable: true})
+                download({
+                    blob: (await db_instance.book_blob.get(book?.objectId))?.blob,
+                    name: book?.objectName
+                })
+            }
             await db_instance?.transaction('rw', db_instance.book_blob, db_instance.book_items, async () => {
 
-                for await (const key of record ?? []) {
-                    download({
-                        blob: (await db_instance.book_blob.get(key?.objectId))?.blob,
-                        name: key?.objectName
-                    })
-                }
+                
             })
             message.success(t('下载成功'))
         } catch (error) {
@@ -56,14 +66,24 @@ export function useExport() {
 }
 
 export default function ExportButton(p: ExportButtonProps) {
+    const {
+        modal,
+        modalContextHolder,
+        openHandler,
+        bookBinaryLoading
+    } = useBookDownload()
     const db_instance = useBookState(state => state.db_instance)
     const {t} = useTranslation()
     const { runAsync: exportFile, loading } = useRequest(async () => {
         try {
+            for await (const book of (p?.books ?? [])) {
+                await openHandler(book, {openDisable: true})
+            }
             await db_instance?.transaction('rw', db_instance.book_blob, db_instance.book_items, async () => {
-                const records = await db_instance.book_items.where('hash').anyOf([...p.keys].filter(val => val)).toArray()
+                const records = await db_instance.book_items.where('hash').anyOf([...(p?.books ?? []).map(el => el.objectId)].filter(val => val)).toArray()
             })
         } catch (error) {
+            console.error(error)
         }
         
     }, {

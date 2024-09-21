@@ -24,7 +24,7 @@ import { usePdfBook } from './usePdfBook'
 import { RenderTask } from 'pdfjs-dist';
 import { ImgToText } from '../../utils/imgToText'
 import { readFileAsArrayBuffer } from '../../dbs/createBook'
-import { CloseOutlined, DeleteOutlined, EditOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CameraOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
 import { tesseractLuanguages } from '../../utils/tesseractLanguages'
 import { createPortal } from 'react-dom'
 import { languages } from '../../utils/locale'
@@ -34,6 +34,7 @@ import { useReadingProgress } from '../../utils/useReadingProgress'
 import { useAnnotation } from '../../utils/useAnnotation'
 import { green } from '../../main'
 import { ItemType } from 'antd/es/menu/interface'
+import { useBookState } from '../../store'
 const OVERSCAN = 4
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id, contextHolder }] = usePdfBook()
@@ -51,20 +52,25 @@ export const Component = function PdfReader() {
   const [remoteProgress, setRemoteProgress] = useReadingProgress(book_id)
   const [isProgressInit, setIsProgressInit] = useState<boolean>(false)
   const { run: setRemoteProgressThrottle } = useThrottleFn(setRemoteProgress, {
-    wait: 1000 * 30
+    wait: 1000 * 5
+  })
+
+  const profile = useBookState(state => state.profile)
+
+  const [isNewCommerTourOpen, setIsNewCommerTourOpen] = useLocalStorageState<boolean>(`userId:${profile}:bookId:${book_id}`, {
+    defaultValue: true
   })
 
   const [isRendering, setIsRendering] = useState<boolean>(false)
-
+  const [ocrSelectOpen, setOcrSelectOpen] = useState(false)
   const [isEditing, setIsEditing] = useState<boolean>(false)
 
   const [modalHook, progressHolder] = Modal.useModal()
   useEffect(() => {
-    console.log(remoteProgress, form.getFieldValue(['page']))
     if (isProgressInit || !(Number(remoteProgress) > 0) || remoteProgress === Number(form.getFieldValue(['page']))) {
       return
     }
-    if(remoteProgress === -1) {
+    if (remoteProgress === -1) {
       return
     }
     modalHook.confirm({
@@ -232,7 +238,6 @@ export const Component = function PdfReader() {
   const { data: maxWidthViewPort } = useRequest(async () => {
     return (pages ?? []).reduce((pre, page) => {
       const viewport = page.getViewport()
-      console.log(viewport)
       return Math.max(pre, viewport.viewBox[2] ?? (Number.isNaN(viewport.width) ? 700 : viewport.width))
     }, 0)
   }, {
@@ -413,41 +418,53 @@ export const Component = function PdfReader() {
                 >
                   <Space>
                     <Tooltip
-                    placement='rightBottom'
-                    title={`是否编辑(当前状态：${isEditing ? '是' : '否'})`}
+                      placement='rightBottom'
+                      title={`是否编辑(当前状态：${isEditing ? '是' : '否'})`}
                     >
                       <Button
                         type={isEditing ? "primary" : 'default'}
                         icon={<EditOutlined />}
-                      // type={'primary'}
-                      onClick={() => {
-                        setIsEditing(!isEditing)
-                        if(!isEditing) {
-                          messageIns.success('在 pdf 文档上 长按鼠标左键后拖动 进行标记')
-                        }
-                        
-                      }}
+                        // type={'primary'}
+                        onClick={() => {
+                          setIsEditing(!isEditing)
+                          if (!isEditing) {
+                            messageIns.success('在 pdf 文档上 长按鼠标左键后拖动 进行标记')
+                          }
+
+                        }}
                       >
 
                       </Button>
                     </Tooltip>
 
                   </Space>
-                  <Alert
-                    closable
-                    type='warning'
-                    message={'按住 Ctrl 时，滑动鼠标滚轮可缩放文档'}
-                  ></Alert>
-                  <Alert
-                    closable
-                    type='warning'
-                    message={'按住 Ctrl 时，鼠标左键可拖动文档位置'}
-                  ></Alert>
+                  {
+                    isNewCommerTourOpen ? <><Alert
+                      closable
+                      type='warning'
+                      onClose={() => {
+                        setIsNewCommerTourOpen(false)
+                      }}
+                      message={'按住 Ctrl 时，滑动鼠标滚轮可缩放文档'}
+                    ></Alert>
+                      <Alert
+                        closable
+                        type='warning'
+                        onClose={() => {
+                          setIsNewCommerTourOpen(false)
+                        }}
+                        message={'按住 Ctrl 时，鼠标左键可拖动文档位置'}
+                      ></Alert></> : null
+                  }
+
                 </Space>
 
               </div>
               <div
                 className={styles.reader_tooltip}
+                style={{
+                  right: !ocrSelectOpen ? '3.6rem' : "13.85rem"
+                }}
               >
                 <div className={styles.page}>
                   {/* 阅读器控制区 */}
@@ -480,24 +497,55 @@ export const Component = function PdfReader() {
                           suffix={<span>/ {(meta?.numPages ?? 0) as number}</span>}
                         ></Input>
                       </Form.Item>
-                      <Form.Item
-                        name={'ocr'}
-                      >
-                        <Select
-                          style={{ minWidth: '9rem' }}
-                          options={tesseractLuanguages.map(el => ({
-                            label: el.Language,
-                            value: el['Lang Code']
-                          }))}
-                          // maxTagCount={2}
-                          mode="multiple"
-                          placeholder={'请选择OCR语言'}
-                          showSearch
-                          filterOption={(value, option) => {
-                            return JSON.stringify(option ?? {}).indexOf(value) > -1
-                          }}
-                        ></Select>
-                      </Form.Item>
+                      <Tooltip
+                        title={'更改 OCR 语言'}
+                        placement='bottom'
+                      >{
+                          ocrSelectOpen ?
+                            <Space
+                              align='start'
+                            >
+                              <Form.Item
+                                name={'ocr'}
+                              >
+                                <Select
+                                  style={{ minWidth: '9rem' }}
+                                  options={tesseractLuanguages.map(el => ({
+                                    label: el.Language,
+                                    value: el['Lang Code']
+                                  }))}
+                                  // maxTagCount={2}
+                                  mode="multiple"
+                                  showSearch
+                                  filterOption={(value, option) => {
+                                    return JSON.stringify(option ?? {}).indexOf(value) > -1
+                                  }}
+                                ></Select>
+                              </Form.Item>
+                              <Button
+                                type="primary"
+                                onClick={() => {
+                                  setOcrSelectOpen(false)
+                                }}
+                                icon={<CameraOutlined />}
+                              ></Button>
+                            </Space>
+
+                            : <div>
+                              <Form.Item
+                                hidden
+                                name={'ocr'}
+                              ><input type="text" /></Form.Item>
+                              <Button
+                                onClick={() => {
+                                  setOcrSelectOpen(true)
+                                }}
+                                icon={<CameraOutlined />}
+                              ></Button>
+                            </div>
+                        }</Tooltip>
+
+
 
                     </Space>
 
@@ -613,7 +661,7 @@ export const Component = function PdfReader() {
                           position: 'absolute',
                           left: ((size?.width ?? 0) - viewport.width) / 2 - 4,
                           top: 12,
-                          pointerEvents:isEditing ? undefined : 'none'
+                          pointerEvents: isEditing ? undefined : 'none'
                         }}
                       >
                         {LinesGet(String(index)).map(line => (

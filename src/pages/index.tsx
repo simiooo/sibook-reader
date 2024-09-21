@@ -116,7 +116,7 @@ export const Component = function App() {
 
         <div>
             <UploadContainer></UploadContainer>
-            {userOnline && <Flex
+            {(!location.pathname.startsWith('/login') || userOnline) && <Flex
                 className={classNames({
                     [style.tabs_container]: renderClassName
                 })}

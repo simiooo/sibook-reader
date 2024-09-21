@@ -50,14 +50,13 @@ interface BookItemListProps {
 const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
     const { t } = useTranslation()
     const navigate = useNavigate()
-    const { tabs, tabs_add } = useBookState(state => state)
-    const { uploadingTaskList, uploadingTaskList_update } = useBookState(state => ({
-        uploadingTaskList: state.uploadingTaskList,
-        uploadingTaskList_update: state.uploadingTaskList_update,
-    }))
 
-    const [modal, modalContextHolder] = Modal.useModal()
-
+    const {
+        modal,
+        modalContextHolder,
+        openHandler,
+        bookBinaryLoading
+    } = useBookDownload()
     const container_ref = useRef<HTMLDivElement>()
     const [intersectionContainer, {
         set: setInter,
@@ -73,158 +72,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
     })
 
 
-    const { runAsync: openHandler, loading: bookBinaryLoading } = useRequest(async (ele: Book) => {
-        try {
 
-            const cache = await db.book_blob.get(ele.objectId)
-            if (cache?.blob?.byteLength > 0 && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
-                // 本地获取
-                if (ele?.objectType.startsWith('application/epub+zip')) {
-                    const pathname = `/reader/${ele.objectId}`
-                    tabs_add({
-                        url: pathname,
-                        label: ele.objectName,
-                        closable: true
-                    })
-                    navigate(pathname)
-                } else if (ele?.objectType.startsWith('application/pdf')) {
-                    const pathname = `/pdf_reader/${ele.objectId}`
-                    tabs_add({
-                        url: pathname,
-                        label: ele.objectName,
-                        closable: true
-                    })
-                    navigate(pathname)
-                } else {
-                    message.error(t('暂不支持'))
-                }
-            } else {
-                let fileIndex: number = -1
-                // 云端获取
-                if((fileIndex = uploadingTaskList.findIndex(el => "httpMeta" in el ? el.httpMeta?.id === ele.objectId : false)) > -1 ) {
-                    const res = await modal.confirm({
-                        title: '传输列表中已有该书籍，确定要重试吗？',
-                    })
-                    if(res) {
-                        uploadingTaskList.splice(fileIndex, 1)
-                        uploadingTaskList_update(uploadingTaskList)
-                    }
-                }
-                const httpUploadTask = (() => {
-                    const httpUploadTask: HttpTask = {
-                        name: ele.objectName,
-                        des: ele.objectName,
-                        type: 'download',
-                        unread: true,
-                        httpMeta: {
-                            id: ele.objectId,
-                            size: ele.objectSize,
-                            current: 0,
-                            error: false,
-                            onDownloadProgress: function (e: AxiosProgressEvent) {
-                                e
-                            }
-                        }
-                    }
-                    const progressHandler = (e: AxiosProgressEvent) => {
-                        e.loaded
-                        httpUploadTask.httpMeta.current = e.loaded
-                    }
-                    httpUploadTask.httpMeta.onDownloadProgress = progressHandler
-                    return httpUploadTask
-                })()
-                uploadingTaskList.unshift(httpUploadTask)
-                uploadingTaskList_update(uploadingTaskList)
-                const exitInCos = await requestor<{ data: string }>({
-                    url: "/backblaze/isExitedInStorage",
-                    data: {
-                        bookId: ele.objectId
-                    }
-                })
-                const cancel = new AbortController()
-                if (exitInCos.data.data === '1') {
-                    httpUploadTask.httpMeta.signal = cancel
-                    const fileTask = await backblazeIns.getObject(`${ele.objectId}`, {
-                        signal: cancel.signal,
-                        onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress
-                    })
-                    // console.log(fileTask)
-                    await db.book_blob.add({
-                        id: ele.objectId,
-                        blob: await readFileAsArrayBuffer(new File([fileTask?.data], ele.objectName)),
-                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                    })
-                    
-                    if (ele?.objectType === 'application/epub+zip') {
-                        const pathname = `/reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
-                        })
-                        navigate(pathname)
-                    } else if (ele?.objectType === 'application/pdf') {
-                        const pathname = `/pdf_reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
-                        })
-                        navigate(pathname)
-                    } else {
-                        message.error(t('暂不支持'))
-                    }
-
-                } else if (exitInCos.data.data === '0') {
-                    httpUploadTask.httpMeta.signal = cancel
-                    const res = await requestor<Blob>({
-                        url: "/island/getBookBinaryFromIsland",
-                        responseType: 'blob',
-                        timeout: 1000 * 60 * 5,
-                        signal: cancel.signal,
-                        onDownloadProgress: httpUploadTask.httpMeta.onDownloadProgress,
-                        data: {
-                            bookId: ele.objectId
-                        }
-                    })
-                    
-                    db.book_blob.add({
-                        id: ele.objectId,
-                        blob: await readFileAsArrayBuffer(new File([res.data], ele.objectName)),
-                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                    }).then(() => {
-                        if (ele?.objectType === 'application/epub+zip') {
-                            const pathname = `/reader/${ele.objectId}`
-                            tabs_add({
-                                url: pathname,
-                                label: ele.objectName,
-                                closable: true
-                            })
-                            navigate(pathname)
-                        } else if (ele?.objectType === 'application/pdf') {
-                            const pathname = `/pdf_reader/${ele.objectId}`
-                            tabs_add({
-                                url: pathname,
-                                label: ele.objectName,
-                                closable: true
-                            })
-                            navigate(pathname)
-                        } else {
-                            message.error(t('暂不支持'))
-                        }
-                    })
-                } else {
-                    message.error('发生未知错误')
-                }
-
-            }
-        } catch (error) {
-            message.error(error.message)
-        }
-
-    }, {
-        manual: true,
-    })
     const { run: openDebouncedHandler } = useDebounceFn(openHandler, {
         leading: true,
     })
@@ -410,3 +258,183 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
 }
 )
 export default BookItemList
+
+export const useBookDownload = () => {
+    const [modal, modalContextHolder] = Modal.useModal()
+    const { t } = useTranslation()
+    const navigate = useNavigate()
+    const { tabs, tabs_add } = useBookState(state => state)
+    const { uploadingTaskList, uploadingTaskList_update } = useBookState(state => ({
+        uploadingTaskList: state.uploadingTaskList,
+        uploadingTaskList_update: state.uploadingTaskList_update,
+    }))
+    const { runAsync: openHandler, loading: bookBinaryLoading } = useRequest(async (ele: Book, options?: {
+        openDisable?: boolean,
+    }) => {
+        try {
+
+            if (!options?.openDisable) {
+                const cache = await db.book_blob.get(ele.objectId)
+                if (cache?.blob?.byteLength > 0 && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
+                    // 本地获取
+                    if (ele?.objectType.startsWith('application/epub+zip')) {
+                        const pathname = `/reader/${ele.objectId}`
+                        tabs_add({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else if (ele?.objectType.startsWith('application/pdf')) {
+                        const pathname = `/pdf_reader/${ele.objectId}`
+                        tabs_add({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else {
+                        message.error(t('暂不支持'))
+                    }
+                }
+
+            } else {
+                let fileIndex: number = -1
+                // 云端获取
+                if ((fileIndex = uploadingTaskList.findIndex(el => "httpMeta" in el ? el.httpMeta?.id === ele.objectId && el.httpMeta.type === 'download' : false)) > -1) {
+                    const res = await modal.confirm({
+                        title: '传输列表中已有该书籍，确定要重新下载吗？',
+                    })
+                    if (res) {
+                        uploadingTaskList.splice(fileIndex, 1)
+                        uploadingTaskList_update(uploadingTaskList)
+                    }
+                }
+                const httpDownloadTask = (() => {
+                    const httpDownloadTask: HttpTask = {
+                        name: ele.objectName,
+                        des: ele.objectName,
+                        type: 'download',
+                        unread: true,
+                        httpMeta: {
+                            type: 'download',
+                            id: ele.objectId,
+                            size: ele.objectSize,
+                            current: 0,
+                            error: false,
+                            onDownloadProgress: function (e: AxiosProgressEvent) {
+                                e
+                            }
+                        }
+                    }
+                    const progressHandler = (e: AxiosProgressEvent) => {
+                        e.loaded
+                        httpDownloadTask.httpMeta.current = e.loaded
+                    }
+                    httpDownloadTask.httpMeta.onDownloadProgress = progressHandler
+                    return httpDownloadTask
+                })()
+                uploadingTaskList.unshift(httpDownloadTask)
+                uploadingTaskList_update(uploadingTaskList)
+                const exitInCos = await requestor<{ data: string }>({
+                    url: "/backblaze/isExitedInStorage",
+                    data: {
+                        bookId: ele.objectId
+                    }
+                })
+                const cancel = new AbortController()
+                if (exitInCos.data.data === '1') {
+                    httpDownloadTask.httpMeta.signal = cancel
+                    const fileTask = await backblazeIns.getObject(`${ele.objectId}`, {
+                        signal: cancel.signal,
+                        onDownloadProgress: httpDownloadTask.httpMeta.onDownloadProgress
+                    })
+                    // console.log(fileTask)
+                    await db.book_blob.add({
+                        id: ele.objectId,
+                        blob: await readFileAsArrayBuffer(new File([fileTask?.data], ele.objectName)),
+                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    })
+                    if(options?.openDisable) {
+                        return
+                    }
+                    if (ele?.objectType === 'application/epub+zip') {
+                        const pathname = `/reader/${ele.objectId}`
+                        tabs_add({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else if (ele?.objectType === 'application/pdf') {
+                        const pathname = `/pdf_reader/${ele.objectId}`
+                        tabs_add({
+                            url: pathname,
+                            label: ele.objectName,
+                            closable: true
+                        })
+                        navigate(pathname)
+                    } else {
+                        message.error(t('暂不支持'))
+                    }
+
+                } else if (exitInCos.data.data === '0') {
+                    httpDownloadTask.httpMeta.signal = cancel
+                    const res = await requestor<Blob>({
+                        url: "/island/getBookBinaryFromIsland",
+                        responseType: 'blob',
+                        timeout: 1000 * 60 * 5,
+                        signal: cancel.signal,
+                        onDownloadProgress: httpDownloadTask.httpMeta.onDownloadProgress,
+                        data: {
+                            bookId: ele.objectId
+                        }
+                    })
+
+                    db.book_blob.add({
+                        id: ele.objectId,
+                        blob: await readFileAsArrayBuffer(new File([res.data], ele.objectName)),
+                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    }).then(() => {
+                        if(options?.openDisable) {
+                            return
+                        }
+                        if (ele?.objectType === 'application/epub+zip') {
+                            const pathname = `/reader/${ele.objectId}`
+                            tabs_add({
+                                url: pathname,
+                                label: ele.objectName,
+                                closable: true
+                            })
+                            navigate(pathname)
+                        } else if (ele?.objectType === 'application/pdf') {
+                            const pathname = `/pdf_reader/${ele.objectId}`
+                            tabs_add({
+                                url: pathname,
+                                label: ele.objectName,
+                                closable: true
+                            })
+                            navigate(pathname)
+                        } else {
+                            message.error(t('暂不支持'))
+                        }
+                    })
+                } else {
+                    message.error('发生未知错误')
+                }
+
+            }
+        } catch (error) {
+            message.error(error.message)
+        }
+
+    }, {
+        manual: true,
+    })
+    return {
+        openHandler,
+        bookBinaryLoading,
+        modal,
+        modalContextHolder
+    }
+} 

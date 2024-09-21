@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as echarts from 'echarts'
 import { Button, Col, Form, Input, Modal, Row, message, Spin, Space, Select, SelectProps, Tag, Result, Avatar, Breadcrumb, Alert, Tooltip } from 'antd';
+import { motion } from 'framer-motion'
 import classNames from 'classnames';
 function OptionBuilder(data: [number, number, string, number][], activeId?: number) {
 
@@ -252,13 +253,13 @@ export const Component = function Island() {
                     >
                         <Col>
                             <Space
-                            style={{
-                                fontSize: '1.5rem',
-                            }}
+                                style={{
+                                    fontSize: '1.5rem',
+                                }}
                             >
                                 <HddOutlined />
                                 <strong
-                                    
+
                                 >{(islands ?? [])?.find(el => el.id === currentIsland)?.name}</strong>
                             </Space>
 
@@ -294,31 +295,56 @@ export const Component = function Island() {
                 <Col
                     style={{ height: '2rem' }}
                 >
-                    {(members ?? []).length > 0
-                        ? <Avatar.Group
-                            maxCount={7}
-                        >
-                            {(members ?? []).map((el, index) => (
-                                <Tooltip
-                                    title={el.memberName}
-                                    key={el.memberId}
-                                >
-                                    <Avatar
+                    <Spin spinning={queryMembersLoading}>
+                        {(members ?? []).length > 0
+                            ? <Avatar.Group
+                            
+                                max={{count:7}}
+                            >
+                                {(members ?? []).map((el, index) => (
+                                    <Tooltip
+                                        title={el.memberName}
+                                        key={el.memberId + el.memberName}
+                                    >
+                                        <motion.div
+                                        
+                                            initial={{
+                                                y: -6,
+                                                opacity: 0,
+                                            }}
+                                            transition={{
+                                                delay: index * 0.01,
+                                                duration: .5,
+                                                times: 20,
+                                                type: "spring",
+                                                damping: 10,
+                                                stiffness: 100,
+                                            }}
+                                            animate={{
+                                                y: 0,
+                                                opacity: 1
+                                            }}
+                                        >
+                                            <Avatar
 
-                                        style={{
-                                            background: colors[index % 3]
-                                        }}
-                                    >{el.memberName?.[0]}</Avatar>
-                                </Tooltip>
+                                                style={{
+                                                    background: colors[index % 3]
+                                                }}
+                                            >{el.memberName?.[0]}</Avatar>
+                                        </motion.div>
 
-                            ))}
+                                    </Tooltip>
 
-                        </Avatar.Group>
-                        : <Tag
-                        >
-                            {t('暂无成员')}
-                        </Tag>
-                    }
+                                ))}
+
+                            </Avatar.Group>
+                            : <Tag
+                            >
+                                {t('暂无成员')}
+                            </Tag>
+                        }
+                    </Spin>
+
 
                 </Col>
             </Row>

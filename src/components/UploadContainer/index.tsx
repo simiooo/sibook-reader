@@ -24,6 +24,7 @@ export type HttpTask = Omit<WsTask, 'ws'> & {
         current: number;
         error: boolean;
         id?: string;
+        type: "upload" | "download",
         signal?: AbortController;
         onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void;
         onUploadProgress?: (type: string, ...others: any[]) => void;

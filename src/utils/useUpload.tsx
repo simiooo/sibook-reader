@@ -68,6 +68,7 @@ export function useUpload(
             const httpMeta: HttpTask["httpMeta"] = {
                 size: info.file.size,
                 current: 0,
+                type:"upload",
                 error: false,
                 id: hash,
                 onUploadProgress: function (type, ...others) {
@@ -103,7 +104,16 @@ export function useUpload(
                     url: '/backblaze/uploadSave',
                     data: payload
                 })
-            }).catch((err) => {
+            })
+            .then(async requestor => {
+                return db.book_blob.add({
+                    id: hash,
+                    blob: await readFileAsArrayBuffer(info.file),
+                    updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                })
+            }
+            )
+            .catch((err) => {
                 httpMeta.onUploadProgress('error', {
                     message: err
                 })

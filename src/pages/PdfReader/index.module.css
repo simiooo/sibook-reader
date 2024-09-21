@@ -86,7 +86,6 @@
     .reader_tooltip{
       display: inline-flex;
       position: absolute;
-      right: 11.85rem;
       top: 1rem;
       .page{
         /* background-color: #fff; */

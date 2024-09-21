@@ -34,6 +34,7 @@ export const Component = function Bookshelf() {
     const [inViewport] = useInViewport(visible_checker_ref, {
 
     })
+    const [init, setInit] = useState<boolean>(false)
     const { runAsync, loading: listLoading, data: listInfo } = useRequest(async (isInit: boolean = true) => {
         // const res = await db_instance?.book_items?.toArray()
         try {
@@ -51,6 +52,7 @@ export const Component = function Bookshelf() {
                     sortValue: form.getFieldValue(['sort']) ? '1' : '0',
                 }
             })
+            setInit(true)
             const map = new Map<string, boolean>()
             return isInit ? {
                 total: res?.data?.data?.total,
@@ -348,6 +350,15 @@ export const Component = function Bookshelf() {
                     </div>}
                 </Layout>
             </Col>
+            {
+                !init && <Spin
+                    fullscreen={true}
+                    spinning={listLoading}
+                    percent={'auto'}
+                    size={'large'}
+                ></Spin>
+            }
+
         </Row>
 
 
