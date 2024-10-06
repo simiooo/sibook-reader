@@ -66,23 +66,7 @@ export const Component = function PdfReader() {
   const [isEditing, setIsEditing] = useState<boolean>(false)
 
   const [modalHook, progressHolder] = Modal.useModal()
-  useEffect(() => {
-    if (isProgressInit || !(Number(remoteProgress) > 0) || remoteProgress === Number(form.getFieldValue(['page']))) {
-      return
-    }
-    if (remoteProgress === -1) {
-      return
-    }
-    modalHook.confirm({
-      title: '云端同步',
-      content: `远端已有阅读进度，是否使用云端进度第 ${remoteProgress} 页`,
-      onOk() {
-        form.setFieldValue('page', remoteProgress)
-        VlistRef.current.scrollToIndex((remoteProgress ?? 1))
-      }
-    })
-    setIsProgressInit(true)
-  }, [remoteProgress])
+
 
   const cachePageImageMap = useRef<Map<number, OffscreenCanvas>>(new Map())
 
@@ -248,12 +232,31 @@ export const Component = function PdfReader() {
 
   // 初始化页码
   useEffect(() => {
-    if (pages?.length > 0) {
+    if (!init && pages?.length > 0) {
       form.setFieldValue(['page'], pagination ?? 0)
       VlistRef.current.scrollToIndex((pagination ?? 0) - 1)
+      setInit(true)
     }
-    setInit(true)
-  }, [pages])
+    
+    if(!init) {
+      return
+    }
+    if (isProgressInit || !(Number(remoteProgress) > 0) || Math.abs(Number(remoteProgress) - Number(pagination)) < 2) {
+      return
+    }
+    if (remoteProgress === -1) {
+      return
+    }
+    modalHook.confirm({
+      title: '云端同步',
+      content: `远端已有阅读进度，是否使用云端进度第 ${remoteProgress} 页`,
+      onOk() {
+        form.setFieldValue('page', remoteProgress)
+        VlistRef.current.scrollToIndex((remoteProgress ?? 1))
+      }
+    })
+    setIsProgressInit(true)
+  }, [pages, remoteProgress])
 
   const size = useSize(listRef)
 

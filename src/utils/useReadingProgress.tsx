@@ -25,9 +25,9 @@ export function useReadingProgress(bookId?: string) {
         
     }, {
         manual: true,
-        onSuccess() {
-            getProgress()
-        }
+        // onSuccess() {
+        //     getProgress()
+        // }
     })
     const {data: currentProgress, runAsync: getProgress} = useRequest(async () => {
         try {

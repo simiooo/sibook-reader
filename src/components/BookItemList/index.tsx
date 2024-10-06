@@ -5,7 +5,7 @@ import Selecto from "react-selecto";
 import style from './index.module.css'
 import { Tooltip } from 'antd';
 import { Tag } from 'antd';
-import { BookItems, db } from '../../dbs/db';
+import { BookBlob, BookItems, db } from '../../dbs/db';
 import { useNavigate } from 'react-router-dom';
 import { MutableRefObject, forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
@@ -268,36 +268,41 @@ export const useBookDownload = () => {
         uploadingTaskList: state.uploadingTaskList,
         uploadingTaskList_update: state.uploadingTaskList_update,
     }))
+
+    const openBook = (cache: BookBlob, ele: Book) => {
+        if (cache?.blob?.byteLength > 0 && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
+            // 本地获取
+            if (ele?.objectType.startsWith('application/epub+zip')) {
+                const pathname = `/reader/${ele.objectId}`
+                tabs_add({
+                    url: pathname,
+                    label: ele.objectName,
+                    closable: true
+                })
+                navigate(pathname)
+            } else if (ele?.objectType.startsWith('application/pdf')) {
+                const pathname = `/pdf_reader/${ele.objectId}`
+                tabs_add({
+                    url: pathname,
+                    label: ele.objectName,
+                    closable: true
+                })
+                navigate(pathname)
+            } else {
+                message.error(t('暂不支持'))
+            }
+        } else {
+            message.error('Errored When open book')
+        }
+    }
+
     const { runAsync: openHandler, loading: bookBinaryLoading } = useRequest(async (ele: Book, options?: {
         openDisable?: boolean,
     }) => {
         try {
-
-            if (!options?.openDisable) {
-                const cache = await db.book_blob.get(ele.objectId)
-                if (cache?.blob?.byteLength > 0 && dayjs(cache?.updatedAt).isAfter(ele?.uploadDate)) {
-                    // 本地获取
-                    if (ele?.objectType.startsWith('application/epub+zip')) {
-                        const pathname = `/reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
-                        })
-                        navigate(pathname)
-                    } else if (ele?.objectType.startsWith('application/pdf')) {
-                        const pathname = `/pdf_reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
-                        })
-                        navigate(pathname)
-                    } else {
-                        message.error(t('暂不支持'))
-                    }
-                }
-
+            const cache = await db.book_blob.get(ele.objectId)
+            if (cache) {
+                !options?.openDisable && openBook(cache, ele)
             } else {
                 let fileIndex: number = -1
                 // 云端获取
@@ -358,26 +363,8 @@ export const useBookDownload = () => {
                     if(options?.openDisable) {
                         return
                     }
-                    if (ele?.objectType === 'application/epub+zip') {
-                        const pathname = `/reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
-                        })
-                        navigate(pathname)
-                    } else if (ele?.objectType === 'application/pdf') {
-                        const pathname = `/pdf_reader/${ele.objectId}`
-                        tabs_add({
-                            url: pathname,
-                            label: ele.objectName,
-                            closable: true
-                        })
-                        navigate(pathname)
-                    } else {
-                        message.error(t('暂不支持'))
-                    }
-
+                    const cache = await db.book_blob.get(ele.objectId)
+                    openBook(cache,ele)
                 } else if (exitInCos.data.data === '0') {
                     httpDownloadTask.httpMeta.signal = cancel
                     const res = await requestor<Blob>({
