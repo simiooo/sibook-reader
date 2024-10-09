@@ -91,6 +91,7 @@ import { useTranslation } from 'react-i18next';
 import { IslandMembers, UserSimply } from '../../store/user.type';
 import { HddOutlined, HomeOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import IslandIcon from '../../components/Icons/IslandIcon';
 const colors = ['#F9E79F', '#283593', '#196F3D']
 export const Component = function Island() {
     const navigate = useNavigate();
@@ -257,7 +258,7 @@ export const Component = function Island() {
                                     fontSize: '1.5rem',
                                 }}
                             >
-                                <HddOutlined />
+                                <IslandIcon></IslandIcon>
                                 <strong
 
                                 >{(islands ?? [])?.find(el => el.id === currentIsland)?.name}</strong>

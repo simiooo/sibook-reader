@@ -9,6 +9,7 @@ import { useHover, useRequest } from 'ahooks'
 import { useBookState } from '../../store'
 import useModal from 'antd/es/modal/useModal'
 import { requestor } from '../../utils/requestor'
+import IslandIcon from '../Icons/IslandIcon'
 
 const maxWidth = '4.1rem'
 const minWidth = '0rem'
@@ -109,7 +110,7 @@ export default function LeftMenu() {
             label: t('岛屿'),
             title: t('岛屿'),
             key: 'island',
-            icon: <ShopOutlined />,
+            icon: <IslandIcon />,
           },
           {
             icon: <Divider></Divider>,
