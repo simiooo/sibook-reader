@@ -28,9 +28,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // registerType: 'autoUpdate',
       workbox: {
-        cleanupOutdatedCaches: false
+        // cleanupOutdatedCaches: false
+        globIgnores: ["**\/node_modules\/**\/*", 'index.html'],
       },
       manifest: {
         name: 'Si Reader',
