@@ -63,6 +63,7 @@ export const Component = function App() {
         ]
     })
     useAsyncEffect(async () => {
+        console.log(userOnline)
         if (typeof userOnline === 'boolean' && !userOnline) {
             navigate('/login')
         }

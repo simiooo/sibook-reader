@@ -105,7 +105,7 @@ export const useBookState = create<BookStateType>((set, get) => {
                 })
                 return res.status === 200
             } catch (error) {
-                console.log(error)
+                console.log(error.response.status)
                 return error instanceof AxiosError ? [401, 403].includes(error.response.status) ? false : true : true
             }
             

@@ -28,7 +28,7 @@ import dayjs from 'dayjs';
 
 
 export const Component = function Bookshelf() {
-    const { currentIsland, profile, isUserOnline } = useBookState(state => ({ currentIsland: state.currentIsland, profile: state.profile, isUserOnline: state.isUserOnline }))
+    const { currentIsland, profile } = useBookState(state => ({ currentIsland: state.currentIsland, profile: state.profile }))
     const containerRef = useRef<HTMLElement>(null)
     const visible_checker_ref = useRef<HTMLDivElement>()
     const [inViewport] = useInViewport(visible_checker_ref, {
@@ -39,7 +39,7 @@ export const Component = function Bookshelf() {
         // const res = await db_instance?.book_items?.toArray()
         try {
             if (!currentIsland) {
-                throw Error('请先登录')
+                throw Error('请先选择岛屿')
             }
             const current = isInit ? 1 : ((listInfo as any)?.current ?? 0) + 1
             const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
