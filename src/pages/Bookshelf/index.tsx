@@ -41,7 +41,7 @@ export const Component = function Bookshelf() {
             if (!currentIsland) {
                 throw Error('请先登录')
             }
-            const current = isInit ? 1 : (listInfo as any)?.current + 1 ?? 1
+            const current = isInit ? 1 : ((listInfo as any)?.current ?? 0) + 1
             const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
                 url: '/island/getBookListFromIsland',
                 data: {
@@ -57,21 +57,12 @@ export const Component = function Bookshelf() {
             return isInit ? {
                 total: res?.data?.data?.total,
                 current,
-                list: res.data?.data?.rows ?? []
+                list: (res.data?.data?.rows ?? []).map(el => listInfo?.list?.some(pre => (pre?.objectId && pre?.objectId === el.objectId)) ? ({...el, animationStatus: 'visible'}) : ({...el, animationStatus: 'added'}) )
             } as const
                 : {
                     current,
                     total: res?.data?.data?.total,
-                    list: [...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? [])]
-                    // .
-                    // filter((val) => {
-                    //     if (map.has(val?.objectId)) {
-                    //         return false
-                    //     } else {
-                    //         map.set(val?.objectId, true)
-                    //         return true
-                    //     }
-                    // })
+                    list: [...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? []).map(el => ({...el, animationStatus: 'added'}))]
                 } as const
         } catch (error) {
             message.error(error?.response?.data?.message ?? error?.message)
@@ -91,7 +82,7 @@ export const Component = function Bookshelf() {
             runAsync(false)
         }
     }, [inViewport, listInfo])
-    const { upload, loading: uploadLoading } = useUpload({ onFinish: () => runAsync() })
+    const { upload, loading: uploadLoading } = useUpload({})
 
     const { t, i18n } = useTranslation()
 

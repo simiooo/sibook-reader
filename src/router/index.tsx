@@ -11,6 +11,7 @@ const PdfReader = () => import("../pages/PdfReader");
 const Login = () => import("../pages/Login");
 const Island = () => import("../pages/Island");
 const Register = () => import("../pages/Register");
+const Profile = () => import("../pages/Profile");
 
 
 export const router = createBrowserRouter([
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         path: '/island',
         lazy: Island,
+      },
+      {
+        path: '/profile',
+        lazy: Profile,
       }
     ]
   },

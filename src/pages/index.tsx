@@ -46,7 +46,7 @@ export const ErrorBoundary = (props) => <div
 export const Component = function App() {
     const location = useLocation()
     const navigate = useNavigate()
-    const [refreshData, refresh] = useRefresh()
+    const [refreshData, refresh, {loading: refreshLoading}] = useRefresh()
     useEventListener('load', () => {
         refresh()
     })
@@ -126,7 +126,7 @@ export const Component = function App() {
                 ></BookTabs>
             </Flex>}
             <Spin
-                spinning={state === 'loading'}
+                spinning={state === 'loading' || refreshLoading}
                 delay={100}
             >
                 <Outlet></Outlet>

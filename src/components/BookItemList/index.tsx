@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Dropdown, Modal, Spin, message } from 'antd'
+import { Alert, Button, Col, Dropdown, Modal, Result, Spin, message } from 'antd'
 import { Card } from 'antd'
 import { Row } from 'antd'
 import Selecto from "react-selecto";
@@ -11,7 +11,7 @@ import { MutableRefObject, forwardRef, useCallback, useImperativeHandle, useMemo
 import { Menu as CMenu, Item as CItem, useContextMenu } from 'react-contexify';
 import "react-contexify/dist/ReactContexify.css";
 import { useDebounceFn, useEventListener, useMap, useRequest, useThrottle, useThrottleFn } from 'ahooks';
-import { motion } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion, Reorder } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import Draggable, { DraggableEventHandler } from 'react-draggable';
 import BookPlaceholder from './BookPlaceholder';
@@ -36,9 +36,21 @@ export const tagMap = {
         color: '#3498DB',
     }
 }
+// initial={{ opacity: 0, scale: 0.9 }}
+//                                     animate={{ opacity: 1, scale: 1 }}
+//                                     exit={{ opacity: 0, scale: 0.9 }}
+//                                     transition={{
+//                                         duration: 0.34,
+//                                         ease: [0, 0.71, 0.2, 1.01],
+//                                         type: 'spring'
+//                                     }}
+const cardAnimation = {
+    initial: { opacity: 0, scale: 0.9 },
+    visible: { opacity: 1, scale: 1 },
+}
 
 interface BookItemListProps {
-    data?: Book[]
+    data?: (Book & {animationStatus: 'added' | 'visible'})[]
     selected?: Set<string | undefined>;
     onAdd?: (key?: string) => void;
     onRemove?: (key?: string) => void;
@@ -173,67 +185,59 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                     justify={'start'}
                     gutter={[32, 26]}
                 >
+                    {/* <AnimatePresence> */}
                     {
                         (renderList ?? []).map((ele, index) => {
-                            if (ele.objectId === 'placeholder') {
-                                <Col
-                                    span={8}
-                                    key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
-                                >
-                                    <BookPlaceholder></BookPlaceholder>
-                                </Col>
-                            } else {
-                                let title
-                                let des
+                            let title
+                            let des
+                            return <Col
+                                span={6}
+                                sm={12}
+                                xs={24}
+                                md={8}
+                                xl={6}
+                                xxl={6}
+                                key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
+                            >
 
-                                return <Col
-                                    span={6}
-                                    sm={12}
-                                    xs={24}
-                                    md={8}
-                                    xl={6}
-                                    xxl={6}
+                                <motion.div
                                     key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
+                                    style={{
+                                        height: '100%',
+                                        width: '100%',
+                                        minHeight: '16rem',
+                                        originX: 0,
+                                        originY: 0
+                                    }}
+                                    initial={ele?.animationStatus === 'added' ? 'initial' : false}
+                                    animate={'visible'}
+                                    variants={cardAnimation}
                                 >
-
-                                    <motion.div
-                                        style={{
-                                            height: '100%',
-                                            width: '100%',
-                                            minHeight: '16rem',
-                                        }}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{
-                                            duration: 0.34,
-                                            delay: 0.5 + Math.pow(Math.min(index, 16) * 0.04, 0.9),
-                                            ease: [0, 0.71, 0.2, 1.01]
-                                        }}
-                                    >
-                                        <Card
-                                            cover={<img></img>}
-                                            data-hash={ele?.objectId}
-                                            extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
-                                            className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
-                                            onDoubleClick={() => openDebouncedHandler(ele)}
-                                            onTouchEnd={() => openDebouncedHandler(ele)}
-                                            title={<Tooltip
+                                    <Card
+                                        cover={<img></img>}
+                                        data-hash={ele?.objectId}
+                                        extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
+                                        className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
+                                        onDoubleClick={() => openDebouncedHandler(ele)}
+                                        onTouchEnd={() => openDebouncedHandler(ele)}
+                                        title={<Tooltip
+                                        >
+                                            <Tooltip
+                                                title={title ?? ele?.objectName}
                                             >
-                                                <Tooltip
-                                                    title={title ?? ele?.objectName}
-                                                >
-                                                    {title ?? ele?.objectName}
-                                                </Tooltip>
+                                                {title ?? ele?.objectName}
+                                            </Tooltip>
 
-                                            </Tooltip>}
-                                        >{des ?? ele?.objectName}</Card>
-                                    </motion.div>
+                                        </Tooltip>}
+                                    >{des ?? ele?.objectName}</Card>
+                                </motion.div>
 
-                                </Col>
-                            }
+                            </Col>
+
 
                         })
                     }
+                    {/* </AnimatePresence> */}
                     {p?.loading && <LoadingOutlined style={{ fontSize: '24px' }} />}
 
                     <div
@@ -246,6 +250,8 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                     ></div>
 
                 </Row>
+
+
 
 
 
@@ -354,17 +360,16 @@ export const useBookDownload = () => {
                         signal: cancel.signal,
                         onDownloadProgress: httpDownloadTask.httpMeta.onDownloadProgress
                     })
-                    // console.log(fileTask)
                     await db.book_blob.add({
                         id: ele.objectId,
                         blob: await readFileAsArrayBuffer(new File([fileTask?.data], ele.objectName)),
                         updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
                     })
-                    if(options?.openDisable) {
+                    if (options?.openDisable) {
                         return
                     }
                     const cache = await db.book_blob.get(ele.objectId)
-                    openBook(cache,ele)
+                    openBook(cache, ele)
                 } else if (exitInCos.data.data === '0') {
                     httpDownloadTask.httpMeta.signal = cancel
                     const res = await requestor<Blob>({
@@ -383,7 +388,7 @@ export const useBookDownload = () => {
                         blob: await readFileAsArrayBuffer(new File([res.data], ele.objectName)),
                         updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
                     }).then(() => {
-                        if(options?.openDisable) {
+                        if (options?.openDisable) {
                             return
                         }
                         if (ele?.objectType === 'application/epub+zip') {

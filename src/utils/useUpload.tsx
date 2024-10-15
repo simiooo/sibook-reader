@@ -21,7 +21,7 @@ const parser = new XMLParser();
 
 export function useUpload(
     options?: {
-        onFinish: (e: WsChangeEvent) => void
+        onFinish?: (e?: WsChangeEvent) => void
     }
 ) {
     const { currentIsland } = useBookState(state => ({ currentIsland: state.currentIsland }))
@@ -68,7 +68,7 @@ export function useUpload(
             const httpMeta: HttpTask["httpMeta"] = {
                 size: info.file.size,
                 current: 0,
-                type:"upload",
+                type: "upload",
                 error: false,
                 id: hash,
                 onUploadProgress: function (type, ...others) {
@@ -105,19 +105,22 @@ export function useUpload(
                     data: payload
                 })
             })
-            .then(async requestor => {
-                return db.book_blob.add({
-                    id: hash,
-                    blob: await readFileAsArrayBuffer(info.file),
-                    updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                .then(async requestor => {
+                    return db.book_blob.add({
+                        id: hash,
+                        blob: await readFileAsArrayBuffer(info.file),
+                        updatedAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+                    })
+                }
+                )
+                .catch((err) => {
+                    httpMeta.onUploadProgress('error', {
+                        message: err
+                    })
                 })
-            }
-            )
-            .catch((err) => {
-                httpMeta.onUploadProgress('error', {
-                    message: err
+                .finally(() => {
+                    options?.onFinish?.()
                 })
-            })
             uploadingTaskList.unshift({
                 httpMeta: httpMeta,
                 type: 'upload',

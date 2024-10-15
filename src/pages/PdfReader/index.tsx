@@ -263,7 +263,6 @@ export const Component = function PdfReader() {
   // pdf 渲染处理
   const { run: pdfPageRenderHandler } = useThrottleFn(async (startIndex: number, endIndex: number, pages: pdfjs.PDFPageProxy[], options?: { pageIndicator?: number, canvasScale?: number, clearDpr?: boolean, cacheRerenderDisable?: boolean }) => {
     // 该方法在缩放时不被调用，需要让它被调用；
-
     const start = Math.max(pagination - OVERSCAN / 2, startIndex, 0)
     const end = Math.min(pagination + OVERSCAN / 2, Number.isNaN(pages?.length) ? 0 : pages?.length) //这里有问题
     if (options?.pageIndicator && init) {

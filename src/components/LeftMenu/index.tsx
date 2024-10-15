@@ -140,6 +140,12 @@ export default function LeftMenu() {
                     logout()
                   }}
                   >注销</Button>
+                  <Button
+                  type="link"
+                  onClick={() => {
+                    navigate('/Profile')
+                  }}
+                  >个人中心</Button>
                   {/* <Divider
                     type="vertical"
                   ></Divider> */}

@@ -2,7 +2,11 @@ import { useInterval, useRequest } from "ahooks"
 import { requestor } from "./requestor"
 
 export function useRefresh() {
-    const {runAsync: refresh, loading: refreshLoading, data: refreshData} = useRequest(async () =>{
+    const {
+        runAsync: refresh, 
+        loading: refreshLoading, 
+        data: refreshData,
+    } = useRequest(async () =>{
         const res = await requestor({
             url: '/refresh',
             method: 'get'
@@ -13,14 +17,16 @@ export function useRefresh() {
         }
         return res
     }, {
-        manual: true
+        manual: true,
+        // refreshOnWindowFocus: true,
+        pollingInterval: 1000 * 60 * 60 * 3,
     })
 
-    useInterval(() => {
-        refresh()
-    }, 1000 * 60 * 60 * 24)
     return [
         refreshData,
-        refresh
+        refresh,
+        {
+            loading: refreshLoading
+        }
     ] as const
 }
