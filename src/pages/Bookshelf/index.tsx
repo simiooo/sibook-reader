@@ -25,6 +25,7 @@ import { requestor } from '../../utils/requestor';
 import { Book } from '../../store/book.type';
 import LeftMenu from '../../components/LeftMenu';
 import dayjs from 'dayjs';
+import { useLatestIsland } from '../../utils/useLatestIsland';
 
 
 export const Component = function Bookshelf() {
@@ -34,18 +35,24 @@ export const Component = function Bookshelf() {
     const [inViewport] = useInViewport(visible_checker_ref, {
 
     })
+    const [getLatestId] = useLatestIsland([profile])
     const [init, setInit] = useState<boolean>(false)
     const { runAsync, loading: listLoading, data: listInfo } = useRequest(async (isInit: boolean = true) => {
         // const res = await db_instance?.book_items?.toArray()
+        let thisCurrentIsland = currentIsland
         try {
-            if (!currentIsland) {
-                throw Error('请先选择岛屿')
+            if (!thisCurrentIsland || thisCurrentIsland === -1) {
+                const islandId = await getLatestId()
+                if(islandId === -1) {
+                    throw Error('请先选择岛屿')
+                }
+                thisCurrentIsland = islandId
             }
             const current = isInit ? 1 : ((listInfo as any)?.current ?? 0) + 1
             const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
                 url: '/island/getBookListFromIsland',
                 data: {
-                    islandId: currentIsland,
+                    islandId: thisCurrentIsland,
                     current,
                     pageSize: 20,
                     searchString: form.getFieldValue(['searchString']),
@@ -204,7 +211,7 @@ export const Component = function Bookshelf() {
                                                 >
                                                     <Space>
                                                         <Tooltip
-                                                            title={'按上传时间排序'}
+                                                            title={t('按上传时间排序')}
                                                         >
                                                             <><Form.Item
                                                                 noStyle
@@ -214,9 +221,9 @@ export const Component = function Bookshelf() {
                                                                 <Switch
                                                                     onChange={form.submit}
                                                                     checkedChildren={
-                                                                        <Space><span>由新到旧</span><SortDescendingOutlined /></Space>
+                                                                        <Space><span>{t('由新到旧')}</span><SortDescendingOutlined /></Space>
                                                                     }
-                                                                    unCheckedChildren={<Space><span>由旧到新</span><SortAscendingOutlined /></Space>}
+                                                                    unCheckedChildren={<Space><span>{t('由旧到新')}</span><SortAscendingOutlined /></Space>}
                                                                 ></Switch>
                                                             </Form.Item>
                                                             </>

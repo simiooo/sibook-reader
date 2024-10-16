@@ -141,7 +141,7 @@ export default function LeftMenu() {
                   }}
                   >注销</Button>
                   <Button
-                  type="link"
+                  type="text"
                   onClick={() => {
                     navigate('/Profile')
                   }}

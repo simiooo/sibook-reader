@@ -35,6 +35,7 @@ import { useAnnotation } from '../../utils/useAnnotation'
 import { green } from '../../main'
 import { ItemType } from 'antd/es/menu/interface'
 import { useBookState } from '../../store'
+import { useLatestIsland } from '../../utils/useLatestIsland'
 const OVERSCAN = 4
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id, contextHolder }] = usePdfBook()
@@ -60,6 +61,7 @@ export const Component = function PdfReader() {
   const [isNewCommerTourOpen, setIsNewCommerTourOpen] = useLocalStorageState<boolean>(`userId:${profile}:bookId:${book_id}`, {
     defaultValue: true
   })
+  
 
   const [isRendering, setIsRendering] = useState<boolean>(false)
   const [ocrSelectOpen, setOcrSelectOpen] = useState(false)
@@ -229,6 +231,8 @@ export const Component = function PdfReader() {
       pages
     ]
   })
+
+
 
   // 初始化页码
   useEffect(() => {

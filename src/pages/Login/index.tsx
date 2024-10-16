@@ -5,6 +5,7 @@ import { useRequest } from 'ahooks'
 import { requestor } from '../../utils/requestor'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useBookState } from '../../store'
 
 export interface LoginType {
     code?: number;
@@ -13,6 +14,7 @@ export interface LoginType {
 }
 
 export const Component = function Login() {
+    const currentIsland_update = useBookState(state => state.currentIsland_update)
     const { loading: imgLoading, data: backgroundImg } = useRequest(async () => {
         const res = await requestor<Blob>({
             baseURL: '/',
@@ -36,12 +38,14 @@ export const Component = function Login() {
             })
             if (res.status !== 200) {
 
-                throw Error('登录失败')
+                throw Error(t('登录失败'))
             }
             localStorage.setItem('authorization', JSON.stringify(res.data))
+            currentIsland_update(undefined)
+            localStorage.removeItem('currentIsland')
             navigate('/')
         } catch (error) {
-            message.error('登陆失败')
+            message.error(t('登陆失败'))
         }
 
     }, {

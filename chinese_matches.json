@@ -1,0 +1,1584 @@
+{
+  "results": [
+    {
+      "text": "请选择一种工具选择模式",
+      "position": 1300,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "普通模式",
+      "position": 3335,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "摘要生成",
+      "position": 3476,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "阐释并列举例子",
+      "position": 3611,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "生成练习题目",
+      "position": 3747,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "名词解释",
+      "position": 3884,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "相关阅读推荐",
+      "position": 4022,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "数据解读",
+      "position": 4163,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiFeatureMenu/index.tsx"
+    },
+    {
+      "text": "服务端异常",
+      "position": 2090,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiResponse/index.tsx"
+    },
+    {
+      "text": "请检查",
+      "position": 2097,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiResponse/index.tsx"
+    },
+    {
+      "text": "辅助设置是否正确",
+      "position": 2102,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiResponse/index.tsx"
+    },
+    {
+      "text": "未知错误",
+      "position": 3121,
+      "file": "/home/simooo/work/sibook-reader/src/components/AiResponse/index.tsx"
+    },
+    {
+      "text": "本地获取",
+      "position": 10408,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookItemList/index.tsx"
+    },
+    {
+      "text": "暂不支持",
+      "position": 11119,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookItemList/index.tsx"
+    },
+    {
+      "text": "云端获取",
+      "position": 11624,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookItemList/index.tsx"
+    },
+    {
+      "text": "传输列表中已有该书籍",
+      "position": 11887,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookItemList/index.tsx"
+    },
+    {
+      "text": "确定要重新下载吗",
+      "position": 11898,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookItemList/index.tsx"
+    },
+    {
+      "text": "暂不支持",
+      "position": 16395,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookItemList/index.tsx"
+    },
+    {
+      "text": "发生未知错误",
+      "position": 16512,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookItemList/index.tsx"
+    },
+    {
+      "text": "加入书架",
+      "position": 882,
+      "file": "/home/simooo/work/sibook-reader/src/components/BookNewButton/index.tsx"
+    },
+    {
+      "text": "请选择模型",
+      "position": 1667,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "请选择待翻译语言",
+      "position": 1748,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "翻译内容不能为空",
+      "position": 1833,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "任意",
+      "position": 1998,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "中文",
+      "position": 2044,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "服务端异常",
+      "position": 2256,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "请检查",
+      "position": 2263,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "辅助设置是否正确",
+      "position": 2268,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "翻译",
+      "position": 4485,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "请选择模型",
+      "position": 5222,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "请选择待翻译语言",
+      "position": 6347,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "翻译",
+      "position": 6737,
+      "file": "/home/simooo/work/sibook-reader/src/components/ClipboardList/index.tsx"
+    },
+    {
+      "text": "请选择岛屿",
+      "position": 785,
+      "file": "/home/simooo/work/sibook-reader/src/components/DropButton/index.tsx"
+    },
+    {
+      "text": "删除成功",
+      "position": 1474,
+      "file": "/home/simooo/work/sibook-reader/src/components/DropButton/index.tsx"
+    },
+    {
+      "text": "删除失败",
+      "position": 1541,
+      "file": "/home/simooo/work/sibook-reader/src/components/DropButton/index.tsx"
+    },
+    {
+      "text": "确认删除吗",
+      "position": 2430,
+      "file": "/home/simooo/work/sibook-reader/src/components/DropButton/index.tsx"
+    },
+    {
+      "text": "删除",
+      "position": 2704,
+      "file": "/home/simooo/work/sibook-reader/src/components/DropButton/index.tsx"
+    },
+    {
+      "text": "服务端异常",
+      "position": 1513,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExplainModal/index.tsx"
+    },
+    {
+      "text": "请检查",
+      "position": 1520,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExplainModal/index.tsx"
+    },
+    {
+      "text": "辅助设置是否正确",
+      "position": 1525,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExplainModal/index.tsx"
+    },
+    {
+      "text": "阐释",
+      "position": 2708,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExplainModal/index.tsx"
+    },
+    {
+      "text": "请选择选择语言",
+      "position": 4085,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExplainModal/index.tsx"
+    },
+    {
+      "text": "未命名",
+      "position": 695,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExportButton/index.tsx"
+    },
+    {
+      "text": "下载成功",
+      "position": 1693,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExportButton/index.tsx"
+    },
+    {
+      "text": "导出按钮",
+      "position": 2950,
+      "file": "/home/simooo/work/sibook-reader/src/components/ExportButton/index.tsx"
+    },
+    {
+      "text": "配置",
+      "position": 920,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "代理地址",
+      "position": 1458,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "可选",
+      "position": 1463,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "输入的",
+      "position": 1621,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "不正确",
+      "position": 1627,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "请输入基础",
+      "position": 1874,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "密钥",
+      "position": 2005,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "请输入",
+      "position": 2221,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "密钥",
+      "position": 2229,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "请输入",
+      "position": 2514,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "密钥",
+      "position": 2520,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "该密钥存储在本地",
+      "position": 2523,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "模型",
+      "position": 2648,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "保存",
+      "position": 3277,
+      "file": "/home/simooo/work/sibook-reader/src/components/GPTSetting/index.tsx"
+    },
+    {
+      "text": "选择语言",
+      "position": 1982,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "选择语言",
+      "position": 2061,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "选择语言",
+      "position": 2100,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "岛屿",
+      "position": 3148,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "岛屿",
+      "position": 3176,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "选择语言",
+      "position": 3410,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "选择语言",
+      "position": 3440,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "注销",
+      "position": 3996,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "个人中心",
+      "position": 4180,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "我",
+      "position": 4718,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "我",
+      "position": 4814,
+      "file": "/home/simooo/work/sibook-reader/src/components/LeftMenu/index.tsx"
+    },
+    {
+      "text": "岛屿",
+      "position": 978,
+      "file": "/home/simooo/work/sibook-reader/src/components/SyncModal/index.tsx"
+    },
+    {
+      "text": "岛屿名",
+      "position": 1885,
+      "file": "/home/simooo/work/sibook-reader/src/components/SyncModal/index.tsx"
+    },
+    {
+      "text": "同步",
+      "position": 2406,
+      "file": "/home/simooo/work/sibook-reader/src/components/SyncModal/index.tsx"
+    },
+    {
+      "text": "任意",
+      "position": 1336,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "中文",
+      "position": 1391,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "服务端异常",
+      "position": 1603,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "请检查",
+      "position": 1610,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "辅助设置是否正确",
+      "position": 1615,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "翻译",
+      "position": 2728,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "请复制内容",
+      "position": 3139,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "请选择待翻译语言",
+      "position": 3648,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "请选择目标语言",
+      "position": 4814,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslateModal/index.tsx"
+    },
+    {
+      "text": "翻译",
+      "position": 1692,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslatePortal/index.tsx"
+    },
+    {
+      "text": "请选择语言",
+      "position": 2745,
+      "file": "/home/simooo/work/sibook-reader/src/components/TranslatePortal/index.tsx"
+    },
+    {
+      "text": "传输列表",
+      "position": 2996,
+      "file": "/home/simooo/work/sibook-reader/src/components/UploadContainer/index.tsx"
+    },
+    {
+      "text": "确认删除吗",
+      "position": 4263,
+      "file": "/home/simooo/work/sibook-reader/src/components/UploadContainer/index.tsx"
+    },
+    {
+      "text": "确认删除吗",
+      "position": 6395,
+      "file": "/home/simooo/work/sibook-reader/src/components/UploadContainer/index.tsx"
+    },
+    {
+      "text": "请传入文件",
+      "position": 615,
+      "file": "/home/simooo/work/sibook-reader/src/dbs/createBook.ts"
+    },
+    {
+      "text": "请勿重复上传文件",
+      "position": 895,
+      "file": "/home/simooo/work/sibook-reader/src/dbs/createBook.ts"
+    },
+    {
+      "text": "上传失败",
+      "position": 1412,
+      "file": "/home/simooo/work/sibook-reader/src/dbs/createBook.ts"
+    },
+    {
+      "text": "未知错误",
+      "position": 1507,
+      "file": "/home/simooo/work/sibook-reader/src/dbs/createBook.ts"
+    },
+    {
+      "text": "请先选择岛屿",
+      "position": 2448,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "请选择",
+      "position": 6028,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "删除",
+      "position": 6289,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "导出",
+      "position": 6450,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "按上传时间排序",
+      "position": 8350,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "由新到旧",
+      "position": 9123,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "由旧到新",
+      "position": 9339,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "搜索书籍",
+      "position": 10337,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "请上传书籍",
+      "position": 13940,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "可拖拽到此处",
+      "position": 14551,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "可粘贴文件在此处",
+      "position": 14667,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Bookshelf/index.tsx"
+    },
+    {
+      "text": "添加岛屿成功",
+      "position": 5610,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "添加岛屿失败",
+      "position": 5675,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "搜索失败",
+      "position": 6367,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "不能为空",
+      "position": 6760,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "添加成功",
+      "position": 7056,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "添加失败",
+      "position": 7119,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "请选择岛屿",
+      "position": 9492,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "新建岛屿",
+      "position": 9776,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "添加成员",
+      "position": 10055,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "暂无成员",
+      "position": 12617,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "新建岛屿",
+      "position": 13210,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "成员",
+      "position": 14659,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "昵称",
+      "position": 14822,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "没有找到用户",
+      "position": 15490,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "输入内容后搜索",
+      "position": 15535,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "请选择",
+      "position": 15724,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Island/index.tsx"
+    },
+    {
+      "text": "登录失败",
+      "position": 1374,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Login/index.tsx"
+    },
+    {
+      "text": "登陆失败",
+      "position": 1647,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Login/index.tsx"
+    },
+    {
+      "text": "登录",
+      "position": 2946,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Login/index.tsx"
+    },
+    {
+      "text": "登录",
+      "position": 5862,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Login/index.tsx"
+    },
+    {
+      "text": "注册",
+      "position": 6208,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Login/index.tsx"
+    },
+    {
+      "text": "修复缩放时定位",
+      "position": 7699,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "复制成功",
+      "position": 10490,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "粘贴失败",
+      "position": 10648,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "读取文字成功",
+      "position": 10967,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "请在",
+      "position": 10974,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "辅助功能里使用",
+      "position": 10978,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "模拟选择文字事件",
+      "position": 13502,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "请选择一种工具选择模式",
+      "position": 14031,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "初始化书籍",
+      "position": 15820,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "普通模式",
+      "position": 16498,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "摘要生成",
+      "position": 16632,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "阐释并列举例子",
+      "position": 16761,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "生成练习题目",
+      "position": 16891,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "名词解释",
+      "position": 17022,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "相关阅读推荐",
+      "position": 17154,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "数据解读",
+      "position": 17289,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "该书籍",
+      "position": 18392,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "目录",
+      "position": 18646,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "开",
+      "position": 18649,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "目录",
+      "position": 18698,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "关",
+      "position": 18701,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "书籍加载失败",
+      "position": 21508,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "书籍加载失败",
+      "position": 23317,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "放大",
+      "position": 24018,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "缩小",
+      "position": 24269,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "文字转图片",
+      "position": 24765,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "裁切图片",
+      "position": 29243,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "完成",
+      "position": 29878,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.bak.tsx"
+    },
+    {
+      "text": "文字识别层",
+      "position": 5028,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "避免",
+      "position": 7946,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "重复调用",
+      "position": 7953,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "方法",
+      "position": 7963,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "生成",
+      "position": 8178,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "页对象",
+      "position": 8185,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "引用",
+      "position": 8189,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "初始化页码",
+      "position": 8904,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "云端同步",
+      "position": 9375,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "远端已有阅读进度",
+      "position": 9398,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "是否使用云端进度第",
+      "position": 9407,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "页",
+      "position": 9435,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "渲染处理",
+      "position": 9683,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "该方法在缩放时不被调用",
+      "position": 9940,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "需要让它被调用",
+      "position": 9952,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "这里有问题",
+      "position": 10133,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "取消相同引用未完成的渲染任务",
+      "position": 11659,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "只缩放没有被缩放的元素",
+      "position": 11746,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "屏蔽这个异常",
+      "position": 12808,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "因为这个异常是故意的",
+      "position": 12815,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "避免潜在的竞态情况",
+      "position": 12964,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "是否编辑",
+      "position": 15455,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "当前状态",
+      "position": 15460,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "是",
+      "position": 15480,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "否",
+      "position": 15486,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "在",
+      "position": 15886,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "文档上",
+      "position": 15892,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "长按鼠标左键后拖动",
+      "position": 15896,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "进行标记",
+      "position": 15906,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "按住",
+      "position": 16374,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "时",
+      "position": 16382,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "滑动鼠标滚轮可缩放文档",
+      "position": 16384,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "按住",
+      "position": 16687,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "时",
+      "position": 16695,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "鼠标左键可拖动文档位置",
+      "position": 16697,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "阅读器控制区",
+      "position": 17082,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "更改",
+      "position": 18296,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "语言",
+      "position": 18303,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "该方法在缩放时不被调用",
+      "position": 21039,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "需要让它被调用",
+      "position": 21051,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "提取图片文字",
+      "position": 25941,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "删除笔记",
+      "position": 28384,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "确定删除吗",
+      "position": 28495,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/index.tsx"
+    },
+    {
+      "text": "请输入密码",
+      "position": 2338,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/usePdfBook.tsx"
+    },
+    {
+      "text": "密码",
+      "position": 2700,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/usePdfBook.tsx"
+    },
+    {
+      "text": "打开",
+      "position": 3692,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/usePdfBook.tsx"
+    },
+    {
+      "text": "失败",
+      "position": 3699,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/usePdfBook.tsx"
+    },
+    {
+      "text": "刷新页面吗",
+      "position": 3830,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/usePdfBook.tsx"
+    },
+    {
+      "text": "清理并回到首页",
+      "position": 4697,
+      "file": "/home/simooo/work/sibook-reader/src/pages/PdfReader/usePdfBook.tsx"
+    },
+    {
+      "text": "用户名",
+      "position": 1503,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "头像",
+      "position": 1661,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "昵称",
+      "position": 1880,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "邮箱",
+      "position": 2044,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "电话",
+      "position": 2205,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "简介",
+      "position": 2366,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "会员等级",
+      "position": 2525,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "使用情况",
+      "position": 2706,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Profile/index.tsx"
+    },
+    {
+      "text": "向上",
+      "position": 4231,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "向下",
+      "position": 4302,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "复制成功",
+      "position": 4852,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "粘贴失败",
+      "position": 5006,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "设置事件监听",
+      "position": 5618,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "通过进度条改位置",
+      "position": 8263,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "加载图书失败",
+      "position": 9530,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "发生异常",
+      "position": 9565,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "请联系开发者",
+      "position": 9570,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "回到书架",
+      "position": 9801,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "该书籍",
+      "position": 10426,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "目录",
+      "position": 10715,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "开",
+      "position": 10718,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "目录",
+      "position": 10766,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "关",
+      "position": 10769,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Reader/index.tsx"
+    },
+    {
+      "text": "注册成功",
+      "position": 1176,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Register/index.tsx"
+    },
+    {
+      "text": "注册失败",
+      "position": 1268,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Register/index.tsx"
+    },
+    {
+      "text": "注册",
+      "position": 1615,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Register/index.tsx"
+    },
+    {
+      "text": "确定取消吗",
+      "position": 6577,
+      "file": "/home/simooo/work/sibook-reader/src/pages/Register/index.tsx"
+    },
+    {
+      "text": "错误",
+      "position": 1030,
+      "file": "/home/simooo/work/sibook-reader/src/pages/index.tsx"
+    },
+    {
+      "text": "请联系开发者",
+      "position": 1033,
+      "file": "/home/simooo/work/sibook-reader/src/pages/index.tsx"
+    },
+    {
+      "text": "重新加载",
+      "position": 1256,
+      "file": "/home/simooo/work/sibook-reader/src/pages/index.tsx"
+    },
+    {
+      "text": "获取用户信息失败",
+      "position": 2526,
+      "file": "/home/simooo/work/sibook-reader/src/pages/index.tsx"
+    },
+    {
+      "text": "获取用户信息失败",
+      "position": 2646,
+      "file": "/home/simooo/work/sibook-reader/src/pages/index.tsx"
+    },
+    {
+      "text": "不存在",
+      "position": 4122,
+      "file": "/home/simooo/work/sibook-reader/src/store/index.tsx"
+    },
+    {
+      "text": "首页",
+      "position": 5176,
+      "file": "/home/simooo/work/sibook-reader/src/store/index.tsx"
+    },
+    {
+      "text": "首页",
+      "position": 5275,
+      "file": "/home/simooo/work/sibook-reader/src/store/index.tsx"
+    },
+    {
+      "text": "将",
+      "position": 7353,
+      "file": "/home/simooo/work/sibook-reader/src/store/index.tsx"
+    },
+    {
+      "text": "转换为字符串",
+      "position": 7366,
+      "file": "/home/simooo/work/sibook-reader/src/store/index.tsx"
+    },
+    {
+      "text": "处理可能的多行数据",
+      "position": 7482,
+      "file": "/home/simooo/work/sibook-reader/src/store/index.tsx"
+    },
+    {
+      "text": "男",
+      "position": 203,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "女",
+      "position": 209,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "假设性别只有男女两种情况",
+      "position": 216,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "如果有其他情况可以继续添加",
+      "position": 229,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "或者使用",
+      "position": 511,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "类型",
+      "position": 521,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "如果你希望将字符串转换为",
+      "position": 524,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "对象",
+      "position": 542,
+      "file": "/home/simooo/work/sibook-reader/src/store/user.type.ts"
+    },
+    {
+      "text": "必须加上斜杠",
+      "position": 7287,
+      "file": "/home/simooo/work/sibook-reader/src/utils/backblaze.ts"
+    },
+    {
+      "text": "必选参数",
+      "position": 401,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "初始化时不会调用",
+      "position": 476,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "只有调用",
+      "position": 485,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "方法",
+      "position": 494,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "例如",
+      "position": 497,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "时才会进入",
+      "position": 514,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "异步获取临时密钥",
+      "position": 531,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "服务端",
+      "position": 551,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "和",
+      "position": 558,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "例子",
+      "position": 564,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "服务端其他语言参考",
+      "position": 642,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "详细文档指引看",
+      "position": 729,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "时间戳",
+      "position": 1201,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "单位秒",
+      "position": 1205,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "如",
+      "position": 1209,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "时间戳",
+      "position": 1277,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "单位秒",
+      "position": 1281,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "如",
+      "position": 1285,
+      "file": "/home/simooo/work/sibook-reader/src/utils/coClient.ts"
+    },
+    {
+      "text": "请传入图片",
+      "position": 471,
+      "file": "/home/simooo/work/sibook-reader/src/utils/imgToText.ts"
+    },
+    {
+      "text": "上传文件前",
+      "position": 1657,
+      "file": "/home/simooo/work/sibook-reader/src/utils/jsClient.ts"
+    },
+    {
+      "text": "请选择岛屿",
+      "position": 1663,
+      "file": "/home/simooo/work/sibook-reader/src/utils/jsClient.ts"
+    },
+    {
+      "text": "下面我让你来充当翻译家",
+      "position": 442,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "回答中只需要有翻译产物",
+      "position": 454,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "不要带有无关内容",
+      "position": 466,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "你的目标是把",
+      "position": 475,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "任意",
+      "position": 502,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "语言",
+      "position": 506,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "语言配置可能以",
+      "position": 509,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "风格的",
+      "position": 521,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "文件告诉你",
+      "position": 532,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "翻译成",
+      "position": 538,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "英语",
+      "position": 562,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "请使用亚里士多德古典主义式的",
+      "position": 567,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "禅院僧侣式的严谨学术态度进行翻译",
+      "position": 582,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "请翻译下面这句话",
+      "position": 599,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "这是一条测试消息",
+      "position": 630,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "当您看到该消息时",
+      "position": 639,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "说明翻译失败",
+      "position": 648,
+      "file": "/home/simooo/work/sibook-reader/src/utils/openai_params_generator.tsx"
+    },
+    {
+      "text": "支持字符串和",
+      "position": 132,
+      "file": "/home/simooo/work/sibook-reader/src/utils/sha256.ts"
+    },
+    {
+      "text": "将缓冲区转换为字节数组",
+      "position": 365,
+      "file": "/home/simooo/work/sibook-reader/src/utils/sha256.ts"
+    },
+    {
+      "text": "编码为",
+      "position": 149,
+      "file": "/home/simooo/work/sibook-reader/src/utils/sha515.ts"
+    },
+    {
+      "text": "计算消息的哈希值",
+      "position": 245,
+      "file": "/home/simooo/work/sibook-reader/src/utils/sha515.ts"
+    },
+    {
+      "text": "将缓冲区转换为字节数组",
+      "position": 319,
+      "file": "/home/simooo/work/sibook-reader/src/utils/sha515.ts"
+    },
+    {
+      "text": "将字节数组转换为十六进制字符串",
+      "position": 436,
+      "file": "/home/simooo/work/sibook-reader/src/utils/sha515.ts"
+    },
+    {
+      "text": "此处省略了部分数据",
+      "position": 1013,
+      "file": "/home/simooo/work/sibook-reader/src/utils/tesseractLanguages.ts"
+    },
+    {
+      "text": "以节省空间",
+      "position": 1023,
+      "file": "/home/simooo/work/sibook-reader/src/utils/tesseractLanguages.ts"
+    },
+    {
+      "text": "首页",
+      "position": 394,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useCacheBookTab.ts"
+    },
+    {
+      "text": "暂无获取到当前阅读进度",
+      "position": 343,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useReadingProgress.tsx"
+    },
+    {
+      "text": "暂无获取到当前阅读书籍",
+      "position": 426,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useReadingProgress.tsx"
+    },
+    {
+      "text": "暂无获取到当前阅读书籍",
+      "position": 1025,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useReadingProgress.tsx"
+    },
+    {
+      "text": "登录失败",
+      "position": 489,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useRefresh.tsx"
+    },
+    {
+      "text": "请选择模型",
+      "position": 864,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "请选择待翻译语言",
+      "position": 956,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "翻译内容不能为空",
+      "position": 1041,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "任意",
+      "position": 1206,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "中文",
+      "position": 1260,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "服务端异常",
+      "position": 1472,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "请检查",
+      "position": 1479,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "辅助设置是否正确",
+      "position": 1484,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useTranslate.tsx"
+    },
+    {
+      "text": "请传入文件",
+      "position": 1795,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "上传失败",
+      "position": 1881,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "请重试",
+      "position": 1886,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "传输列表",
+      "position": 2018,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "文件已存在",
+      "position": 2025,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "仅支持",
+      "position": 2168,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "与",
+      "position": 2176,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "书籍",
+      "position": 2183,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "请传入不大于",
+      "position": 2383,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    },
+    {
+      "text": "的书籍",
+      "position": 2418,
+      "file": "/home/simooo/work/sibook-reader/src/utils/useUpload.tsx"
+    }
+  ]
+}

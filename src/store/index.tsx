@@ -38,7 +38,7 @@ export interface BookStateType {
     profile?: User;
     profile_update?: (profile: User) => void;
     currentIsland: number;
-    currentIsland_update?: (currentIsland: number) => void;
+    currentIsland_update?: (currentIsland?: number) => void;
     tabs: HistoryTab;
     tabs_add: (tabs: HistoryTab) => void;
     tabs_remove: (key: string) => void;
@@ -118,8 +118,8 @@ export const useBookState = create<BookStateType>((set, get) => {
         }))}),
         profile: [],
         profile_update: (profile: User) => set({profile}),
-        currentIsland: Number(localStorage.getItem('currentIsland')),
-        currentIsland_update: (currentIsland: number) => set({currentIsland}),
+        currentIsland: Number(localStorage.getItem('currentIsland') ?? -1),
+        currentIsland_update: (currentIsland?: number) => set({currentIsland}),
         tabs: JSON.parse(localStorage.getItem('tabs') ?? '{"/":{"url":"/","label":"首页","closable":false}}') ?? {
             "/": {
                 url: '/',

@@ -187,7 +187,7 @@ export const Component = function Island() {
     const { runAsync: addUserToIsland, loading: addUserToIslandLoading, data: addUserToIslandData } = useRequest(async (memberId?: string) => {
         try {
             if (!memberId) {
-                throw Error('memberId不能为空')
+                throw Error(t('memberId 不能为空'))
             }
             await requestor({
                 url: '/island/addUserToIsland',
@@ -423,7 +423,7 @@ export const Component = function Island() {
                                 <div
                                     className={style.noFountMember}
                                 >
-                                    {searchUserLoading ? <Spin></Spin> : <Result title={t("没有找到用户")} icon={<Alert type="error" message="输入内容后搜索"></Alert>} status={"warning"} />}
+                                    {searchUserLoading ? <Spin></Spin> : <Result title={t("没有找到用户")} icon={<Alert type="error" message={t("输入内容后搜索")}></Alert>} status={"warning"} />}
                                 </div>}
                             onSearch={(v) => debouceSearch(v)}
                             placeholder={t('请选择')}
