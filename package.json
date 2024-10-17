@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "icon": "node icon.generator.js",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "fix": "eslint . --ext ts,tsx --fix",
     "preview": "vite preview",
@@ -39,6 +40,7 @@
     "epubjs": "^0.3.93",
     "fabric": "^6.4.3",
     "fast-xml-parser": "^4.3.6",
+    "favicons": "^7.2.0",
     "framer-motion": "^10.16.5",
     "google-auth-library": "^9.14.2",
     "html2canvas": "^1.4.1",
