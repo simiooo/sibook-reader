@@ -1,16 +1,28 @@
 import { Button, Col, Form, Input, Row, Space, Spin, message } from 'antd'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import style from './index.module.css'
 import { useRequest } from 'ahooks'
 import { requestor } from '../../utils/requestor'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useBookState } from '../../store'
+import { GoogleOutlined } from '@ant-design/icons'
+type GoogleOAuthResponse = {
+    authuser: string | null;
+    code: string;
+    prompt: string;
+    scope: string;
+};
+// import { GoogleAuth } from 'google-auth-library'
 
 export interface LoginType {
     code?: number;
     expire?: string;
     token?: string;
+}
+
+declare global {
+    let google: any
 }
 
 export const Component = function Login() {
@@ -24,6 +36,41 @@ export const Component = function Login() {
         })
 
         return URL.createObjectURL(res.data)
+    })
+
+    const { data: googleClient } = useRequest(async () => {
+
+        const client = google.accounts.oauth2.initCodeClient({
+            client_id: '51728316140-3cgt48unak6v5oaf93cgqeleardei2v5.apps.googleusercontent.com',
+            scope: 'email profile',
+            ux_mode: 'popup',
+            callback: (response: GoogleOAuthResponse) => {
+                // console.log(response)
+                loginWithGoogle(response)
+            },
+        });
+        return client
+    })
+    const { runAsync: loginWithGoogle, loading: loginWithGoogleLoading } = useRequest(async (data: GoogleOAuthResponse) => {
+        try {
+            const res = await requestor({
+                url: "/auth/googleAuth",
+                data
+            })
+            if (res.status !== 200) {
+
+                throw Error(t('登录失败'))
+            }
+            localStorage.setItem('authorization', JSON.stringify(res.data))
+            currentIsland_update(undefined)
+            localStorage.removeItem('currentIsland')
+            navigate('/')
+        } catch (error) {
+            message.error(t('登陆失败'))
+        }
+
+    }, {
+        manual: true
     })
     const navigate = useNavigate()
     const { t, i18n } = useTranslation()
@@ -138,6 +185,15 @@ export const Component = function Login() {
                                                         htmlType='submit'
                                                     >{t('登录')}</Button>
                                                     <Button
+                                                        loading={loginWithGoogleLoading}
+                                                        onClick={() => {
+                                                            googleClient.requestCode()
+                                                        }}
+                                                        icon={<GoogleOutlined />}
+                                                        type="primary"
+
+                                                    >{t('登录')}</Button>
+                                                    <Button
                                                         onClick={() => {
                                                             navigate('/register')
                                                         }}
@@ -147,6 +203,11 @@ export const Component = function Login() {
                                             </Form.Item>
                                         </div>
 
+                                    </Col>
+                                    <Col>
+                                        <Space>
+
+                                        </Space>
                                     </Col>
                                 </Form>
                             </Row>

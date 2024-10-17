@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as echarts from 'echarts'
-import { Button, Col, Form, Input, Modal, Row, message, Spin, Space, Select, SelectProps, Tag, Result, Avatar, Breadcrumb, Alert, Tooltip } from 'antd';
+import { Button, Col, Form, Input, Modal, Row, message, Spin, Space, Select, SelectProps, Tag, Result, Avatar, Breadcrumb, Alert, Tooltip, Descriptions, QRCode } from 'antd';
 import { motion } from 'framer-motion'
 import classNames from 'classnames';
 function OptionBuilder(data: [number, number, string, number][], activeId?: number) {
@@ -92,6 +92,7 @@ import { IslandMembers, UserSimply } from '../../store/user.type';
 import { HddOutlined, HomeOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import IslandIcon from '../../components/Icons/IslandIcon';
+import { useCreateShareCode } from '../../utils/island';
 const colors = ['#F9E79F', '#283593', '#196F3D']
 export const Component = function Island() {
     const navigate = useNavigate();
@@ -239,10 +240,13 @@ export const Component = function Island() {
         echarts_instance.current?.resize?.({})
     }, [size])
 
+    const { runAsync: createShareCode, loading: shareCodeLoading, modal: { modal: shareModal, modalHolder: hsareModalHolder } } = useCreateShareCode()
+
     return (
         <div
             ref={container_ref}
             className={classNames(style.container)}>
+            {hsareModalHolder}
             <Row>
                 <Col
                     span={24}
@@ -281,6 +285,18 @@ export const Component = function Island() {
                                     disabled={!currentIsland}
                                     onClick={() => setMemberOpen(true)}
                                 >{t('添加成员')}</Button>
+                                <Button
+                                    disabled={!currentIsland}
+                                    loading={shareCodeLoading}
+                                    onClick={async () => {
+                                        const code = await createShareCode({
+                                            islandId: currentIsland
+                                        })
+
+                                    }}
+                                >
+                                    {t('邀请成员')}
+                                </Button>
                             </Space>
                         </Col>
                     </Row>
@@ -299,8 +315,8 @@ export const Component = function Island() {
                     <Spin spinning={queryMembersLoading}>
                         {(members ?? []).length > 0
                             ? <Avatar.Group
-                            
-                                max={{count:7}}
+
+                                max={{ count: 7 }}
                             >
                                 {(members ?? []).map((el, index) => (
                                     <Tooltip
@@ -308,7 +324,7 @@ export const Component = function Island() {
                                         key={el.memberId + el.memberName}
                                     >
                                         <motion.div
-                                        
+
                                             initial={{
                                                 y: -6,
                                                 opacity: 0,

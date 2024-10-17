@@ -42,12 +42,14 @@ export const Component = function Bookshelf() {
         let thisCurrentIsland = currentIsland
         try {
             if (!thisCurrentIsland || thisCurrentIsland === -1) {
+                // console.log(thisCurrentIsland)
                 const islandId = await getLatestId()
                 if(islandId === -1) {
                     throw Error('请先选择岛屿')
                 }
                 thisCurrentIsland = islandId
             }
+            
             const current = isInit ? 1 : ((listInfo as any)?.current ?? 0) + 1
             const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
                 url: '/island/getBookListFromIsland',

@@ -11,7 +11,7 @@ const SCALE_LIMIT = 0.05
 export function usePagination(p: PaginationParams) {
     const paginationInit = useCallback(() =>{
         const cachePageNumber = Number(localStorage.getItem(`book_id:${p.book_id}`))
-        console.log(cachePageNumber)
+        // console.log(cachePageNumber)
         setPageNumber(Number.isNaN(cachePageNumber) ? 1 : Math.max(1, cachePageNumber))
         const init_scale = localStorage.getItem(`scale:${p.book_id}`) ?? 1
         setScale(Number.isNaN(Number(init_scale)) ? 1 : Number(init_scale))
@@ -22,7 +22,7 @@ export function usePagination(p: PaginationParams) {
 
     useEffect(() => {
         pageNumber
-        console.log(pageNumber)
+        // console.log(pageNumber)
         // debugger
       }, [pageNumber, previewPageNumber])
 

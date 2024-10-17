@@ -56,6 +56,9 @@ export const Component = function App() {
 
     const isUserOnline = useBookState(state => state.isUserOnline)
     const { data: userOnline, } = useRequest(async () => {
+        if(location.pathname === '/login') {
+            return
+        }
         return await isUserOnline()
     }, {
         refreshDeps: [
@@ -63,7 +66,7 @@ export const Component = function App() {
         ]
     })
     useAsyncEffect(async () => {
-        console.log(userOnline)
+        // console.log(userOnline)
         if (typeof userOnline === 'boolean' && !userOnline) {
             navigate('/login')
         }
@@ -72,7 +75,11 @@ export const Component = function App() {
     const { authorization, profile_update } = useBookState(state => state)
 
     useRequest(async () => {
+        // console.log(authorization)
         if (!authorization.token) {
+            return
+        }
+        if(location.pathname === '/login') {
             return
         }
         try {
@@ -91,6 +98,7 @@ export const Component = function App() {
     }, {
         refreshDeps: [
             authorization,
+            location,
         ]
     })
     const { state } = useNavigation()

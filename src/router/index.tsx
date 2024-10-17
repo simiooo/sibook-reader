@@ -3,7 +3,7 @@ import {
   RouteObject,
   createBrowserRouter,
 } from "react-router-dom";
-import { Result } from "antd";
+import { Button, Col, Result, Row } from "antd";
 const Bookshelf = () => (import("../pages/Bookshelf"));
 const Reader = () => import("../pages/Reader");
 const Index = () => import('../pages');
@@ -12,13 +12,29 @@ const Login = () => import("../pages/Login");
 const Island = () => import("../pages/Island");
 const Register = () => import("../pages/Register");
 const Profile = () => import("../pages/Profile");
-
+const IslandJoin = () => import("../pages/IslandJoin");
 
 export const router = createBrowserRouter([
   {
     path: '/',
     lazy: Index,
-    
+    errorElement: <Result status='error'>
+      <Row 
+      gutter={[24, 24]}
+      justify={'center'}
+      align={'middle'}
+      >
+        <Col>
+        <span>404 Page Not Found</span>
+        </Col>
+        <Col>
+        <Button
+        type="link"
+        href="/"
+        >Go back</Button>
+        </Col>
+      </Row>
+      </Result>,
     children: [
       {
         path: "/",
@@ -47,6 +63,10 @@ export const router = createBrowserRouter([
       {
         path: '/profile',
         lazy: Profile,
+      },
+      {
+        path: '/islandJoin',
+        lazy: IslandJoin
       }
     ]
   },

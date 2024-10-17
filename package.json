@@ -12,7 +12,7 @@
     "findZhChar": "tsx scripts/getAllChineseCharacters.ts"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.2.6",
+    "@ant-design/icons": "^5.5.1",
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/client-s3": "^3.645.0",
     "@aws-sdk/credential-providers": "^3.645.0",
@@ -39,6 +39,7 @@
     "epubjs": "^0.3.93",
     "fast-xml-parser": "^4.3.6",
     "framer-motion": "^10.16.5",
+    "google-auth-library": "^9.14.2",
     "html2canvas": "^1.4.1",
     "htmlparser2": "^9.1.0",
     "i18next": "^23.7.7",
