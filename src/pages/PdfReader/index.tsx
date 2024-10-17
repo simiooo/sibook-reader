@@ -1,5 +1,5 @@
-import { Alert, Button, Col, Form, Input, Menu, message, Modal, Popconfirm, Popover, Row, Select, Space, Spin, Tooltip } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import { Alert, Button, Col, Flex, Form, Input, Menu, message, Modal, Popconfirm, Popover, Radio, Row, Select, Space, Spin, Tooltip } from 'antd'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import styles from './index.module.css'
 import * as pdfjs from 'pdfjs-dist'
 import 'pdfjs-dist/web/pdf_viewer.css'
@@ -24,7 +24,7 @@ import { usePdfBook } from './usePdfBook'
 import { RenderTask } from 'pdfjs-dist';
 import { ImgToText } from '../../utils/imgToText'
 import { readFileAsArrayBuffer } from '../../dbs/createBook'
-import { CameraOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
+import { CameraOutlined, ClearOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
 import { tesseractLuanguages } from '../../utils/tesseractLanguages'
 import { createPortal } from 'react-dom'
 import { languages } from '../../utils/locale'
@@ -36,6 +36,11 @@ import { green } from '../../main'
 import { ItemType } from 'antd/es/menu/interface'
 import { useBookState } from '../../store'
 import { useLatestIsland } from '../../utils/useLatestIsland'
+import PdfEditor from '../../components/PdfEditor'
+import { COLOR_ENUM, COLOR_KEY } from '../../vars/color'
+import { motion } from 'framer-motion'
+
+
 const OVERSCAN = 4
 export const Component = function PdfReader() {
   const [book, pdfDocument, meta, loading, { book_id, contextHolder }] = usePdfBook()
@@ -45,9 +50,13 @@ export const Component = function PdfReader() {
   const [init, setInit] = useState<boolean>(false)
   const [pagination, setPagination] = useLocalStorageState<number>(`pagination:${book_id}`)
   const trashRef = useRef<HTMLDivElement>()
+  const [brushConf, setbrushConf] = useState<string>()
+  const brushColor = useMemo(() => {
+    return Object.keys(COLOR_ENUM).includes(brushConf) ? brushConf as any as COLOR_KEY : Object.keys(COLOR_ENUM)[0] as any as COLOR_KEY
+  }, [brushConf])
 
   const [messageIns, messageContextHolder] = message.useMessage()
-
+  // const editor = useCreateBlockNote();
   const [ocrTaskMap, { set, remove, reset }] = useMap<string, OcrTask>()
   const [selectedMenuKey, setSelectedMenuKey] = useState<string[]>();
   const [remoteProgress, setRemoteProgress] = useReadingProgress(book_id)
@@ -61,7 +70,7 @@ export const Component = function PdfReader() {
   const [isNewCommerTourOpen, setIsNewCommerTourOpen] = useLocalStorageState<boolean>(`userId:${profile}:bookId:${book_id}`, {
     defaultValue: true
   })
-  
+
 
   const [isRendering, setIsRendering] = useState<boolean>(false)
   const [ocrSelectOpen, setOcrSelectOpen] = useState(false)
@@ -91,7 +100,7 @@ export const Component = function PdfReader() {
 
 
   const [canvasScale, setCanvasScale] = useState(1)
-  const { handlePointerDown, handlePointerMove, linesMap, get: LinesGet, remove: linesRemove } = useAnnotation(book_id, canvasScale)
+  // const { handlePointerDown, handlePointerMove, linesMap, get: LinesGet, remove: linesRemove } = useAnnotation(book_id, canvasScale)
   const panzoomifyFactory = () => panzoomify(listRef.current, {
     beforeWheel: function (e) {
       const shouldIgnore = !(e.ctrlKey || e.metaKey);
@@ -241,8 +250,8 @@ export const Component = function PdfReader() {
       VlistRef.current.scrollToIndex((pagination ?? 0) - 1)
       setInit(true)
     }
-    
-    if(!init) {
+
+    if (!init) {
       return
     }
     if (isProgressInit || !(Number(remoteProgress) > 0) || Math.abs(Number(remoteProgress) - Number(pagination)) < 2) {
@@ -436,13 +445,79 @@ export const Component = function PdfReader() {
                           if (!isEditing) {
                             messageIns.success('在 pdf 文档上 长按鼠标左键后拖动 进行标记')
                           }
-
                         }}
                       >
-
                       </Button>
-                    </Tooltip>
 
+                    </Tooltip>
+                    {isEditing ? <motion.div
+                      initial={{
+                        opacity: 0,
+
+                        scale: 0.9
+                      }}
+                      animate={{
+                        opacity: 1,
+                        scale: 0.9
+                      }}
+                      transition={{
+                        originX: 0,
+                        originY: 0,
+                      }}
+                    >
+                      <Radio.Group
+                        defaultValue={Object.keys(COLOR_ENUM)[0]}
+                      // size="large"
+                      // buttonStyle="solid"
+                      value={brushConf}
+                      onChange={v => {
+                        setbrushConf(v?.target?.value)
+                      }}
+                      >
+                        {Object.entries(COLOR_ENUM).map(el => {
+                          const [key, value] = el
+                          return <Radio.Button
+
+                            key={key}
+                            value={key}>
+                            <Flex
+                              align='center'
+                              style={{
+                                height: '100%'
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: '1rem',
+                                  height: '1rem',
+                                  borderRadius: '.5rem',
+                                  background: `#${value['900']}`
+                                }}
+                              ></div>
+                            </Flex>
+
+                          </Radio.Button>
+                        })}
+                        <Radio.Button
+                          value={'eraser'}>
+                            <Flex
+                              align='center'
+                              style={{
+                                height: '100%'
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: '1rem',
+                                  height: '1.55rem',
+                                }}
+                              ><ClearOutlined 
+                              
+                              /></div>
+                            </Flex>
+                          </Radio.Button>
+                      </Radio.Group>
+                    </motion.div> : undefined}
                   </Space>
                   {
                     isNewCommerTourOpen ? <><Alert
@@ -655,10 +730,8 @@ export const Component = function PdfReader() {
                       >
 
                       </div>
-                      <svg
+                      <div
                         data-pageindex={index}
-                        onPointerDown={(e: any) => handlePointerDown(e as PointerEvent, index.toString())}
-                        onPointerMove={(e: any) => handlePointerMove(e as PointerEvent, index.toString())}
                         className={`annotationCusTom ${styles.annotationCusTom}`}
                         style={{
                           zIndex: 3,
@@ -670,10 +743,18 @@ export const Component = function PdfReader() {
                           pointerEvents: isEditing ? undefined : 'none'
                         }}
                       >
-                        {LinesGet(String(index)).map(line => (
-                          <path d={line}></path>
-                        ))}
-                      </svg>
+                        <PdfEditor
+                          id={`${book_id}/${index}`}
+                          color={brushColor}
+                          width={10}
+                          editable={true}
+                          isEraserEnable={brushConf === 'eraser'}
+                          style={{
+                            width: viewport.width,
+                            height: viewport.height,
+                          }}
+                        ></PdfEditor>
+                      </div>
                       <div
                         className={styles.toolbar}
                         style={{
@@ -730,7 +811,7 @@ export const Component = function PdfReader() {
                               }}
                             ></Button>}
                           </Tooltip>
-                          <Tooltip
+                          {/* <Tooltip
                             title="删除笔记"
                           >
                             <Popconfirm
@@ -752,7 +833,7 @@ export const Component = function PdfReader() {
                               ></Button>
                             </Popconfirm>
 
-                          </Tooltip>
+                          </Tooltip> */}
                         </Space>
                       </div>
                     </div>

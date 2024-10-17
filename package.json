@@ -37,6 +37,7 @@
     "echarts": "^5.4.3",
     "echarts-stat": "^1.2.0",
     "epubjs": "^0.3.93",
+    "fabric": "^6.4.3",
     "fast-xml-parser": "^4.3.6",
     "framer-motion": "^10.16.5",
     "google-auth-library": "^9.14.2",

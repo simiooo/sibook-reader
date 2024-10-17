@@ -19,8 +19,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // target: `https://squirrelso.top`,
-        target: "http://localhost:8080",
+        target: `https://squirrelso.top`,
+        // target: "http://localhost:8080",
         // rewrite: (path) => path.replace(/^\/api/, ""),
       },
     }
@@ -37,7 +37,7 @@ export default defineConfig({
         name: 'Si Reader',
         short_name: 'Si Reader',
         description: 'Si Reader application',
-        theme_color: '#50aa81',
+        theme_color: '#0d52bf',
         background_color: '#ffffff',
         icons: [
           {

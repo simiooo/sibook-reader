@@ -23,10 +23,16 @@ export interface BookBlob {
   blob?: Uint8Array;
   updatedAt?: string;
 }
+export interface PdfNote{
+  id?: string; /* pdf + pagination : pdf/pagiantion*/
+  createAt?: string;
+  content?: string;
+}
 
 export class BookClassedDexie extends Dexie {
   book_items!: Table<BookItems>;
   book_blob!: Table<BookBlob>;
+  pdf_notes!: Table<PdfNote>;
 
   constructor() {
     super("BookClassedDexie");
@@ -34,6 +40,12 @@ export class BookClassedDexie extends Dexie {
         book_items: "name, hash, fileType", 
         book_blob: "id", 
     });
+    
+    this.version(2).stores({
+      book_items: "name, hash, fileType", 
+        book_blob: "id", 
+        pdf_notes: "&id,content",
+    })
   }
 }
 

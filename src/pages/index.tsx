@@ -13,40 +13,45 @@ import { requestor } from '../utils/requestor'
 import { User } from '../store/user.type'
 import { useRefresh } from '../utils/useRefresh'
 
-export const ErrorBoundary = (props) => <div
+export const ErrorBoundary = (props) => {
+    
+    return <div
 
-    style={{
-        display: 'flex',
-        height: '90vh',
-        width: '100vw',
-        justifyContent: 'center',
-        alignItems: 'center',
-    }}
->
-    <Result
-        status={'error'}
-        title="错误，请联系开发者"
+        style={{
+            display: 'flex',
+            height: '90vh',
+            width: '100vw',
+            justifyContent: 'center',
+            alignItems: 'center',
+        }}
     >
-        <Row justify={'center'}>
-            <Col>
-            <Space>
-            <Button
-            onClick={() => {
-                location.reload()
-            }}
-            type='primary'
-            >重新加载</Button>
-        </Space>
-            </Col>
-        </Row>
-        
-    </Result>
-</div>
+        <Result
+            status={'error'}
+            title="错误，请联系开发者"
+        >
+            <Row
+                gutter={[24, 24]}
+                justify={'center'}>
+                <Col>
+                    <Space>
+                        <Button
+                            onClick={() => {
+                                location.reload()
+                            }}
+                            type='primary'
+                        >重新加载</Button>
+                    </Space>
+                </Col>
+            </Row>
+
+        </Result>
+    </div>
+}
 
 export const Component = function App() {
     const location = useLocation()
     const navigate = useNavigate()
-    const [refreshData, refresh, {loading: refreshLoading}] = useRefresh()
+    const [refreshData, refresh, { loading: refreshLoading }] = useRefresh()
     useEventListener('load', () => {
         refresh()
     })
@@ -56,7 +61,7 @@ export const Component = function App() {
 
     const isUserOnline = useBookState(state => state.isUserOnline)
     const { data: userOnline, } = useRequest(async () => {
-        if(location.pathname === '/login') {
+        if (location.pathname === '/login') {
             return
         }
         return await isUserOnline()
@@ -79,7 +84,7 @@ export const Component = function App() {
         if (!authorization.token) {
             return
         }
-        if(location.pathname === '/login') {
+        if (location.pathname === '/login') {
             return
         }
         try {
@@ -103,8 +108,8 @@ export const Component = function App() {
     })
     const { state } = useNavigation()
 
-    
-    
+
+
 
     return (
 

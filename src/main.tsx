@@ -12,6 +12,10 @@ import en from './translations/en.json'
 import ja from './translations/ja.json'
 import zh from './translations/zh.json'
 import Indicator from './components/Indicator'
+import * as Fabric from 'fabric'
+declare global {
+  export const fabric: typeof Fabric
+}
 
 inject()
 
@@ -31,7 +35,7 @@ i18n
     }
   });
 
-export const green = '#50aa81'
+export const green = '#0d52bf'
 
 Spin.setDefaultIndicator(<Indicator />)
 
