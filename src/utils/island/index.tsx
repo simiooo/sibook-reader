@@ -4,7 +4,7 @@ import { Button, Col, Descriptions, Divider, Modal, QRCode, Row } from "antd";
 import { useTranslation } from "react-i18next";
 import { useBookState } from "../../store";
 import { DependencyList } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export function useCreateShareCode() {
     const [shareModal, shareModalHolder] = Modal.useModal()
@@ -82,6 +82,7 @@ export function useCreateShareCode() {
 }
 
 export function useUserInvitedToIsland() {
+    const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams();
     const { runAsync: getIslandInfo, data: island, loading } = useRequest(async () => {
 
@@ -122,6 +123,7 @@ export function useUserInvitedToIsland() {
                     code: payload?.code
                 }
             })
+            navigate('/island')
             return res
         } catch (error) {
             return error
