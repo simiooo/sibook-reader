@@ -1,4 +1,4 @@
-import { Button, Col, Form, Input, Row, Space, Spin, message } from 'antd'
+import { Button, Col, ConfigProvider, Divider, Flex, Form, Input, Row, Space, Spin, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import style from './index.module.css'
 import { useRequest } from 'ahooks'
@@ -184,15 +184,7 @@ export const Component = function Login() {
                                                         type="primary"
                                                         htmlType='submit'
                                                     >{t('登录')}</Button>
-                                                    <Button
-                                                        loading={loginWithGoogleLoading}
-                                                        onClick={() => {
-                                                            googleClient.requestCode()
-                                                        }}
-                                                        icon={<GoogleOutlined />}
-                                                        type="primary"
 
-                                                    >{t('登录')}</Button>
                                                     <Button
                                                         onClick={() => {
                                                             navigate('/register')
@@ -204,10 +196,45 @@ export const Component = function Login() {
                                         </div>
 
                                     </Col>
-                                    <Col>
-                                        <Space>
+                                    <Divider></Divider>
+                                    <Col
+                                        span={24}
+                                    >
+                                        <ConfigProvider
+                                            theme={{
+                                                token: {
+                                                    borderRadius: 24,
 
-                                        </Space>
+                                                },
+                                                components: {
+                                                    Button: {
+                                                        paddingBlock: 18,
+                                                        paddingInline: 44,
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <Flex
+                                            justify='center'
+                                            >
+                                                <Space
+                                                    direction='vertical'
+
+                                                >
+                                                    <Button
+                                                        loading={loginWithGoogleLoading}
+                                                        onClick={() => {
+                                                            googleClient.requestCode()
+                                                        }}
+                                                        icon={<GoogleOutlined />}
+                                                    // type="primary"
+
+                                                    >{t('登录')}</Button>
+                                                </Space>
+                                            </Flex>
+
+                                        </ConfigProvider>
+
                                     </Col>
                                 </Form>
                             </Row>
