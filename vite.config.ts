@@ -34,9 +34,9 @@ export default defineConfig({
         globIgnores: ["**\/node_modules\/**\/*", 'index.html'],
       },
       manifest: {
-        name: 'Si Reader',
-        short_name: 'Si Reader',
-        description: 'Si Reader application',
+        name: 'Squirrel Reader',
+        short_name: 'Squirrel',
+        description: 'Squirrel Reader application in cloud',
         theme_color: '#0d52bf',
         background_color: '#ffffff',
         icons: [
