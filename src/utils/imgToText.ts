@@ -1,6 +1,7 @@
 import { createWorker } from 'tesseract.js'
 // import * as htmlparser2 from "htmlparser2";
 import workerUrl from 'tesseract.js/dist/worker.min.js?url'
+import { requestor } from './requestor';
 function base64ToBytes(base64) {
     const binString = atob(base64);
     return Uint8Array.from(binString, (m) => m.codePointAt(0));
@@ -43,4 +44,10 @@ export async function ImgToText(data?: string | Uint8Array, languages?: string[]
     root.innerHTML = res.data.hocr
     dom.appendChild(root)
     return dom
+}
+
+export async function imageToTextByRemote(image: string) {
+    return requestor.post("/ai/ocr", {
+        image
+    })    
 }

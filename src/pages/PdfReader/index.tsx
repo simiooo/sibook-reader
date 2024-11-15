@@ -1,5 +1,6 @@
 import { Alert, Button, Col, Flex, Form, Input, Menu, message, Modal, Popconfirm, Popover, Radio, Row, Select, Space, Spin, Tooltip } from 'antd'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
+import { render } from 'react-dom';
 import styles from './index.module.css'
 import * as pdfjs from 'pdfjs-dist'
 import 'pdfjs-dist/web/pdf_viewer.css'
@@ -14,7 +15,7 @@ export const ANIMATION_STATIC = {
 }
 type OcrTask = Partial<{
   status: 'error' | "done" | "loading" | 'hidden';
-  fragment: DocumentFragment | Element;
+  fragment: ReactElement;
   error: Error;
 }>
 type ElementType<T> = T extends (infer U)[] ? U : T;
@@ -22,8 +23,8 @@ type OutlineType = ElementType<Awaited<ReturnType<pdfjs.PDFDocumentProxy["getOut
 
 import { usePdfBook } from './usePdfBook'
 import { RenderTask } from 'pdfjs-dist';
-import { ImgToText } from '../../utils/imgToText'
-import { readFileAsArrayBuffer } from '../../dbs/createBook'
+import { imageToTextByRemote, ImgToText } from '../../utils/imgToText'
+import { readFileAsArrayBuffer, readFileAsBase64 } from '../../dbs/createBook'
 import { CameraOutlined, ClearOutlined, CloseOutlined, DeleteOutlined, EditOutlined, FontColorsOutlined, RedoOutlined, TranslationOutlined } from '@ant-design/icons'
 import { tesseractLuanguages } from '../../utils/tesseractLanguages'
 import { createPortal } from 'react-dom'
@@ -135,61 +136,43 @@ export const Component = function PdfReader() {
     if (ocrContaienr.innerHTML.length > 0) {
       return
     }
-    ocrContaienr.append(cache?.fragment)
+    render(cache?.fragment,ocrContaienr)
     return
   }
 
 
   // ocr 文字识别层
-  const ocrTextLayerBuilder = (canvas: HTMLCanvasElement, index: number) => {
-    canvas.toBlob(async (blob) => {
-      const containeDom = document.querySelector(`[data-ocrpageindex="${index}"]`)
-      const res = await ImgToText(await readFileAsArrayBuffer(new File([blob], index + '.png'),), form.getFieldValue('ocr'))
-      if (trashRef.current) {
-        trashRef.current.innerHTML = ''
-        trashRef.current.append(res)
-      }
-      traversalDom(trashRef.current?.children?.[0], (dom) => {
-        if (dom instanceof DocumentFragment) {
-          return
-        }
-        const ocrAttr = (dom as any)?.attributes?.title?.value?.split(';')?.map(el => {
-          const splitIndex = Math.max(0, el?.indexOf(' '))
-          return [el?.slice?.(0, splitIndex), el?.slice?.(splitIndex)?.trim?.()]
-        }
-        ).filter(el => el?.[0] && el?.[1])
-        const result = Object.fromEntries(ocrAttr ?? [])
-        const factor = window.devicePixelRatio * canvasScale
-        if (result?.bbox && dom.className === 'ocr_line' && 'style' in dom) {
-          const [left, top, right, bottom] = result?.bbox?.split(' ') ?? []
-          dom.style.position = `absolute`
-          dom.style.left = `${Number(left) / factor}px`
-          dom.style.top = `${Number(top) / factor}px`
-          const height = bottom - top
-          // const width = right - left
-          // const domWidth = dom.getBoundingClientRect().width
-          // dom.style.letterSpacing = `${(width - domWidth) / (dom?.innerText ?? '').length / factor}px`
-          dom.style.fontSize = `${height / factor}px`
-
-        } else if (result?.bbox && dom.className.indexOf('word') > -1 && 'style' in dom) {
-          const [left, top, right, bottom] = result?.bbox?.split(' ') ?? []
-          const height = bottom - top
-          const width = right - left
-          const domWidth = dom.getBoundingClientRect().width
-          dom.style.letterSpacing = `${(width - domWidth) / (dom?.innerText ?? '').length / factor}px`
-          dom.style.fontSize = `${height / factor}px`
-          dom.style.color = 'transparent'
-          dom.style.transformOrigin = 'center'
-        }
-        if (result?.rotate && 'style' in dom) {
-          dom.style.transform = `rotate(${result?.rotate})`
-        }
-
-      })
+  const ocrTextLayerBuilder = async (canvas: HTMLCanvasElement, index: number) => {
+    const text = canvas.toDataURL("image/png")
+    const _res = (await imageToTextByRemote(encodeURIComponent(text.slice(22))))?.data?.data
+    console.log(_res)
+    const containeDom = document.querySelector<HTMLDivElement>(`[data-ocrpageindex="${index}"]`)
+    if (_res?.words_result instanceof Array) {
+      const rcnode = <div
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+      }}
+      >
+        {_res.words_result.map((el,index) => (<>
+          <span
+          key={index}
+            style={{
+              position: 'absolute',
+              color: 'transparent',
+              left: el?.location?.left / canvasScale / window.devicePixelRatio,
+              top: el?.location?.top / canvasScale / window.devicePixelRatio,
+              fontSize: el?.location?.height / canvasScale / window.devicePixelRatio,
+            }}
+          >{el?.words}</span>
+        </>))}
+      </div>
+      render(rcnode,containeDom)
       const languagesSetting = JSON.stringify(form.getFieldValue('ocr') ?? [])
-      set(index + languagesSetting, { status: 'done', fragment: trashRef.current?.children?.[0].cloneNode(true) as Element })
-      containeDom.append(trashRef.current?.children?.[0].cloneNode(true))
-    })
+      set(index + languagesSetting, { status: 'done', fragment: rcnode})
+    }
+    return
   }
 
 
@@ -467,12 +450,12 @@ export const Component = function PdfReader() {
                     >
                       <Radio.Group
                         defaultValue={Object.keys(COLOR_ENUM)[0]}
-                      // size="large"
-                      // buttonStyle="solid"
-                      value={brushConf}
-                      onChange={v => {
-                        setbrushConf(v?.target?.value)
-                      }}
+                        // size="large"
+                        // buttonStyle="solid"
+                        value={brushConf}
+                        onChange={v => {
+                          setbrushConf(v?.target?.value)
+                        }}
                       >
                         {Object.entries(COLOR_ENUM).map(el => {
                           const [key, value] = el
@@ -500,22 +483,22 @@ export const Component = function PdfReader() {
                         })}
                         <Radio.Button
                           value={'eraser'}>
-                            <Flex
-                              align='center'
+                          <Flex
+                            align='center'
+                            style={{
+                              height: '100%'
+                            }}
+                          >
+                            <div
                               style={{
-                                height: '100%'
+                                width: '1rem',
+                                height: '1.55rem',
                               }}
-                            >
-                              <div
-                                style={{
-                                  width: '1rem',
-                                  height: '1.55rem',
-                                }}
-                              ><ClearOutlined 
-                              
+                            ><ClearOutlined
+
                               /></div>
-                            </Flex>
-                          </Radio.Button>
+                          </Flex>
+                        </Radio.Button>
                       </Radio.Group>
                     </motion.div> : undefined}
                   </Space>
@@ -807,7 +790,7 @@ export const Component = function PdfReader() {
                                 const cache = ocrTaskMap.get(index + languagesSetting)
                                 cache.status = 'hidden'
                                 set(index + languagesSetting, cache)
-                                listRef.current.querySelector(`[data-ocrpageindex="${index}"]`).innerHTML = ''
+                                render(<></>,listRef.current.querySelector(`[data-ocrpageindex="${index}"]`))
                               }}
                             ></Button>}
                           </Tooltip>
