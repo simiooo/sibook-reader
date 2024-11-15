@@ -145,7 +145,6 @@ export const Component = function PdfReader() {
   const ocrTextLayerBuilder = async (canvas: HTMLCanvasElement, index: number) => {
     const text = canvas.toDataURL("image/png")
     const _res = (await imageToTextByRemote(encodeURIComponent(text.slice(22))))?.data?.data
-    console.log(_res)
     const containeDom = document.querySelector<HTMLDivElement>(`[data-ocrpageindex="${index}"]`)
     if (_res?.words_result instanceof Array) {
       const rcnode = <div
@@ -165,7 +164,7 @@ export const Component = function PdfReader() {
               top: el?.location?.top / canvasScale / window.devicePixelRatio,
               fontSize: el?.location?.height / canvasScale / window.devicePixelRatio,
             }}
-          >{el?.words}</span>
+          >{el?.words + " "}</span>
         </>))}
       </div>
       render(rcnode,containeDom)
