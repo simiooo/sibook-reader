@@ -228,7 +228,6 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                                         className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
                                         onDoubleClick={() => openDebouncedHandler(ele)}
                                         onTouchEnd={() => openDebouncedHandler(ele)}
-
                                     >
                                         <Card.Meta
                                             title={
@@ -254,9 +253,7 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                                                     </Col>
                                                 </Row>
                                             }
-                                        >
-
-                                        </Card.Meta>
+                                        />
                                         {/* <Divider>
 
                                         </Divider>
