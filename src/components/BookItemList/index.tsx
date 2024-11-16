@@ -193,12 +193,12 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                             // console.log(ele.cover)
                             let url = ele.cover ? URL.createObjectURL(new Blob([ele.cover])) : undefined
                             return <Col
-                                span={6}
-                                sm={12}
+                                span={4}
+                                sm={8}
                                 xs={24}
-                                md={8}
-                                xl={6}
-                                xxl={6}
+                                md={6}
+                                xl={4}
+                                xxl={4}
                                 key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
                             >
 
@@ -219,10 +219,10 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                                         cover={<img
                                             style={{
                                                 maxHeight: 600,
-                                                objectFit: 'cover',                                                
+                                                objectFit: 'cover',
                                                 objectPosition: '50% 0%'
                                             }}
-                                            src={url}
+                                            src={url ?? '/pdf_default_cover.png'}
                                         ></img>}
                                         data-hash={ele?.objectId}
                                         className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
@@ -231,21 +231,33 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
 
                                     >
                                         <Card.Meta
+                                            title={
+                                                <Row gutter={[6, 6]} wrap={false}>
+                                                    <Col flex={'1 1'}>
 
-                                            avatar={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
-                                            title={<Tooltip
-                                            >
-                                                <Tooltip
-                                                    title={title ?? ele?.objectName}
-                                                >
-                                                    {title ?? ele?.objectName}
-                                                </Tooltip>
+                                                        <Tooltip
+                                                            title={title ?? ele?.objectName}
+                                                        >
+                                                            <div
+                                                                style={{
+                                                                    textOverflow: 'ellipsis',
+                                                                    overflow: 'hidden'
+                                                                }}
+                                                            >
+                                                                {title ?? ele?.objectName}
+                                                            </div>
 
-                                            </Tooltip>}
+                                                        </Tooltip>
+                                                    </Col>
+                                                    <Col>
+                                                        <Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>
+                                                    </Col>
+                                                </Row>
+                                            }
                                         >
 
                                         </Card.Meta>
-                                        <Divider>
+                                        {/* <Divider>
 
                                         </Divider>
                                         <div
@@ -256,8 +268,8 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                                         }}
                                         >
                                         {des ?? ele?.objectName}
-                                        </div>
-                                        
+                                        </div> */}
+
                                     </Card>
                                 </motion.div>
 
