@@ -26,6 +26,7 @@ import { Book } from '../../store/book.type';
 import LeftMenu from '../../components/LeftMenu';
 import dayjs from 'dayjs';
 import { useLatestIsland } from '../../utils/useLatestIsland';
+import { db } from '../../dbs/db';
 
 
 export const Component = function Bookshelf() {
@@ -44,12 +45,12 @@ export const Component = function Bookshelf() {
             if (!thisCurrentIsland || thisCurrentIsland === -1) {
                 // console.log(thisCurrentIsland)
                 const islandId = await getLatestId()
-                if(islandId === -1) {
+                if (islandId === -1) {
                     throw Error('请先选择岛屿')
                 }
                 thisCurrentIsland = islandId
             }
-            
+
             const current = isInit ? 1 : ((listInfo as any)?.current ?? 0) + 1
             const res = await requestor<{ data?: { total?: number, rows: Book[] } }>({
                 url: '/island/getBookListFromIsland',
@@ -66,12 +67,12 @@ export const Component = function Bookshelf() {
             return isInit ? {
                 total: res?.data?.data?.total,
                 current,
-                list: (res.data?.data?.rows ?? []).map(el => listInfo?.list?.some(pre => (pre?.objectId && pre?.objectId === el.objectId)) ? ({...el, animationStatus: 'visible'}) : ({...el, animationStatus: 'added'}) )
+                list: await Promise.all((res.data?.data?.rows ?? []).map(async el => listInfo?.list?.some(pre => (pre?.objectId && pre?.objectId === el.objectId)) ? ({ ...el, animationStatus: 'visible', cover: (await db.book_blob.get(el?.objectId))?.coverBlob }) : ({ ...el, animationStatus: 'added', cover: (await db.book_blob.get(el?.objectId))?.coverBlob })))
             } as const
                 : {
                     current,
                     total: res?.data?.data?.total,
-                    list: [...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? []).map(el => ({...el, animationStatus: 'added'}))]
+                    list: await Promise.all([...(listInfo?.list ?? []), ...(res.data?.data?.rows ?? []).map(async el => ({ ...el, animationStatus: 'added', cover: (await db.book_blob.get(el?.objectId))?.coverBlob }))])
                 } as const
         } catch (error) {
             message.error(error?.response?.data?.message ?? error?.message)

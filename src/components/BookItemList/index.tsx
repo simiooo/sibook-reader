@@ -1,4 +1,4 @@
-import { Alert, Button, Col, Dropdown, Modal, Result, Spin, message } from 'antd'
+import { Alert, Button, Col, Divider, Dropdown, Modal, Result, Spin, message } from 'antd'
 import { Card } from 'antd'
 import { Row } from 'antd'
 import Selecto from "react-selecto";
@@ -50,7 +50,7 @@ const cardAnimation = {
 }
 
 interface BookItemListProps {
-    data?: (Book & {animationStatus: 'added' | 'visible'})[]
+    data?: (Book & { animationStatus: 'added' | 'visible' })[]
     selected?: Set<string | undefined>;
     onAdd?: (key?: string) => void;
     onRemove?: (key?: string) => void;
@@ -190,6 +190,8 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                         (renderList ?? []).map((ele, index) => {
                             let title
                             let des
+                            // console.log(ele.cover)
+                            let url = ele.cover ? URL.createObjectURL(new Blob([ele.cover])) : undefined
                             return <Col
                                 span={6}
                                 sm={12}
@@ -214,22 +216,49 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                                     variants={cardAnimation}
                                 >
                                     <Card
-                                        cover={<img></img>}
+                                        cover={<img
+                                            style={{
+                                                maxHeight: 600,
+                                                objectFit: 'cover',                                                
+                                                objectPosition: '50% 0%'
+                                            }}
+                                            src={url}
+                                        ></img>}
                                         data-hash={ele?.objectId}
-                                        extra={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
                                         className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
                                         onDoubleClick={() => openDebouncedHandler(ele)}
                                         onTouchEnd={() => openDebouncedHandler(ele)}
-                                        title={<Tooltip
-                                        >
-                                            <Tooltip
-                                                title={title ?? ele?.objectName}
-                                            >
-                                                {title ?? ele?.objectName}
-                                            </Tooltip>
 
-                                        </Tooltip>}
-                                    >{des ?? ele?.objectName}</Card>
+                                    >
+                                        <Card.Meta
+
+                                            avatar={<Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>}
+                                            title={<Tooltip
+                                            >
+                                                <Tooltip
+                                                    title={title ?? ele?.objectName}
+                                                >
+                                                    {title ?? ele?.objectName}
+                                                </Tooltip>
+
+                                            </Tooltip>}
+                                        >
+
+                                        </Card.Meta>
+                                        <Divider>
+
+                                        </Divider>
+                                        <div
+                                        style={{
+                                            whiteSpace: 'break-spaces',
+                                            width: '100%',
+                                            wordBreak: 'break-all'
+                                        }}
+                                        >
+                                        {des ?? ele?.objectName}
+                                        </div>
+                                        
+                                    </Card>
                                 </motion.div>
 
                             </Col>

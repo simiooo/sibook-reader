@@ -40,6 +40,7 @@ import { useLatestIsland } from '../../utils/useLatestIsland'
 import PdfEditor from '../../components/PdfEditor'
 import { COLOR_ENUM, COLOR_KEY } from '../../vars/color'
 import { motion } from 'framer-motion'
+import { db } from '../../dbs/db';
 
 
 const OVERSCAN = 4
@@ -308,6 +309,7 @@ export const Component = function PdfReader() {
         viewport,
         canvasContext: ctx
       })
+      
       renderTaskQueue.push(task.promise)
       task.promise.then(() => {
         if (!cachePageImageMap.current.has(i)) {
@@ -317,6 +319,16 @@ export const Component = function PdfReader() {
             offCtx.drawImage(await createImageBitmap(data), 0, 0, canvas.width, canvas.height)
             cachePageImageMap.current.set(i, offscreenCanvas)
           }, 'image/png', 1)
+        }
+      }).finally(() => {
+        if(page.pageNumber === 1) {
+          // 用于书架页面，封面显示
+          canvas.toBlob(async (blob) => {
+            const cover = await readFileAsArrayBuffer(new File([blob], book_id + 'cover'))
+            db.book_blob.update(book_id, {
+              coverBlob: cover
+            })
+          })
         }
       })
       pdfjs.renderTextLayer({

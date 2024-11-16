@@ -9,4 +9,5 @@ export type Book = Partial<{
     thumbnailUrl: string;
     islandId: string;
     ownerId: string;
+    cover?: Uint8Array;
 }>
