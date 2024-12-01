@@ -11,7 +11,6 @@ export type PdfEditorProps = {
     id: string;
     style?: React.CSSProperties;
 }
-// console.log(fabric)
 
 export default function PdfEditor(props: PdfEditorProps) {
     const [_fabric, setFabric] = useState<Fabric.Canvas>()

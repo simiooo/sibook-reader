@@ -23,21 +23,7 @@ export default function LeftMenu() {
 
   const [modal, modalContext] = useModal()
 
-  const {runAsync: logout, loading: logouting} = useRequest(async () => {
-    try {
-      const res = await requestor({
-        url: "/auth/logout",
-        method : 'get'
-      })
-      localStorage.removeItem('authorization')
-      navigate('/login')
-    } catch (error) {
-      
-    }
-   
-  }, {
-    manual: true
-  })
+  
 
   useEffect(() => {
     if (hover) {
@@ -123,52 +109,11 @@ export default function LeftMenu() {
             key: 'language',
             icon: <TranslationOutlined />
           },
-          {
-            label: <Popover
-            // trigger={'click'}
-            zIndex={1}
-            placement='bottomRight'
-              content={<div>
-                <Space
-                  direction='vertical'
-                >
-                  <Button
-                  danger
-                  type="link"
-                  loading={logouting}
-                  onClick={() => {
-                    logout()
-                  }}
-                  >注销</Button>
-                  <Button
-                  type="text"
-                  onClick={() => {
-                    navigate('/Profile')
-                  }}
-                  >个人中心</Button>
-                  {/* <Divider
-                    type="vertical"
-                  ></Divider> */}
-                  {/* <div></div> */}
-                </Space>
-
-              </div>}
-            >
-              <Avatar
-                size={'small'}
-                style={{
-                  background: '#3498DB',
-                  color: '#fff',
-                  fontSize: '0.75rem',
-                  transform: 'translateX(-.25rem)'
-                }}
-              >
-                {profile?.nickname?.[0] ?? t('我')}
-              </Avatar>
-            </Popover>,
-            title: profile?.nickname ?? t('我'),
-            key: 'profile'
-          }
+          // {
+          //   label: ,
+          //   title: profile?.nickname ?? t('我'),
+          //   key: 'profile'
+          // }
         ]}
       ></Menu>
       <motion.div

@@ -38,7 +38,9 @@ export const Component = function Login() {
         return URL.createObjectURL(res.data)
     })
 
-    const { data: googleClient } = useRequest(async () => {
+    const [isGoogleInit, setIsGoogleInit] = useState<boolean>()
+
+    const { data: googleClient, runAsync: googleInitHandler } = useRequest(async () => {
 
         const client = google.accounts.oauth2.initCodeClient({
             client_id: '51728316140-3cgt48unak6v5oaf93cgqeleardei2v5.apps.googleusercontent.com',
@@ -50,6 +52,9 @@ export const Component = function Login() {
             },
         });
         return client
+    }, {
+        manual: true,
+        
     })
     const { runAsync: loginWithGoogle, loading: loginWithGoogleLoading } = useRequest(async (data: GoogleOAuthResponse) => {
         try {
@@ -73,6 +78,7 @@ export const Component = function Login() {
         manual: true
     })
     const navigate = useNavigate()
+
     const { t, i18n } = useTranslation()
     const { loading, runAsync } = useRequest(async (params: any) => {
         try {
@@ -100,6 +106,28 @@ export const Component = function Login() {
         debounceWait: 1000,
         debounceLeading: true,
     })
+
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.className = "googleSdkScriptForSibook"
+        script.onload = () => {
+            console.log('------- Google Inited --------');
+            googleInitHandler();
+            setIsGoogleInit(true);
+        };
+        script.onerror = () => {
+            console.log('err');
+        };
+        document.body.appendChild(script);
+
+        // Cleanup function to remove the script when the component unmounts
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, [])
 
 
 
@@ -215,13 +243,14 @@ export const Component = function Login() {
                                             }}
                                         >
                                             <Flex
-                                            justify='center'
+                                                justify='center'
                                             >
                                                 <Space
                                                     direction='vertical'
 
                                                 >
                                                     <Button
+                                                        disabled={!isGoogleInit}
                                                         loading={loginWithGoogleLoading}
                                                         onClick={() => {
                                                             googleClient.requestCode()
