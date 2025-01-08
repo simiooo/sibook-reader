@@ -44,7 +44,6 @@ export const BookItem = ({ book, index, selected, onDoubleClick }: BookItemProps
 
                     const pdf = await PDFJS.getDocument(blob.blob).promise;
                     const metadata = await pdf.getMetadata();
-                    console.log(pdf)
                     setMetadata({
                         title: (metadata.info as any).Title || book.objectName || '',
                         author: (metadata.info as any).Author || ''
@@ -105,7 +104,9 @@ export const BookItem = ({ book, index, selected, onDoubleClick }: BookItemProps
                     <div
                     style={{height: '.8rem'}}
                     ></div>
-                    <Tag>{metadata.author}</Tag>
+                    {metadata.author && <Tag
+                    
+                    >{metadata.author}</Tag>}
 
                 </Card>
             </motion.div>
