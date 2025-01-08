@@ -25,6 +25,7 @@ import { readFileAsArrayBuffer } from '../../dbs/createBook';
 import { LoadingOutlined } from '@ant-design/icons';
 import { backblazeIns } from '../../utils/backblaze';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { BookItem } from './BookItem';
 
 export const tagMap = {
     'application/pdf': {
@@ -187,93 +188,15 @@ const BookItemList = forwardRef(function (p: BookItemListProps, ref: any) {
                 >
                     {/* <AnimatePresence> */}
                     {
-                        (renderList ?? []).map((ele, index) => {
-                            let title
-                            let des
-                            // console.log(ele.cover)
-                            let url = ele.cover ? URL.createObjectURL(new Blob([ele.cover])) : undefined
-                            return <Col
-                                span={4}
-                                sm={8}
-                                xs={24}
-                                md={6}
-                                xl={4}
-                                xxl={4}
+                        (renderList ?? []).map((ele, index) => (
+                            <BookItem
                                 key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
-                            >
-
-                                <motion.div
-                                    key={`${(ele?.objectId ?? ele?.objectName ?? index)}${index}`}
-                                    style={{
-                                        height: '100%',
-                                        width: '100%',
-                                        minHeight: '16rem',
-                                        originX: 0,
-                                        originY: 0
-                                    }}
-                                    initial={ele?.animationStatus === 'added' ? 'initial' : false}
-                                    animate={'visible'}
-                                    variants={cardAnimation}
-                                >
-                                    <Card
-                                        cover={<img
-                                            style={{
-                                                maxHeight: 600,
-                                                objectFit: 'cover',
-                                                objectPosition: '50% 0%'
-                                            }}
-                                            src={url ?? '/pdf_default_cover.png'}
-                                        ></img>}
-                                        data-hash={ele?.objectId}
-                                        className={`book_item ${p.selected?.has?.(ele?.objectId) && style.book_item_active}`}
-                                        onDoubleClick={() => openDebouncedHandler(ele)}
-                                        onTouchEnd={() => openDebouncedHandler(ele)}
-                                    >
-                                        <Card.Meta
-                                            title={
-                                                <Row gutter={[6, 6]} wrap={false}>
-                                                    <Col flex={'1 1'}>
-
-                                                        <Tooltip
-                                                            title={title ?? ele?.objectName}
-                                                        >
-                                                            <div
-                                                                style={{
-                                                                    textOverflow: 'ellipsis',
-                                                                    overflow: 'hidden'
-                                                                }}
-                                                            >
-                                                                {title ?? ele?.objectName}
-                                                            </div>
-
-                                                        </Tooltip>
-                                                    </Col>
-                                                    <Col>
-                                                        <Tag color={tagMap[ele?.objectType]?.color}>{tagMap[ele?.objectType]?.type}</Tag>
-                                                    </Col>
-                                                </Row>
-                                            }
-                                        />
-                                        {/* <Divider>
-
-                                        </Divider>
-                                        <div
-                                        style={{
-                                            whiteSpace: 'break-spaces',
-                                            width: '100%',
-                                            wordBreak: 'break-all'
-                                        }}
-                                        >
-                                        {des ?? ele?.objectName}
-                                        </div> */}
-
-                                    </Card>
-                                </motion.div>
-
-                            </Col>
-
-
-                        })
+                                book={ele}
+                                index={index}
+                                selected={p.selected?.has?.(ele?.objectId)}
+                                onDoubleClick={() => openDebouncedHandler(ele)}
+                            />
+                        ))
                     }
                     {/* </AnimatePresence> */}
                     {p?.loading && <LoadingOutlined style={{ fontSize: '24px' }} />}

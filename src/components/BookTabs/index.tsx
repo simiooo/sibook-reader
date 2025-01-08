@@ -51,6 +51,9 @@ export default function BookTabs(p: BookTabsProp) {
     }, [tabs])
     return (
         <Row 
+        style={{
+            width: '100%'
+        }}
         align={'middle'}
         wrap={false}>
             <Col flex={'1 1'}>
