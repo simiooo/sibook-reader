@@ -30,10 +30,16 @@ export interface PdfNote {
   content?: string;
 }
 
+export interface PdfPageImageCache {
+  id: string;
+  blob: Blob;
+}
+
 export class BookClassedDexie extends Dexie {
   book_items!: Table<BookItems>;
   book_blob!: Table<BookBlob>;
   pdf_notes!: Table<PdfNote>;
+  pdf_page_image_cache!: Table<PdfPageImageCache>
 
   constructor() {
     super("BookClassedDexie");
@@ -52,6 +58,13 @@ export class BookClassedDexie extends Dexie {
       book_items: "name, hash, fileType",
       book_blob: "id",
       pdf_notes: "&id,content",
+    })
+
+    this.version(4).stores({
+      book_items: "name, hash, fileType",
+      book_blob: "id",
+      pdf_notes: "&id,content",
+      pdf_page_image_cache: "id",
     })
   }
 }

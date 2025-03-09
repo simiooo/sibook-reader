@@ -1,0 +1,33 @@
+.pageContainer {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
+  background: transparent;
+}
+.pageDivider {
+  height: 12px;
+}
+.canvasContainer {
+  box-shadow: 0 0 4px 2px #e2e2e2;
+  border-radius: 3px;
+  overflow: hidden;
+  &:focus {
+    border: 1px solid #222;
+  }
+}
+.canvasSubContainer {
+  box-shadow: 0 0 4px 2px #e2e2e2;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.textLayerContainer {
+  position: relative;
+}
+.ocrLayer {
+}
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
