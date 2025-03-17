@@ -31,30 +31,30 @@ export default function Page(props: PageProps) {
   const [ocrCache, setOcrCache] = useState<OcrTask>({ status: "hidden" });
   const canvasRef = useRef<HTMLCanvasElement>();
   const canvasSubRef = useRef<HTMLCanvasElement>();
-  const db = useBookState((state) => state.db_instance);
+  // const db = useBookState((state) => state.db_instance);
   const isDprSet = useRef<boolean>(false);
   const textLayerRef = useRef<HTMLDivElement>();
   const [canvasCache, setCanvasCache] = useState<OffscreenCanvas>();
   useEffect(() => {
-    db.pdf_page_image_cache
-      .get({ id: `${props?.bookId}/${props?.pageIndex}` })
-      .then(async (res) => {
-        const data = await createImageBitmap(res.blob)
-        const offscreenCanvas = new OffscreenCanvas(
-          props?.size?.width,
-          props?.size?.height
-        );
-        const offCtx = offscreenCanvas.getContext("2d");
-        offCtx.drawImage(
-          data,
-          0,
-          0,
-          props?.size?.width,
-          props?.size?.height
-        );
-        setCanvasCache(offscreenCanvas);
-      })
-      .catch((err) => {});
+    // db.pdf_page_image_cache
+    //   .get({ id: `${props?.bookId}/${props?.pageIndex}` })
+    //   .then(async (res) => {
+    //     const data = await createImageBitmap(res.blob)
+    //     const offscreenCanvas = new OffscreenCanvas(
+    //       props?.size?.width,
+    //       props?.size?.height
+    //     );
+    //     const offCtx = offscreenCanvas.getContext("2d");
+    //     offCtx.drawImage(
+    //       data,
+    //       0,
+    //       0,
+    //       props?.size?.width,
+    //       props?.size?.height
+    //     );
+    //     setCanvasCache(offscreenCanvas);
+    //   })
+    //   .catch((err) => {});
   }, []);
   const viewport = props?.page.getViewport({
     scale: 1,
@@ -152,10 +152,10 @@ export default function Page(props: PageProps) {
             if (!canvasCache) {
               canvas.toBlob(
                 async (data) => {
-                  db.pdf_page_image_cache.put(
-                    { id: `${props?.bookId}/${props?.pageIndex}`, blob: data },
-                    `${props?.bookId}/${props?.pageIndex}`
-                  );
+                  // db.pdf_page_image_cache.put(
+                  //   { id: `${props?.bookId}/${props?.pageIndex}`, blob: data },
+                  //   `${props?.bookId}/${props?.pageIndex}`
+                  // );
                 },
                 "image/png",
                 1
