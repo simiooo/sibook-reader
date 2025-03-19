@@ -26,7 +26,9 @@ import { useRequest, useThrottleFn } from "ahooks";
 import { OcrTask } from "../../../pages/PdfReader";
 import { imageToTextByRemote } from "../../../utils/imgToText";
 import { useBookState } from "../../../store";
+import { usePDFCache } from "../PDFCacheProvider";
 export default function Page(props: PageProps) {
+  const { canvasCache, updateCache } = usePDFCache();
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [ocrCache, setOcrCache] = useState<OcrTask>({ status: "hidden" });
   const canvasRef = useRef<HTMLCanvasElement>();
@@ -34,7 +36,7 @@ export default function Page(props: PageProps) {
   // const db = useBookState((state) => state.db_instance);
   const isDprSet = useRef<boolean>(false);
   const textLayerRef = useRef<HTMLDivElement>();
-  const [canvasCache, setCanvasCache] = useState<OffscreenCanvas>();
+  const cacheKey = `${props?.bookId}-${props?.pageIndex}`;
   useEffect(() => {
     // db.pdf_page_image_cache
     //   .get({ id: `${props?.bookId}/${props?.pageIndex}` })
@@ -128,12 +130,15 @@ export default function Page(props: PageProps) {
         return;
       }
 
+      // 先绘制缓存
+      const cachedCanvas = canvasCache.get(cacheKey);
+      if (cachedCanvas) {
+        ctx.drawImage(cachedCanvas, 0, 0, canvas.width, canvas.height);
+      }
+
       // 取消相同引用未完成的渲染任务
       if (pdfJsrenderTask?.renderTask) {
         pdfJsrenderTask?.renderTask?.cancel?.();
-      }
-      if (canvasCache) {
-        subCtx.drawImage(canvasCache, 0, 0, canvasSub.width, canvasSub.height);
       }
       ctx.reset();
       ctx.scale(dpr, dpr); // 不能让dpr去缩放canvas多次,但又必须在恰当的时机重新缩放
@@ -149,18 +154,11 @@ export default function Page(props: PageProps) {
       renderTaskQueue.push(
         promiseTask
           .then(() => {
-            if (!canvasCache) {
-              canvas.toBlob(
-                async (data) => {
-                  // db.pdf_page_image_cache.put(
-                  //   { id: `${props?.bookId}/${props?.pageIndex}`, blob: data },
-                  //   `${props?.bookId}/${props?.pageIndex}`
-                  // );
-                },
-                "image/png",
-                1
-              );
-            }
+            // 更新缓存
+            const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
+            const offCtx = offscreenCanvas.getContext("2d");
+            offCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+            canvasCache.set(cacheKey, offscreenCanvas)
           })
           .finally(() => {})
       );

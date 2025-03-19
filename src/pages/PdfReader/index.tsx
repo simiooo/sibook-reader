@@ -8,8 +8,6 @@ import {
   Menu,
   message,
   Modal,
-  Popconfirm,
-  Popover,
   Radio,
   Row,
   Select,
@@ -32,8 +30,6 @@ import {
   useMap,
   useRequest,
   useSize,
-  useTextSelection,
-  useThrottle,
   useThrottleFn,
 } from "ahooks";
 export const ANIMATION_STATIC = {
@@ -53,34 +49,19 @@ type OutlineType = ElementType<
 
 import { usePdfBook } from "./usePdfBook";
 import { RenderTask } from "pdfjs-dist";
-import { imageToTextByRemote, ImgToText } from "../../utils/imgToText";
-import { readFileAsArrayBuffer, readFileAsBase64 } from "../../dbs/createBook";
-import {
-  CameraOutlined,
-  ClearOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  FontColorsOutlined,
-  RedoOutlined,
-  TranslationOutlined,
-} from "@ant-design/icons";
+import { imageToTextByRemote } from "../../utils/imgToText";
+import { readFileAsArrayBuffer } from "../../dbs/createBook";
+import { CameraOutlined, ClearOutlined, EditOutlined } from "@ant-design/icons";
 import { tesseractLuanguages } from "../../utils/tesseractLanguages";
-import { createPortal } from "react-dom";
-import { languages } from "../../utils/locale";
-import { useTranslate } from "../../utils/useTranslate";
 import TranslatePortal from "../../components/TranslatePortal";
 import { useReadingProgress } from "../../utils/useReadingProgress";
-import { useAnnotation } from "../../utils/useAnnotation";
-import { green } from "../../main";
 import { ItemType } from "antd/es/menu/interface";
 import { useBookState } from "../../store";
-import { useLatestIsland } from "../../utils/useLatestIsland";
-import PdfEditor from "../../components/PdfEditor";
 import { COLOR_ENUM, COLOR_KEY } from "../../vars/color";
 import { motion } from "framer-motion";
 import { db } from "../../dbs/db";
 import Page from "../../components/PDFComponents/Page";
+import { PDFCacheProvider } from "../../components/PDFComponents/PDFCacheProvider";
 
 const OVERSCAN = 4;
 export const Component = function PdfReader() {
@@ -481,305 +462,313 @@ export const Component = function PdfReader() {
   );
 
   return (
-    <Spin
-      spinning={Object?.values(loading ?? {})?.some?.((loading) => loading)}
-    >
-      <div key={1}>{progressHolder}</div>
-      <div key={2}>{messageContextHolder}</div>
-      {contextHolder}
-      <div className={styles.container}>
-        <Row wrap={false}>
-          <Col flex={`0 1 ${dividerLeft}px`}>
-            <div className={styles.menuContainer}>
-              <Menu
-                items={pdfToMenuItemHandler(meta?.outline as any)}
-                onSelect={async (v) => {
-                  const keyInfo = JSON.parse(v.key);
-                  if (keyInfo?.value && keyInfo?.value instanceof Object) {
-                    const key = keyInfo.value;
-                    const destRef = key;
-                    const pageRef = destRef.find((el) => el?.num);
-                    const page = pages.find(
-                      (el) =>
-                        JSON.stringify(el.ref) ===
-                        JSON.stringify(pageRef ?? "{}")
-                    );
-                    form.setFieldValue(["page"], page.pageNumber);
-                    VlistRef.current.scrollToIndex(page.pageNumber - 1);
-                  } else if (
-                    keyInfo?.value &&
-                    typeof keyInfo.value === "string"
-                  ) {
-                    const des = await pdfDocument.getDestination(
-                      keyInfo?.value
-                    );
-                    const pageNumber = await pdfDocument.getPageIndex(des?.[0]);
-                    form.setFieldValue(["page"], pageNumber);
-                    VlistRef.current.scrollToIndex(pageNumber - 1);
-                  }
-                  setSelectedMenuKey(v.keyPath ?? []);
-                }}
-                selectedKeys={selectedMenuKey}
-              ></Menu>
-            </div>
-          </Col>
-          <Col flex={"0 1"}>
-            <div ref={dividerRef} className={styles.viewDrag}></div>
-          </Col>
-          <Col flex={"1 0"}>
-            <div className={styles.reader}>
-              <div className={styles.tips}>
-                <Space direction="vertical">
-                  <Space>
-                    <Tooltip
-                      placement="rightBottom"
-                      title={`是否编辑(当前状态：${isEditing ? "是" : "否"})`}
-                    >
-                      <Button
-                        type={isEditing ? "primary" : "default"}
-                        icon={<EditOutlined />}
-                        // type={'primary'}
-                        onClick={() => {
-                          setIsEditing(!isEditing);
-                          if (!isEditing) {
-                            messageIns.success(
-                              "在 pdf 文档上 长按鼠标左键后拖动 进行标记"
-                            );
-                          }
-                        }}
-                      ></Button>
-                    </Tooltip>
-                    {isEditing ? (
-                      <motion.div
-                        initial={{
-                          opacity: 0,
-
-                          scale: 0.9,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          scale: 0.9,
-                        }}
-                        transition={{
-                          originX: 0,
-                          originY: 0,
-                        }}
+    <PDFCacheProvider>
+      <Spin
+        spinning={Object?.values(loading ?? {})?.some?.((loading) => loading)}
+      >
+        <div key={1}>{progressHolder}</div>
+        <div key={2}>{messageContextHolder}</div>
+        {contextHolder}
+        <div className={styles.container}>
+          <Row wrap={false}>
+            <Col flex={`0 1 ${dividerLeft}px`}>
+              <div className={styles.menuContainer}>
+                <Menu
+                  items={pdfToMenuItemHandler(meta?.outline as any)}
+                  onSelect={async (v) => {
+                    const keyInfo = JSON.parse(v.key);
+                    if (keyInfo?.value && keyInfo?.value instanceof Object) {
+                      const key = keyInfo.value;
+                      const destRef = key;
+                      const pageRef = destRef.find((el) => el?.num);
+                      const page = pages.find(
+                        (el) =>
+                          JSON.stringify(el.ref) ===
+                          JSON.stringify(pageRef ?? "{}")
+                      );
+                      form.setFieldValue(["page"], page.pageNumber);
+                      VlistRef.current.scrollToIndex(page.pageNumber - 1);
+                    } else if (
+                      keyInfo?.value &&
+                      typeof keyInfo.value === "string"
+                    ) {
+                      const des = await pdfDocument.getDestination(
+                        keyInfo?.value
+                      );
+                      const pageNumber = await pdfDocument.getPageIndex(
+                        des?.[0]
+                      );
+                      form.setFieldValue(["page"], pageNumber);
+                      VlistRef.current.scrollToIndex(pageNumber - 1);
+                    }
+                    setSelectedMenuKey(v.keyPath ?? []);
+                  }}
+                  selectedKeys={selectedMenuKey}
+                ></Menu>
+              </div>
+            </Col>
+            <Col flex={"0 1"}>
+              <div ref={dividerRef} className={styles.viewDrag}></div>
+            </Col>
+            <Col flex={"1 0"}>
+              <div className={styles.reader}>
+                <div className={styles.tips}>
+                  <Space direction="vertical">
+                    <Space>
+                      <Tooltip
+                        placement="rightBottom"
+                        title={`是否编辑(当前状态：${isEditing ? "是" : "否"})`}
                       >
-                        <Radio.Group
-                          defaultValue={Object.keys(COLOR_ENUM)[0]}
-                          // size="large"
-                          // buttonStyle="solid"
-                          value={brushConf}
-                          onChange={(v) => {
-                            setbrushConf(v?.target?.value);
+                        <Button
+                          type={isEditing ? "primary" : "default"}
+                          icon={<EditOutlined />}
+                          // type={'primary'}
+                          onClick={() => {
+                            setIsEditing(!isEditing);
+                            if (!isEditing) {
+                              messageIns.success(
+                                "在 pdf 文档上 长按鼠标左键后拖动 进行标记"
+                              );
+                            }
+                          }}
+                        ></Button>
+                      </Tooltip>
+                      {isEditing ? (
+                        <motion.div
+                          initial={{
+                            opacity: 0,
+
+                            scale: 0.9,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            scale: 0.9,
+                          }}
+                          transition={{
+                            originX: 0,
+                            originY: 0,
                           }}
                         >
-                          {Object.entries(COLOR_ENUM).map((el) => {
-                            const [key, value] = el;
-                            return (
-                              <Radio.Button key={key} value={key}>
-                                <Flex
-                                  align="center"
-                                  style={{
-                                    height: "100%",
-                                  }}
-                                >
-                                  <div
+                          <Radio.Group
+                            defaultValue={Object.keys(COLOR_ENUM)[0]}
+                            // size="large"
+                            // buttonStyle="solid"
+                            value={brushConf}
+                            onChange={(v) => {
+                              setbrushConf(v?.target?.value);
+                            }}
+                          >
+                            {Object.entries(COLOR_ENUM).map((el) => {
+                              const [key, value] = el;
+                              return (
+                                <Radio.Button key={key} value={key}>
+                                  <Flex
+                                    align="center"
                                     style={{
-                                      width: "1rem",
-                                      height: "1rem",
-                                      borderRadius: ".5rem",
-                                      background: `#${value["900"]}`,
+                                      height: "100%",
                                     }}
-                                  ></div>
-                                </Flex>
-                              </Radio.Button>
-                            );
-                          })}
-                          <Radio.Button value={"eraser"}>
-                            <Flex
-                              align="center"
-                              style={{
-                                height: "100%",
-                              }}
-                            >
-                              <div
+                                  >
+                                    <div
+                                      style={{
+                                        width: "1rem",
+                                        height: "1rem",
+                                        borderRadius: ".5rem",
+                                        background: `#${value["900"]}`,
+                                      }}
+                                    ></div>
+                                  </Flex>
+                                </Radio.Button>
+                              );
+                            })}
+                            <Radio.Button value={"eraser"}>
+                              <Flex
+                                align="center"
                                 style={{
-                                  width: "1rem",
-                                  height: "1.55rem",
+                                  height: "100%",
                                 }}
                               >
-                                <ClearOutlined />
-                              </div>
-                            </Flex>
-                          </Radio.Button>
-                        </Radio.Group>
-                      </motion.div>
-                    ) : undefined}
-                  </Space>
-                  {isNewCommerTourOpen ? (
-                    <>
-                      <Alert
-                        closable
-                        type="warning"
-                        onClose={() => {
-                          setIsNewCommerTourOpen(false);
-                        }}
-                        message={"按住 Ctrl 时，滑动鼠标滚轮可缩放文档"}
-                      ></Alert>
-                      <Alert
-                        closable
-                        type="warning"
-                        onClose={() => {
-                          setIsNewCommerTourOpen(false);
-                        }}
-                        message={"按住 Ctrl 时，鼠标左键可拖动文档位置"}
-                      ></Alert>
-                    </>
-                  ) : null}
-                </Space>
-              </div>
-              <div
-                className={styles.reader_tooltip}
-                style={{
-                  right: !ocrSelectOpen ? "3.6rem" : "13.85rem",
-                }}
-              >
-                <div className={styles.page}>
-                  {/* 阅读器控制区 */}
-                  <Form
-                    form={form}
-                    initialValues={{
-                      page: 1,
-                      ocr: ["chi_sim", "jpn", "eng"],
-                    }}
-                    onValuesChange={(v) => {
-                      if (v?.page && init) {
-                        VlistRef.current.scrollToIndex(v.page);
-                      }
-                    }}
-                  >
-                    <Space align="start">
-                      <Form.Item
-                        name="page"
-                        normalize={(v?: string) => {
-                          const text = v?.replaceAll(/[^\d]/g, "") || "1";
-                          return Math.max(
-                            1,
-                            Math.min(meta.numPages as number, Number(text))
-                          );
-                        }}
-                      >
-                        <Input
-                          style={{
-                            minWidth: "6rem",
-                          }}
-                          suffix={
-                            <span>/ {(meta?.numPages ?? 0) as number}</span>
-                          }
-                        ></Input>
-                      </Form.Item>
-                      <Tooltip title={"更改 OCR 语言"} placement="bottom">
-                        {ocrSelectOpen ? (
-                          <Space align="start">
-                            <Form.Item name={"ocr"}>
-                              <Select
-                                style={{ minWidth: "9rem" }}
-                                options={tesseractLuanguages.map((el) => ({
-                                  label: el.Language,
-                                  value: el["Lang Code"],
-                                }))}
-                                // maxTagCount={2}
-                                mode="multiple"
-                                showSearch
-                                filterOption={(value, option) => {
-                                  return (
-                                    JSON.stringify(option ?? {}).indexOf(
-                                      value
-                                    ) > -1
-                                  );
-                                }}
-                              ></Select>
-                            </Form.Item>
-                            <Button
-                              type="primary"
-                              onClick={() => {
-                                setOcrSelectOpen(false);
-                              }}
-                              icon={<CameraOutlined />}
-                            ></Button>
-                          </Space>
-                        ) : (
-                          <div>
-                            <Form.Item hidden name={"ocr"}>
-                              <input type="text" />
-                            </Form.Item>
-                            <Button
-                              onClick={() => {
-                                setOcrSelectOpen(true);
-                              }}
-                              icon={<CameraOutlined />}
-                            ></Button>
-                          </div>
-                        )}
-                      </Tooltip>
+                                <div
+                                  style={{
+                                    width: "1rem",
+                                    height: "1.55rem",
+                                  }}
+                                >
+                                  <ClearOutlined />
+                                </div>
+                              </Flex>
+                            </Radio.Button>
+                          </Radio.Group>
+                        </motion.div>
+                      ) : undefined}
                     </Space>
-                  </Form>
+                    {isNewCommerTourOpen ? (
+                      <>
+                        <Alert
+                          closable
+                          type="warning"
+                          onClose={() => {
+                            setIsNewCommerTourOpen(false);
+                          }}
+                          message={"按住 Ctrl 时，滑动鼠标滚轮可缩放文档"}
+                        ></Alert>
+                        <Alert
+                          closable
+                          type="warning"
+                          onClose={() => {
+                            setIsNewCommerTourOpen(false);
+                          }}
+                          message={"按住 Ctrl 时，鼠标左键可拖动文档位置"}
+                        ></Alert>
+                      </>
+                    ) : null}
+                  </Space>
                 </div>
-              </div>
-
-              <div
-                ref={listRef}
-                style={{
-                  height: "100%",
-                  width: `${maxWidthViewPort + 186}px`,
-                }}
-              >
-                <VList
-                  ref={VlistRef}
-                  count={pages?.length ?? 0}
+                <div
+                  className={styles.reader_tooltip}
                   style={{
-                    height: "100%",
-                    width: `100%`,
-                  }}
-                  overscan={OVERSCAN}
-                  onRangeChange={(startIndex, endIndex) => {
-                    // setIsRendering(true);
-                    // // 该方法在缩放时不被调用，需要让它被调用；
-                    // pdfPageRenderHandler(startIndex, endIndex, pages, {
-                    //   canvasScale,
-                    //   pageIndicator: startIndex + 1,
-                    // });
+                    right: !ocrSelectOpen ? "3.6rem" : "13.85rem",
                   }}
                 >
-                  {(pages ?? []).map((page, index) => {
-                    return (
-                      <Page
-                        page={page}
-                        languagesSetting={[]}
-                        pageIndex={index}
-                        canvasScale={canvasScale}
-                        brushColor={brushColor}
-                        isEditing={isEditing}
-                        brushConf={brushConf}
-                        size={size}
-                        bookId={book_id}
-                      ></Page>
-                    );
-                  })}
-                </VList>
+                  <div className={styles.page}>
+                    {/* 阅读器控制区 */}
+                    <Form
+                      form={form}
+                      initialValues={{
+                        page: 1,
+                        ocr: ["chi_sim", "jpn", "eng"],
+                      }}
+                      onValuesChange={(v) => {
+                        if (v?.page && init) {
+                          VlistRef.current.scrollToIndex(v.page);
+                        }
+                      }}
+                    >
+                      <Space align="start">
+                        <Form.Item
+                          name="page"
+                          normalize={(v?: string) => {
+                            const text = v?.replaceAll(/[^\d]/g, "") || "1";
+                            return Math.max(
+                              1,
+                              Math.min(meta.numPages as number, Number(text))
+                            );
+                          }}
+                        >
+                          <Input
+                            style={{
+                              minWidth: "6rem",
+                            }}
+                            suffix={
+                              <span>/ {(meta?.numPages ?? 0) as number}</span>
+                            }
+                          ></Input>
+                        </Form.Item>
+                        <Tooltip title={"更改 OCR 语言"} placement="bottom">
+                          {ocrSelectOpen ? (
+                            <Space align="start">
+                              <Form.Item name={"ocr"}>
+                                <Select
+                                  style={{ minWidth: "9rem" }}
+                                  options={tesseractLuanguages.map((el) => ({
+                                    label: el.Language,
+                                    value: el["Lang Code"],
+                                  }))}
+                                  // maxTagCount={2}
+                                  mode="multiple"
+                                  showSearch
+                                  filterOption={(value, option) => {
+                                    return (
+                                      JSON.stringify(option ?? {}).indexOf(
+                                        value
+                                      ) > -1
+                                    );
+                                  }}
+                                ></Select>
+                              </Form.Item>
+                              <Button
+                                type="primary"
+                                onClick={() => {
+                                  setOcrSelectOpen(false);
+                                }}
+                                icon={<CameraOutlined />}
+                              ></Button>
+                            </Space>
+                          ) : (
+                            <div>
+                              <Form.Item hidden name={"ocr"}>
+                                <input type="text" />
+                              </Form.Item>
+                              <Button
+                                onClick={() => {
+                                  setOcrSelectOpen(true);
+                                }}
+                                icon={<CameraOutlined />}
+                              ></Button>
+                            </div>
+                          )}
+                        </Tooltip>
+                      </Space>
+                    </Form>
+                  </div>
+                </div>
+
+                <div
+                  ref={listRef}
+                  style={{
+                    height: "100%",
+                    width: `${maxWidthViewPort + 186}px`,
+                  }}
+                >
+                  <VList
+                    ref={VlistRef}
+                    count={pages?.length ?? 0}
+                    style={{
+                      height: "100%",
+                      width: `100%`,
+                    }}
+                    overscan={OVERSCAN}
+                    onRangeChange={(startIndex, endIndex) => {
+                      // setIsRendering(true);
+                      // // 该方法在缩放时不被调用，需要让它被调用；
+                      // pdfPageRenderHandler(startIndex, endIndex, pages, {
+                      //   canvasScale,
+                      //   pageIndicator: startIndex + 1,
+                      // });
+                    }}
+                  >
+                    {(pages ?? []).map((page, index) => {
+                      return (
+                        <Page
+                          page={page}
+                          languagesSetting={[]}
+                          pageIndex={index}
+                          canvasScale={canvasScale}
+                          brushColor={brushColor}
+                          isEditing={isEditing}
+                          brushConf={brushConf}
+                          size={size}
+                          bookId={book_id}
+                        ></Page>
+                      );
+                    })}
+                  </VList>
+                </div>
               </div>
-            </div>
-          </Col>
-        </Row>
-      </div>
-      <TranslatePortal></TranslatePortal>
-      <div
-        ref={trashRef}
-        style={{ position: "absolute", top: 0, transform: `translateY(-100%)` }}
-        className="trash"
-      ></div>
-    </Spin>
+            </Col>
+          </Row>
+        </div>
+        <TranslatePortal></TranslatePortal>
+        <div
+          ref={trashRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            transform: `translateY(-100%)`,
+          }}
+          className="trash"
+        ></div>
+      </Spin>
+    </PDFCacheProvider>
   );
 };
 
