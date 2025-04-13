@@ -158,7 +158,7 @@ export default function Page(props: PageProps) {
             const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
             const offCtx = offscreenCanvas.getContext("2d");
             offCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
-            canvasCache.set(cacheKey, offscreenCanvas)
+            // canvasCache.set(cacheKey, offscreenCanvas)
           })
           .finally(() => {})
       );
