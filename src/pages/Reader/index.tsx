@@ -283,7 +283,7 @@ export const Component = function Reader() {
 
   return (
     <Spin spinning={bookLoading}>
-      <FloatAiMenu
+      {/* <FloatAiMenu
         copiedText={copiedText}
         translator={{
           value: translatorOpen,
@@ -293,7 +293,7 @@ export const Component = function Reader() {
           value: explainerOpen,
           onCancel: setExplainerOpen
         }}
-      ></FloatAiMenu>
+      ></FloatAiMenu> */}
 
       {error
         ? <Row
