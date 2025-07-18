@@ -16,7 +16,6 @@ import {
   Tooltip,
 } from "antd";
 import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import { render } from "react-dom";
 import styles from "./index.module.css";
 import * as pdfjs from "pdfjs-dist";
 import "pdfjs-dist/web/pdf_viewer.css";
@@ -49,8 +48,6 @@ type OutlineType = ElementType<
 
 import { usePdfBook } from "./usePdfBook";
 import { RenderTask } from "pdfjs-dist";
-import { imageToTextByRemote } from "../../utils/imgToText";
-import { readFileAsArrayBuffer } from "../../dbs/createBook";
 import { CameraOutlined, ClearOutlined, EditOutlined } from "@ant-design/icons";
 import { tesseractLuanguages } from "../../utils/tesseractLanguages";
 import TranslatePortal from "../../components/TranslatePortal";
@@ -59,7 +56,6 @@ import { ItemType } from "antd/es/menu/interface";
 import { useBookState } from "../../store";
 import { COLOR_ENUM, COLOR_KEY } from "../../vars/color";
 import { motion } from "framer-motion";
-import { db } from "../../dbs/db";
 import Page from "../../components/PDFComponents/Page";
 import { PDFCacheProvider } from "../../components/PDFComponents/PDFCacheProvider";
 
@@ -153,68 +149,6 @@ export const Component = function PdfReader() {
       wait: 200,
     }
   );
-
-  const getCacheOcrFragment = (index: number, cache: OcrTask) => {
-    const ocrContaienr = document.querySelector(
-      `[data-ocrpageindex="${index}"]`
-    );
-    if (ocrContaienr.innerHTML.length > 0) {
-      return;
-    }
-    render(cache?.fragment, ocrContaienr);
-    return;
-  };
-
-  // ocr 文字识别层
-  const ocrTextLayerBuilder = async (
-    canvas: HTMLCanvasElement,
-    index: number
-  ) => {
-    const text = canvas.toDataURL("image/png");
-    const _res = (await imageToTextByRemote(encodeURIComponent(text.slice(22))))
-      ?.data?.data;
-    const containeDom = document.querySelector<HTMLDivElement>(
-      `[data-ocrpageindex="${index}"]`
-    );
-    if (_res?.words_result instanceof Array) {
-      const rcnode = (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            position: "relative",
-          }}
-        >
-          {_res.words_result.map((el, index) => (
-            <>
-              <span
-                key={index}
-                style={{
-                  position: "absolute",
-                  color: "transparent",
-                  left:
-                    el?.location?.left / canvasScale / window.devicePixelRatio,
-                  top:
-                    el?.location?.top / canvasScale / window.devicePixelRatio,
-                  fontSize:
-                    el?.location?.height /
-                    canvasScale /
-                    window.devicePixelRatio,
-                }}
-              >
-                {el?.words + " "}
-              </span>
-            </>
-          ))}
-        </div>
-      );
-      render(rcnode, containeDom);
-      const languagesSetting = JSON.stringify(form.getFieldValue("ocr") ?? []);
-      set(index + languagesSetting, { status: "done", fragment: rcnode });
-    }
-    return;
-  };
-
   useEffect(() => {
     if (!zoomInstance) {
       return;
@@ -576,7 +510,7 @@ export const Component = function PdfReader() {
                     }}
                     overscan={OVERSCAN}
                     onRangeChange={(startIndex, endIndex) => {
-                        form.setFieldValue(["page"], startIndex ?? 0);
+                        form.setFieldValue(["page"], (startIndex ?? 0) + 1);
                     }}
                   >
                     {(pages ?? []).map((page, index) => {
