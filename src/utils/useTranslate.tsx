@@ -2,6 +2,7 @@ import { message } from "antd"
 import { useRequest } from "ahooks"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { LoginType } from "../pages/Login"
 
 export function useTranslate(content: string, params: {
     target?: string,
@@ -42,10 +43,12 @@ export function useTranslate(content: string, params: {
             }
 
             // Create SSE request
+            const token = JSON.parse(localStorage.getItem('authorization') ?? "{}") as LoginType
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${token.token}`
                 },
                 body: JSON.stringify(requestBody)
             })
