@@ -33,7 +33,7 @@ export function useTranslate(content: string, params: {
             
             // Construct the request URL
             const baseUrl = import.meta.env.VITE_API_URL || location.origin
-            const url = `${baseUrl}/api/translate`
+            const url = `${baseUrl}/api/ai/translate`
             
             // Prepare request body
             const requestBody = {
