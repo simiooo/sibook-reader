@@ -73,7 +73,8 @@ export function useTranslate(content: string, params: {
                     isReading = false
                     break
                 }
-
+                
+                
                 buffer += decoder.decode(value, { stream: true })
                 const lines = buffer.split('\n')
                 buffer = lines.pop() || ''
@@ -82,20 +83,21 @@ export function useTranslate(content: string, params: {
                 let currentData = ''
 
                 for (const line of lines) {
-                    if (line.startsWith('event: ')) {
-                        currentEvent = line.slice(7)
-                    } else if (line.startsWith('data: ')) {
-                        currentData = line.slice(6)
+                    
+                    if (line.startsWith('event:')) {
+                        currentEvent = line.slice(6).trim()
+                    } else if (line.startsWith('data:')) {
+                        currentData = line.slice(5).trim()
                         
                         try {
                             const data = JSON.parse(currentData)
-                            
                             if (currentEvent === 'start') {
                                 // Handle start event - can be used for metadata
                                 console.log('Translation started:', data)
                             } else if (currentEvent === 'chunk') {
                                 // Handle chunk event - actual translation content
                                 const chunk = data?.content || ''
+                                
                                 if (chunk) {
                                     output.push(chunk)
                                     setOutput([...output])
