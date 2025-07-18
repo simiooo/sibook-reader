@@ -576,7 +576,7 @@ export const Component = function PdfReader() {
                     }}
                     overscan={OVERSCAN}
                     onRangeChange={(startIndex, endIndex) => {
-                        form.setFieldValue(["page"], pagination ?? 0);
+                        form.setFieldValue(["page"], startIndex ?? 0);
                     }}
                   >
                     {(pages ?? []).map((page, index) => {
