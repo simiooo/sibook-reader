@@ -141,11 +141,6 @@ export const Component = function PdfReader() {
     });
   useEffect(() => {
     listRef.current.style.setProperty("--scale-factor", String(1));
-    pdfPageRenderHandler(0, (pages ?? []).length ?? 0, pages, {
-      canvasScale,
-      clearDpr: true,
-      cacheRerenderDisable: true,
-    });
   }, [canvasScale]);
 
   const { run: canvasScaleHandler } = useDebounceFn(
@@ -313,153 +308,6 @@ export const Component = function PdfReader() {
   }, [pages, remoteProgress]);
 
   const size = useSize(listRef);
-
-  // pdf 渲染处理
-  const { run: pdfPageRenderHandler } = useThrottleFn(
-    async (
-      startIndex: number,
-      endIndex: number,
-      pages: pdfjs.PDFPageProxy[],
-      options?: {
-        pageIndicator?: number;
-        canvasScale?: number;
-        clearDpr?: boolean;
-        cacheRerenderDisable?: boolean;
-      }
-    ) => {
-      // 该方法在缩放时不被调用，需要让它被调用；
-      const start = Math.max(pagination - OVERSCAN / 2, startIndex, 0);
-      const end = Math.min(
-        pagination + OVERSCAN / 2,
-        Number.isNaN(pages?.length) ? 0 : pages?.length
-      ); //这里有问题
-      if (options?.pageIndicator && init) {
-        form.setFieldValue(["page"], options?.pageIndicator);
-        setRemoteProgressThrottle(options?.pageIndicator);
-        setPagination(options?.pageIndicator);
-      }
-      const renderTaskQueue = [];
-      for (let i = start; i <= end; i++) {
-        const page = pages[i];
-
-        const languagesSetting = JSON.stringify(
-          form.getFieldValue("ocr") ?? []
-        );
-        const cache = ocrTaskMap.get(i + languagesSetting);
-        if (cache && ["hidden", "done"].includes(cache.status)) {
-          getCacheOcrFragment(i, cache);
-          cache.status = "done";
-          set(i + languagesSetting, cache);
-        }
-        if (!page) {
-          continue;
-        }
-        const dpr = window.devicePixelRatio || 1;
-        const canvas = [
-          ...listRef.current.querySelectorAll<HTMLCanvasElement>(
-            `.${styles.canvasContainer}`
-          ),
-        ].find((el) => Number(el.dataset?.pageindex) === i);
-        const canvasSub = [
-          ...listRef.current.querySelectorAll<HTMLCanvasElement>(
-            `.${styles.canvasSubContainer}`
-          ),
-        ].find((el) => Number(el.dataset?.pageindex) === i);
-        const textLayer = [
-          ...listRef.current.querySelectorAll<HTMLDivElement>(
-            `.${styles.textLayerContainer}`
-          ),
-        ].find((el) => Number(el.dataset?.pageindex) === i);
-        const ctx = canvas?.getContext("2d");
-        const subCtx = canvasSub?.getContext("2d");
-        if (!ctx) {
-          continue;
-        }
-        if (cachePageImageMap.current.has(i)) {
-          const data = cachePageImageMap.current.get(i);
-          subCtx.drawImage(data, 0, 0, canvasSub.width, canvasSub.height);
-        }
-
-        // 取消相同引用未完成的渲染任务
-        pageRenderTask.current.get(ctx)?.renderTask?.cancel?.();
-
-        // 只缩放没有被缩放的元素
-        if (options?.clearDpr || !pageRenderTask.current.get(ctx)) {
-          ctx.scale(dpr, dpr);
-        }
-
-        const viewport = page.getViewport({
-          scale: options?.canvasScale ?? canvasScale,
-        });
-        const textViewport = page.getViewport({ scale: 1 });
-        const task = page.render({
-          viewport,
-          canvasContext: ctx,
-        });
-
-        renderTaskQueue.push(task.promise);
-        task.promise
-          .then(() => {
-            if (!cachePageImageMap.current.has(i)) {
-              canvas.toBlob(
-                async (data) => {
-                  const offscreenCanvas = new OffscreenCanvas(
-                    canvas.width,
-                    canvas.height
-                  );
-                  const offCtx = offscreenCanvas.getContext("2d");
-                  offCtx.drawImage(
-                    await createImageBitmap(data),
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                  );
-                  cachePageImageMap.current.set(i, offscreenCanvas);
-                },
-                "image/png",
-                1
-              );
-            }
-          })
-          .finally(() => {
-            if (page.pageNumber === 1) {
-              // 用于书架页面，封面显示
-              canvas.toBlob(async (blob) => {
-                const cover = await readFileAsArrayBuffer(
-                  new File([blob], book_id + "cover")
-                );
-                db.book_blob.update(book_id, {
-                  coverBlob: cover,
-                });
-              });
-            }
-          });
-        pdfjs.renderTextLayer({
-          textContentSource: page.streamTextContent(),
-          viewport: textViewport,
-          container: textLayer,
-        });
-        task.promise.catch((err) => {
-          // 屏蔽这个异常，因为这个异常是故意的
-          if (err instanceof pdfjs.RenderingCancelledException) {
-            return;
-          }
-          console.error(err);
-        });
-
-        // 避免潜在的竞态情况
-        pageRenderTask.current.set(ctx, { renderTask: task });
-      }
-      Promise.allSettled(renderTaskQueue).finally(() => {
-        setIsRendering(false);
-      });
-    },
-    {
-      wait: 200,
-      leading: true,
-    }
-  );
 
   return (
     <PDFCacheProvider>
@@ -728,12 +576,7 @@ export const Component = function PdfReader() {
                     }}
                     overscan={OVERSCAN}
                     onRangeChange={(startIndex, endIndex) => {
-                      // setIsRendering(true);
-                      // // 该方法在缩放时不被调用，需要让它被调用；
-                      // pdfPageRenderHandler(startIndex, endIndex, pages, {
-                      //   canvasScale,
-                      //   pageIndicator: startIndex + 1,
-                      // });
+                        form.setFieldValue(["page"], pagination ?? 0);
                     }}
                   >
                     {(pages ?? []).map((page, index) => {
