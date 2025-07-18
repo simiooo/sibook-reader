@@ -31,7 +31,7 @@ export function useTranslate(content: string, params: {
             const targetLang = params?.target
             
             // Construct the request URL
-            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+            const baseUrl = import.meta.env.VITE_API_URL || location.origin
             const url = `${baseUrl}/api/translate`
             
             // Prepare request body
