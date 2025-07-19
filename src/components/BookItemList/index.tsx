@@ -309,7 +309,7 @@ export const useBookDownload = () => {
                 uploadingTaskList.unshift(httpDownloadTask)
                 uploadingTaskList_update(uploadingTaskList)
                 const exitInCos = await requestor<{ data: string }>({
-                    url: "/backblaze/isExitedInStorage",
+                    url: "/storage/backblaze/isExitedInStorage",
                     data: {
                         bookId: ele.objectId
                     }

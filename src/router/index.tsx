@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
       align={'middle'}
       >
         <Col>
-        <span>404 Page Not Found</span>
+        <span>Error happened</span>
         </Col>
         <Col>
         <Button

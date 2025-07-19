@@ -35,7 +35,7 @@ class S3Custom {
     public static async create() {
         if (!dayjs().isBefore(credentialsInfo?.expiration)) {
             const res = await requestor<{ data: AWSCredentials; }>({
-                url: '/backblaze/authorization',
+                url: '/storage/backblaze/authorization',
                 data: {}
             });
             S3Custom._s3Instance.destroy()
@@ -125,7 +125,7 @@ class Backblaze {
 
     private async _authorization() {
         const res = await requestor<{ data: AWSCredentials; }>({
-            url: '/backblaze/authorization',
+            url: '/storage/backblaze/authorization',
             data: {}
         });
         this._authorizationInfo = res?.data?.data

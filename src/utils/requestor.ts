@@ -7,7 +7,9 @@ export const requestor = Axios.create({
 })
 
 requestor.interceptors.request.use(config => {
-    const token = JSON.parse(localStorage.getItem('authorization') ?? "{}") as LoginType 
+    const token = JSON.parse(localStorage.getItem('authorization') ?? "{}") as LoginType
+    console.log(token);
+     
     config.headers['Authorization'] = `Bearer ${token.token}`
     return config
 })

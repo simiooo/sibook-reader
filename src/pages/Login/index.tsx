@@ -83,7 +83,7 @@ export const Component = function Login() {
     const { loading, runAsync } = useRequest(async (params: any) => {
         try {
             const res = await requestor<LoginType>({
-                url: '/login',
+                url: '/auth/login',
                 data: {
                     username: params?.username,
                     password: params?.password,

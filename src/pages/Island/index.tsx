@@ -124,7 +124,7 @@ export const Component = function Island() {
             const res = await requestor<{ data?: IslandMembers[] }>({
                 url: '/island/listIslandUser',
                 data: {
-                    id: currentIsland,
+                    islandId: currentIsland,
                 }
             })
             return res.data?.data ?? []

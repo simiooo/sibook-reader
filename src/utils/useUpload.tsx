@@ -101,7 +101,7 @@ export function useUpload(
                     islandId: currentIsland,
                 }
                 return requestor<{ status: number, message: string }>({
-                    url: '/backblaze/uploadSave',
+                    url: '/storage/backblaze/uploadSave',
                     data: payload
                 })
             })
